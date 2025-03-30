@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import styled from 'styled-components';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import logo from './img/logo.png'; 
+import UserForm from './pages/UserForm';
+
+// Estilos Globais
 const AppContainer = styled.div`
   font-family: 'Arial', sans-serif;
   min-height: 100vh;
@@ -19,7 +21,7 @@ const Header = styled.header`
 `;
 
 const LogoImage = styled.img`
-  width: 200px; /* Ajuste conforme o tamanho real do logo */
+  width: 200px;
   height: auto;
 `;
 
@@ -56,8 +58,8 @@ const App: React.FC = () => {
   return (
     <AppContainer>
       <Header>
-       <LogoImage
-          src={logo}
+        <LogoImage
+          src="https://via.placeholder.com/200x60?text=Renato+Frutuoso"
           alt="Renato Frutuoso - Consultoria Esportiva Online"
         />
       </Header>
@@ -70,6 +72,22 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/new"
+              element={
+                <ProtectedRoute>
+                  <UserForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/user/:id"
+              element={
+                <ProtectedRoute>
+                  <UserForm />
                 </ProtectedRoute>
               }
             />
