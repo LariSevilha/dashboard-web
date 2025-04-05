@@ -4,67 +4,83 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+// Definir tipos para os dados do formulário
+interface Comida {
+  id?: number;
+  name: string;
+  amount: string;
+  _destroy?: boolean;
+}
+
+interface Meal {
+  id?: number;
+  meal_type: string;
+  comidas: Comida[];
+  _destroy?: boolean;
+}
+
+interface Training {
+  id?: number;
+  serie_amount: string;
+  repeat_amount: string;
+  exercise_name: string;
+  video: string;
+  _destroy?: boolean;
+}
+
+interface FormData {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  trainings: Training[];
+  meals: Meal[];
+}
+
 const FormContainer = styled.div`
   width: 100%;
   max-width: 600px;
-  text-align: center;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #2f3a3b;
+  border-radius: 8px;
   color: #ffffff;
 `;
 
 const Title = styled.h1`
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
-`;
-
-const Form = styled.form`
-  background-color: #2f3a3b;
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
+  text-align: center;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  background-color: #1c2526;
-  border: 1px solid #1c2526;
-  border-radius: 8px;
-  color: #b0b0b0;
+  border: none;
+  border-radius: 4px;
   font-size: 1rem;
-
-  &::placeholder {
-    color: #b0b0b0;
-  }
 `;
 
-const Textarea = styled.textarea`
+const Select = styled.select`
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  background-color: #1c2526;
-  border: 1px solid #1c2526;
-  border-radius: 8px;
-  color: #b0b0b0;
+  border: none;
+  border-radius: 4px;
   font-size: 1rem;
-  resize: vertical;
-
-  &::placeholder {
-    color: #b0b0b0;
-  }
 `;
 
 const Button = styled.button`
-  width: 100%;
   background-color: #8b0000;
   color: #ffffff;
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin: 0.5rem;
   transition: background-color 0.3s ease;
 
   &:hover {
@@ -72,9 +88,24 @@ const Button = styled.button`
   }
 `;
 
-const SubTitle = styled.h3`
-  color: #b0b0b0;
-  margin: 0.5rem 0;
+const DeleteButton = styled(Button)`
+  background-color: #ff4040;
+
+  &:hover {
+    background-color: #ff6666;
+  }
+`;
+
+const Section = styled.div`
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+`;
+
+const SubTitle = styled.h2`
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
 `;
 
 const ErrorMessage = styled.p`
@@ -84,245 +115,377 @@ const ErrorMessage = styled.p`
 `;
 
 const UserForm: React.FC = () => {
-  const [formData, setFormData] = useState({
-    id: null,
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     password: '',
+    role: 'regular',
     trainings: [{ serie_amount: '', repeat_amount: '', exercise_name: '', video: '' }],
     meals: [{ meal_type: '', comidas: [{ name: '', amount: '' }] }],
   });
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
 
   useEffect(() => {
     if (id) {
       const apiKey = localStorage.getItem('apiKey');
-      if (!apiKey) {
-        navigate('/login');
-        return;
-      }
-
+      const deviceId = localStorage.getItem('deviceId');
       axios
-        .get(`http://localhost:3000/api/v1/users`, {
-          headers: { 'X-API-Key': apiKey },
+        .get(`http://localhost:3000/api/v1/users/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Device-ID': deviceId,
+            'Accept': 'application/json',
+          },
         })
         .then((response) => {
-          const user = response.data.find((u: any) => u.id === parseInt(id!));
-          if (user) {
-            setFormData({
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              password: '',
-              trainings: user.trainings.map((t: any) => ({
-                serie_amount: t.serie.amount,
-                repeat_amount: t.repeat.amount,
-                exercise_name: t.exercise.name,
-                video: t.exercise.video,
-              })),
-              meals: user.meals.map((m: any) => ({
-                meal_type: m.meal_type,
-                comidas: m.comidas.map((c: any) => ({
-                  name: c.name,
-                  amount: c.amount_meal?.amount || '',
-                })),
-              })),
-            });
-          }
+          const userData = response.data;
+          const meals = userData.meals.length > 0
+            ? userData.meals.map((meal: any) => ({
+                ...meal,
+                comidas: meal.comidas || [{ name: '', amount: '' }],
+              }))
+            : [{ meal_type: '', comidas: [{ name: '', amount: '' }] }];
+
+          setFormData({
+            name: userData.name,
+            email: userData.email,
+            password: '',
+            role: userData.role,
+            trainings: userData.trainings.length > 0
+              ? userData.trainings
+              : [{ serie_amount: '', repeat_amount: '', exercise_name: '', video: '' }],
+            meals,
+          });
         })
-        .catch(() => setError('Erro ao carregar dados do usuário'));
+        .catch((err) => {
+          setError(err.response?.data?.error || 'Erro ao carregar usuário');
+          if (err.response?.status === 401 || err.response?.status === 403) {
+            navigate('/login');
+          }
+        });
     }
   }, [id, navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleTrainingChange = (index: number, field: string, value: string) => {
-    const newTrainings = [...formData.trainings];
-    newTrainings[index] = { ...newTrainings[index], [field]: value };
-    setFormData({ ...formData, trainings: newTrainings });
-  };
-
-  const handleMealChange = (index: number, field: string, value: string) => {
-    const newMeals = [...formData.meals];
-    newMeals[index] = { ...newMeals[index], [field]: value };
-    setFormData({ ...formData, meals: newMeals });
-  };
-
-  const handleComidaChange = (mealIndex: number, comidaIndex: number, field: string, value: string) => {
-    const newMeals = [...formData.meals];
-    const newComidas = [...newMeals[mealIndex].comidas];
-    newComidas[comidaIndex] = { ...newComidas[comidaIndex], [field]: value };
-    newMeals[mealIndex].comidas = newComidas;
-    setFormData({ ...formData, meals: newMeals });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, section: string, index: number, subSection?: string, subIndex?: number) => {
+    setFormData((prev) => {
+      if (section === 'trainings') {
+        const updatedTrainings = [...prev.trainings];
+        updatedTrainings[index] = { ...updatedTrainings[index], [e.target.name]: e.target.value };
+        return { ...prev, trainings: updatedTrainings };
+      } else if (section === 'meals' && subSection === 'comidas') {
+        const updatedMeals = [...prev.meals];
+        const updatedComidas = [...updatedMeals[index].comidas];
+        updatedComidas[subIndex!] = { ...updatedComidas[subIndex!], [e.target.name]: e.target.value };
+        updatedMeals[index] = { ...updatedMeals[index], comidas: updatedComidas };
+        return { ...prev, meals: updatedMeals };
+      } else if (section === 'meals') {
+        const updatedMeals = [...prev.meals];
+        updatedMeals[index] = { ...updatedMeals[index], [e.target.name]: e.target.value };
+        return { ...prev, meals: updatedMeals };
+      }
+      return { ...prev, [e.target.name]: e.target.value };
+    });
   };
 
   const addTraining = () => {
-    setFormData({
-      ...formData,
-      trainings: [...formData.trainings, { serie_amount: '', repeat_amount: '', exercise_name: '', video: '' }],
+    setFormData((prev) => ({
+      ...prev,
+      trainings: [...prev.trainings, { serie_amount: '', repeat_amount: '', exercise_name: '', video: '' }],
+    }));
+  };
+
+  const removeTraining = (index: number) => {
+    setFormData((prev) => {
+      const updatedTrainings = [...prev.trainings];
+      if (updatedTrainings[index].id) {
+        updatedTrainings[index] = { ...updatedTrainings[index], _destroy: true };
+      } else {
+        updatedTrainings.splice(index, 1);
+      }
+      return { ...prev, trainings: updatedTrainings };
     });
   };
 
   const addMeal = () => {
-    setFormData({
-      ...formData,
-      meals: [...formData.meals, { meal_type: '', comidas: [{ name: '', amount: '' }] }],
+    setFormData((prev) => ({
+      ...prev,
+      meals: [...prev.meals, { meal_type: '', comidas: [{ name: '', amount: '' }] }],
+    }));
+  };
+
+  const removeMeal = (index: number) => {
+    setFormData((prev) => {
+      const updatedMeals = [...prev.meals];
+      if (updatedMeals[index].id) {
+        updatedMeals[index] = { ...updatedMeals[index], _destroy: true };
+      } else {
+        updatedMeals.splice(index, 1);
+      }
+      return { ...prev, meals: updatedMeals };
     });
   };
 
   const addComida = (mealIndex: number) => {
-    const newMeals = [...formData.meals];
-    newMeals[mealIndex].comidas.push({ name: '', amount: '' });
-    setFormData({ ...formData, meals: newMeals });
+    setFormData((prev) => {
+      const updatedMeals = [...prev.meals];
+      updatedMeals[mealIndex] = {
+        ...updatedMeals[mealIndex],
+        comidas: [...updatedMeals[mealIndex].comidas, { name: '', amount: '' }],
+      };
+      return { ...prev, meals: updatedMeals };
+    });
+  };
+
+  const removeComida = (mealIndex: number, comidaIndex: number) => {
+    setFormData((prev) => {
+      const updatedMeals = [...prev.meals];
+      const updatedComidas = [...updatedMeals[mealIndex].comidas];
+      if (updatedComidas[comidaIndex].id) {
+        updatedComidas[comidaIndex] = { ...updatedComidas[comidaIndex], _destroy: true };
+      } else {
+        updatedComidas.splice(comidaIndex, 1);
+      }
+      updatedMeals[mealIndex] = { ...updatedMeals[mealIndex], comidas: updatedComidas };
+      return { ...prev, meals: updatedMeals };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+  
     const apiKey = localStorage.getItem('apiKey');
-    console.log('API Key usada:', apiKey);
-    if (!apiKey) {
-      setError('Chave API não encontrada. Faça login novamente.');
+    const deviceId = localStorage.getItem('deviceId');
+    const userRole = localStorage.getItem('userRole');
+  
+    if (!apiKey || !deviceId || userRole !== 'master') {
+      navigate('/login');
       return;
     }
-
+  
+    // Transformar comidas em comidas_attributes e remover o campo comidas
+    const mealsAttributes = formData.meals.map((meal) => {
+      const { comidas, ...mealWithoutComidas } = meal; // Remove o campo comidas
+      return {
+        ...mealWithoutComidas,
+        comidas_attributes: meal.comidas,
+      };
+    });
+  
     const payload = {
       user: {
         name: formData.name,
         email: formData.email,
         password: formData.password || undefined,
-        trainings: formData.trainings,
-        meals: formData.meals,
+        role: formData.role,
+        trainings_attributes: formData.trainings,
+        meals_attributes: mealsAttributes,
       },
     };
-
-    console.log('Payload enviado:', payload);
-
+  
     try {
-      if (formData.id) {
-        await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, payload, {
-          headers: { 'X-API-Key': apiKey },
+      if (id) {
+        await axios.put(`http://localhost:3000/api/v1/users/${id}`, payload, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Device-ID': deviceId,
+            'Content-Type': 'application/json',
+          },
         });
       } else {
         await axios.post('http://localhost:3000/api/v1/users', payload, {
-          headers: { 'X-API-Key': apiKey },
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Device-ID': deviceId,
+            'Content-Type': 'application/json',
+          },
         });
       }
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('Erro ao salvar usuário:', err.response?.data || err.message);
-      const errorMessage = err.response?.data?.errors
-        ? err.response.data.errors.join(', ')
-        : err.response?.data?.error || err.message;
-      setError(`Erro ao salvar usuário: ${errorMessage}`);
+      setError(err.response?.data?.errors?.join(', ') || 'Erro ao salvar usuário');
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/login');
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    const apiKey = localStorage.getItem('apiKey');
+    const deviceId = localStorage.getItem('deviceId');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!apiKey || !deviceId || userRole !== 'master') {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:3000/api/v1/users/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Device-ID': deviceId,
+        },
+      });
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Erro ao excluir usuário');
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/login');
+      }
     }
   };
 
   return (
     <FormContainer>
-      <Title>{formData.id ? 'Editar Usuário' : 'Adicionar Usuário'}</Title>
-      <Form onSubmit={handleSubmit}>
+      <Title>{id ? 'Editar Usuário' : 'Novo Usuário'}</Title>
+      <form onSubmit={handleSubmit}>
         <Input
           type="text"
           name="name"
+          placeholder="Nome"
           value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Nome do Usuário"
+          onChange={(e) => handleChange(e, 'user', 0)}
           required
         />
         <Input
           type="email"
           name="email"
+          placeholder="Email"
           value={formData.email}
-          onChange={handleInputChange}
-          placeholder="Email do Usuário"
+          onChange={(e) => handleChange(e, 'user', 0)}
           required
         />
         <Input
           type="password"
           name="password"
+          placeholder="Senha"
           value={formData.password}
-          onChange={handleInputChange}
-          placeholder="Senha (deixe em branco para não alterar)"
+          onChange={(e) => handleChange(e, 'user', 0)}
+          required={!id}
         />
+        <Select name="role" value={formData.role} onChange={(e) => handleChange(e, 'user', 0)}>
+          <option value="master">Master</option>
+          <option value="regular">Regular</option>
+        </Select>
 
-        <SubTitle>Treinos</SubTitle>
-        {formData.trainings.map((training, index) => (
-          <div key={index}>
-            <Input
-              type="number"
-              value={training.serie_amount}
-              onChange={(e) => handleTrainingChange(index, 'serie_amount', e.target.value)}
-              placeholder={`Quantidade de Séries ${index + 1}`}
-            />
-            <Input
-              type="number"
-              value={training.repeat_amount}
-              onChange={(e) => handleTrainingChange(index, 'repeat_amount', e.target.value)}
-              placeholder={`Quantidade de Repetições ${index + 1}`}
-            />
-            <Input
-              type="text"
-              value={training.exercise_name}
-              onChange={(e) => handleTrainingChange(index, 'exercise_name', e.target.value)}
-              placeholder={`Nome do Exercício ${index + 1}`}
-            />
-            <Input
-              type="text"
-              value={training.video}
-              onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
-              placeholder={`Link do Vídeo ${index + 1}`}
-            />
-          </div>
-        ))}
-        <Button type="button" onClick={addTraining}>
-          Adicionar Treino
-        </Button>
-
-        <SubTitle>Dietas</SubTitle>
-        {formData.meals.map((meal, mealIndex) => (
-          <div key={mealIndex}>
-            <Input
-              type="text"
-              value={meal.meal_type}
-              onChange={(e) => handleMealChange(mealIndex, 'meal_type', e.target.value)}
-              placeholder={`Tipo de Refeição ${mealIndex + 1} (ex.: Café da Manhã)`}
-            />
-            <SubTitle>Comidas</SubTitle>
-            {meal.comidas.map((comida, comidaIndex) => (
-              <div key={comidaIndex}>
+        <Section>
+          <SubTitle>Treinos do Usuário</SubTitle>
+          {formData.trainings.map((training: Training, index: number) => (
+            !training._destroy && (
+              <div key={index}>
                 <Input
                   type="text"
-                  value={comida.name}
-                  onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'name', e.target.value)}
-                  placeholder={`Nome da Comida ${comidaIndex + 1}`}
+                  name="exercise_name"
+                  placeholder="Nome do Exercício"
+                  value={training.exercise_name}
+                  onChange={(e) => handleChange(e, 'trainings', index)}
+                  required
+                />
+                <Input
+                  type="number"
+                  name="serie_amount"
+                  placeholder="Quantidade de Séries"
+                  value={training.serie_amount}
+                  onChange={(e) => handleChange(e, 'trainings', index)}
+                  required
+                />
+                <Input
+                  type="number"
+                  name="repeat_amount"
+                  placeholder="Quantidade de Repetições"
+                  value={training.repeat_amount}
+                  onChange={(e) => handleChange(e, 'trainings', index)}
+                  required
                 />
                 <Input
                   type="text"
-                  value={comida.amount}
-                  onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)}
-                  placeholder={`Quantidade ${comidaIndex + 1}`}
+                  name="video"
+                  placeholder="URL do Vídeo (opcional)"
+                  value={training.video}
+                  onChange={(e) => handleChange(e, 'trainings', index)}
                 />
+                <Button type="button" onClick={() => removeTraining(index)}>
+                  Remover Treino
+                </Button>
               </div>
-            ))}
-            <Button type="button" onClick={() => addComida(mealIndex)}>
-              Adicionar Comida
-            </Button>
-          </div>
-        ))}
-        <Button type="button" onClick={addMeal}>
-          Adicionar Refeição
-        </Button>
+            )
+          ))}
+          <Button type="button" onClick={addTraining}>
+            Adicionar Treino
+          </Button>
+        </Section>
 
-        <Button type="submit">{formData.id ? 'Atualizar' : 'Cadastrar'}</Button>
+        <Section>
+          <SubTitle>Dieta do Usuário</SubTitle>
+          {formData.meals.map((meal: Meal, mealIndex: number) => (
+            !meal._destroy && (
+              <div key={mealIndex}>
+                <Input
+                  type="text"
+                  name="meal_type"
+                  placeholder="Tipo de Refeição (ex.: Café da Manhã)"
+                  value={meal.meal_type}
+                  onChange={(e) => handleChange(e, 'meals', mealIndex)}
+                  required
+                />
+                {meal.comidas && meal.comidas.length > 0 ? (
+                  meal.comidas.map((comida: Comida, comidaIndex: number) => (
+                    !comida._destroy && (
+                      <div key={comidaIndex}>
+                        <Input
+                          type="text"
+                          name="name"
+                          placeholder="Nome da Comida"
+                          value={comida.name}
+                          onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
+                          required
+                        />
+                        <Input
+                          type="number"
+                          name="amount"
+                          placeholder="Quantidade (ex.: 100g)"
+                          value={comida.amount}
+                          onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
+                          required
+                        />
+                        <Button type="button" onClick={() => removeComida(mealIndex, comidaIndex)}>
+                          Remover Comida
+                        </Button>
+                      </div>
+                    )
+                  ))
+                ) : (
+                  <p>Nenhuma comida cadastrada.</p>
+                )}
+                <Button type="button" onClick={() => addComida(mealIndex)}>
+                  Adicionar Comida
+                </Button>
+                <Button type="button" onClick={() => removeMeal(mealIndex)}>
+                  Remover Refeição
+                </Button>
+              </div>
+            )
+          ))}
+          <Button type="button" onClick={addMeal}>
+            Adicionar Refeição
+          </Button>
+        </Section>
+
+        <Button type="submit">{id ? 'Atualizar' : 'Criar'}</Button>
+        {id && (
+          <DeleteButton type="button" onClick={handleDelete}>
+            Excluir
+          </DeleteButton>
+        )}
         <Button type="button" onClick={() => navigate('/dashboard')}>
           Cancelar
         </Button>
-      </Form>
+      </form>
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </FormContainer>
   );

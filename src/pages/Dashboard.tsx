@@ -1,51 +1,75 @@
-import React, { useEffect, useState } from 'react';
+// src/pages/Dashboard.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { FaPencilAlt } from 'react-icons/fa';
 
-const EditIcon = styled.span`
-  color: #3498db;
-  cursor: pointer;
-  margin: 0 0.5rem;
-  font-size: 1.2rem;
-`;
+// Definir tipos para os dados
+interface User {
+  id: number;
+  name: string;
+  role: string;
+  email: string;
+  trainings: Training[];
+  meals: Meal[];
+}
 
-const DeleteIcon = styled.span`
-  color: #ff4040;
-  cursor: pointer;
-  margin: 0 0.5rem;
-  font-size: 1.2rem;
-`;
+interface Training {
+  id: number;
+  serie_amount: string;
+  repeat_amount: string;
+  exercise_name: string;
+  video: string;
+}
+
+interface Meal {
+  id: number;
+  meal_type: string;
+  comidas: Comida[];
+}
+
+interface Comida {
+  id: number;
+  name: string;
+  amount: string;
+}
 
 const DashboardContainer = styled.div`
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
   text-align: center;
   color: #ffffff;
 `;
 
 const Title = styled.h1`
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  margin-bottom: 2rem;
 `;
 
-const Info = styled.p`
-  color: #b0b0b0;
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
+const EditText = styled.span`
+  cursor: pointer;
+  color: #ffffff;
+  font-weight: bold;
+
+  &:hover {
+    color: #a00000;
+    text-decoration: underline;
+  }
 `;
 
 const Button = styled.button`
-  width: 100%;
   background-color: #8b0000;
   color: #ffffff;
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin: 0.5rem;
   transition: background-color 0.3s ease;
 
   &:hover {
@@ -53,33 +77,46 @@ const Button = styled.button`
   }
 `;
 
-const UserList = styled.div`
-  margin-top: 2rem;
+const Section = styled.div`
+  margin-top: 1.5rem;
 `;
 
-const UserItem = styled.div`
-  background-color: #2f3a3b;
-  padding: 1rem;
-  border-radius: 8px;
+const SubTitle = styled.h2`
+  font-size: 1.5rem;
   margin-bottom: 1rem;
+`;
+
+const UserList = styled.ul`
+  list-style: none;
+  padding: 0;
+  text-align: left;
+`;
+
+const UserItem = styled.li`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #2f3a3b;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
 `;
 
-const UserInfo = styled.div`
-  color: #ffffff;
+const UserName = styled.span`
+  font-size: 1.1rem;
+`;
+ 
+
+const List = styled.ul`
+  list-style: none;
+  padding: 0;
 `;
 
-const UserDetails = styled.div`
-  color: #b0b0b0;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-`;
-
-const SubTitle = styled.h3`
-  color: #b0b0b0;
-  margin: 0.5rem 0;
+const ListItem = styled.li`
+  background-color: #2f3a3b;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 8px;
 `;
 
 const ErrorMessage = styled.p`
@@ -89,114 +126,118 @@ const ErrorMessage = styled.p`
 `;
 
 const Dashboard: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [refresh, setRefresh] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadData = useCallback(async () => {
     const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey) {
+    const deviceId = localStorage.getItem('deviceId');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!apiKey || !deviceId) {
       navigate('/login');
       return;
     }
 
-    axios
-      .get('http://localhost:3000/api/v1/dashboard', {
-        headers: { 'X-API-Key': apiKey },
-      })
-      .then((response) => setUser(response.data.user))
-      .catch(() => {
-        setError('Erro ao carregar o dashboard');
-        localStorage.removeItem('apiKey');
-        navigate('/login');
+    try {
+      const userResponse = await axios.get('http://localhost:3000/api/v1/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Device-ID': deviceId,
+          'Accept': 'application/json',
+        },
       });
+      setUserData(userResponse.data);
 
-    fetchUsers(apiKey);
+      if (userRole === 'master') {
+        const usersResponse = await axios.get('http://localhost:3000/api/v1/users', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Device-ID': deviceId,
+            'Accept': 'application/json',
+          },
+        });
+        setUsers(usersResponse.data);
+      }
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Erro ao carregar o dashboard';
+      setError(errorMessage);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/login');
+      }
+    }
   }, [navigate]);
 
-  const fetchUsers = async (apiKey: string) => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/v1/users', {
-        headers: { 'X-API-Key': apiKey },
-      });
-      setUsers(response.data);
-    } catch (err) {
-      setError('Erro ao carregar usuários');
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData, refresh]);
 
-  const handleDelete = async (id: number) => {
+  const handleLogout = async () => {
     const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey) return;
+    const deviceId = localStorage.getItem('deviceId');
 
     try {
-      await axios.delete(`http://localhost:3000/api/v1/users/${id}`, {
-        headers: { 'X-API-Key': apiKey },
+      await axios.delete('http://localhost:3000/api/v1/sessions/logout', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Device-ID': deviceId,
+        },
       });
-      fetchUsers(apiKey);
     } catch (err) {
-      setError('Erro ao deletar usuário');
+      console.error('Erro ao fazer logout:', err);
+    } finally {
+      localStorage.removeItem('apiKey');
+      localStorage.removeItem('deviceId');
+      localStorage.removeItem('userRole');
+      navigate('/login');
     }
   };
 
-  if (!user) return <p style={{ color: '#ffffff' }}>Carregando...</p>;
+  useEffect(() => {
+    const handleFocus = () => {
+      setRefresh((prev) => prev + 1);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   return (
     <DashboardContainer>
       <Title>Dashboard</Title>
-      <Info>Bem-vindo, {user.email} ({user.role})</Info>
-
-      <Link to="/dashboard/user/new">
-        <Button>Adicionar Usuário</Button>
-      </Link>
-
-      <UserList>
-        <SubTitle>Usuários Cadastrados</SubTitle>
-        {users.length === 0 ? (
-          <p style={{ color: '#b0b0b0' }}>Nenhum usuário cadastrado.</p>
-        ) : (
-          users.map((u) => (
-            <UserItem key={u.id}>
-              <UserInfo>
-                <strong>{u.name}</strong> ({u.email})
-                <UserDetails>
-                  <SubTitle>Treinos:</SubTitle>
-                  {u.trainings.map((t: any) => (
-                    <div key={t.id}>
-                      Exercício: {t.exercise.name}, Séries: {t.serie.amount}, Repetições: {t.repeat.amount}, Vídeo: {t.exercise.video || 'N/A'}
-                    </div>
+      {userData && (
+        <>
+          <p>Bem-vindo, {userData.email}</p>
+          
+          {userData.role === 'master' && (
+            <>
+              <Section>
+                <SubTitle>Usuários</SubTitle>
+                {users.length > 0 ? (
+                  <UserList>
+                  {users.map((user: any) => (
+                    <UserItem key={user.id}>
+                      <UserName>{user.name}</UserName>
+                      <EditText onClick={() => navigate(`/user/${user.id}`)}>Editar</EditText>
+                    </UserItem>
                   ))}
-                  <SubTitle>Dietas:</SubTitle>
-                  {u.meals.map((m: any) => (
-                    <div key={m.id}>
-                      Tipo: {m.meal_type}
-                      <div>
-                        Comidas:
-                        {m.comidas.map((c: any) => (
-                          <div key={c.id}>
-                            {c.name} - Quantidade: {c.amount || 'N/A'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </UserDetails>
-              </UserInfo>
-              <div>
-                <Link to={`/dashboard/user/${u.id}`}>
-                  <EditIcon>✏️</EditIcon>
-                </Link>
-                <DeleteIcon onClick={() => handleDelete(u.id)}>🗑️</DeleteIcon>
-              </div>
-            </UserItem>
-          ))
-        )}
-      </UserList>
-
-      <Button onClick={() => { localStorage.removeItem('apiKey'); navigate('/login'); }}>
-        Sair
-      </Button>
+                </UserList>
+                ) : (
+                  <p>Nenhum usuário cadastrado.</p>
+                )}
+              </Section>
+              <Button onClick={() => navigate('/user/new')}>Adicionar Usuário</Button>
+              <Button onClick={() => navigate('/users')}>Ver Detalhes dos Usuários</Button>
+            </>
+          )}
+          <Button onClick={handleLogout}>Sair</Button>
+        </>
+      )}
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </DashboardContainer>
   );
