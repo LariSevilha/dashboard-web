@@ -1,8 +1,28 @@
-// src/pages/Login.tsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
+ 
+const GlobalStyle = createGlobalStyle`
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+  }
+`;
+ 
+const PageContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(to bottom, #2f3a3b 50%, #8b0000 100%);
+  padding: 1rem;
+  box-sizing: border-box;
+`;
 
 const LoginContainer = styled.div`
   width: 100%;
@@ -11,21 +31,57 @@ const LoginContainer = styled.div`
   background-color: #2f3a3b;
   border-radius: 8px;
   text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
-const Title = styled.h1`
-  font-size: 1.5rem;
+const Logo = styled.div`
   margin-bottom: 1.5rem;
   color: #ffffff;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  span {
+    color: #ff0000;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 1rem;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-transform: uppercase;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: none;
+  border: 1px solid #555;
   border-radius: 4px;
   font-size: 1rem;
+  background-color: #ffffff;
+  color: #000000;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: #aaaaaa;
+  }
+`;
+
+const ForgotPasswordLink = styled.a`
+  display: block;
+  color: #aaaaaa;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1.5rem;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 const Button = styled.button`
@@ -49,6 +105,23 @@ const ErrorMessage = styled.p`
   color: #ff4040;
   margin-top: 1rem;
   font-size: 0.9rem;
+`;
+
+const Footer = styled.div`
+  margin-top: 1.5rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+
+  span {
+    color: #ff0000;
+  }
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #ff0000, transparent);
+  margin: 1rem 0;
 `;
 
 const Login: React.FC = () => {
@@ -79,27 +152,43 @@ const Login: React.FC = () => {
   };
 
   return (
-    <LoginContainer>
-      <Title>Login</Title>
-      <form onSubmit={handleSubmit}>
-        <Input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <Button type="submit">Entrar</Button>
-      </form>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-    </LoginContainer>
+    <>
+      <GlobalStyle />
+      <PageContainer>
+        <LoginContainer>
+          <Logo>
+            Renato <span>Frutuoso</span>
+            <div style={{ fontSize: '0.8rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+              Consultoria Esportiva Online
+            </div>
+          </Logo>
+          <Subtitle>Faça login para continuar</Subtitle>
+          <form onSubmit={handleSubmit}>
+            <Input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Senha"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <ForgotPasswordLink href="#">Esqueceu sua senha?</ForgotPasswordLink>
+            <Button type="submit">Entrar</Button>
+          </form>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <Divider />
+          <Footer>
+            Renato Frutuoso <span>cref 0000</span>
+          </Footer>
+        </LoginContainer>
+      </PageContainer>
+    </>
   );
 };
 

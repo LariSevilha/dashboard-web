@@ -141,12 +141,21 @@ const UserForm: React.FC = () => {
         })
         .then((response) => {
           const userData = response.data;
+          console.log('Dados recebidos da API:', userData);
           const meals = userData.meals.length > 0
             ? userData.meals.map((meal: any) => ({
                 ...meal,
-                comidas: meal.comidas || [{ name: '', amount: '' }],
+                comidas: meal.comidas
+                  ? meal.comidas.map((comida: any) => ({
+                      ...comida,
+                      name: String(comida.name || ''),
+                      amount: String(comida.amount || ''),
+                    }))
+                  : [{ name: '', amount: '' }],
               }))
             : [{ meal_type: '', comidas: [{ name: '', amount: '' }] }];
+
+          console.log('Dados mapeados para meals:', meals);
 
           setFormData({
             name: userData.name,
@@ -154,7 +163,13 @@ const UserForm: React.FC = () => {
             password: '',
             role: userData.role,
             trainings: userData.trainings.length > 0
-              ? userData.trainings
+              ? userData.trainings.map((training: any) => ({
+                  ...training,
+                  serie_amount: String(training.serie_amount || ''),
+                  repeat_amount: String(training.repeat_amount || ''),
+                  exercise_name: String(training.exercise_name || ''),
+                  video: String(training.video || ''),
+                }))
               : [{ serie_amount: '', repeat_amount: '', exercise_name: '', video: '' }],
             meals,
           });
@@ -255,25 +270,24 @@ const UserForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-  
+
     const apiKey = localStorage.getItem('apiKey');
     const deviceId = localStorage.getItem('deviceId');
     const userRole = localStorage.getItem('userRole');
-  
+
     if (!apiKey || !deviceId || userRole !== 'master') {
       navigate('/login');
       return;
     }
-  
-    // Transformar comidas em comidas_attributes e remover o campo comidas
+
     const mealsAttributes = formData.meals.map((meal) => {
-      const { comidas, ...mealWithoutComidas } = meal; // Remove o campo comidas
+      const { comidas, ...mealWithoutComidas } = meal;
       return {
         ...mealWithoutComidas,
         comidas_attributes: meal.comidas,
       };
     });
-  
+
     const payload = {
       user: {
         name: formData.name,
@@ -284,7 +298,7 @@ const UserForm: React.FC = () => {
         meals_attributes: mealsAttributes,
       },
     };
-  
+
     try {
       if (id) {
         await axios.put(`http://localhost:3000/api/v1/users/${id}`, payload, {
@@ -441,15 +455,15 @@ const UserForm: React.FC = () => {
                           type="text"
                           name="name"
                           placeholder="Nome da Comida"
-                          value={comida.name}
+                          value={comida.name ?? ''}
                           onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
                           required
                         />
                         <Input
-                          type="number"
+                          type="text"
                           name="amount"
                           placeholder="Quantidade (ex.: 100g)"
-                          value={comida.amount}
+                          value={comida.amount ?? ''}
                           onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
                           required
                         />

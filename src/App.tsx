@@ -7,12 +7,10 @@ import UserForm from './pages/UserForm';
 import UsersList from './pages/UsersList';
 
 const AppContainer = styled.div`
-  min-height: 100vh;
-  background-color: #1c2526;
+  min-height: 100vh; 
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  align-items: center; 
 `;
 
 const App: React.FC = () => {

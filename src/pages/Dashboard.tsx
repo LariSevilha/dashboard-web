@@ -2,8 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import { FaPencilAlt } from 'react-icons/fa';
+import styled from 'styled-components'; 
 
 // Definir tipos para os dados
 interface User {
