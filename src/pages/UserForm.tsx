@@ -2,10 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import styled, { createGlobalStyle } from 'styled-components';
-import * as CollapsiblePrimitive from '@radix-ui/react-collapsible';
+import styled, { createGlobalStyle, css } from 'styled-components';
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from '../components/ui/collapsible';
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
 import { ChevronDown, ChevronUp } from 'lucide-react';
- 
+
+// Definir tipos para os dados do formulário
 interface Comida {
   id?: number;
   name: string;
@@ -50,7 +59,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Styled Components
+// Styled Components (overriding ShadCN styles where necessary)
 const PageContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -62,14 +71,27 @@ const PageContainer = styled.div`
   box-sizing: border-box;
 `;
 
-const FormContainer = styled.div`
+const StyledCard = styled(Card)`
   width: 100%;
   max-width: 800px;
-  padding: 2rem;
   background-color: #2f3a3b;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border: none;
+`;
+
+const StyledCardHeader = styled(CardHeader)`
+  padding: 1.5rem;
+`;
+
+const StyledCardTitle = styled(CardTitle)`
+  font-size: 1.5rem;
   color: #ffffff;
+  text-align: center;
+`;
+
+const StyledCardContent = styled(CardContent)`
+  padding: 1.5rem;
 `;
 
 const Logo = styled.div`
@@ -86,18 +108,11 @@ const Logo = styled.div`
   }
 `;
 
-const Title = styled.h1`
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  color: #ffffff;
-  text-align: center;
-`;
-
-const Collapsible = styled(CollapsiblePrimitive.Root)`
+const StyledCollapsible = styled(Collapsible)`
   margin-bottom: 1.5rem;
 `;
 
-const CollapsibleTrigger = styled(CollapsiblePrimitive.Trigger)`
+const StyledCollapsibleTrigger = styled(CollapsibleTrigger)`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -115,10 +130,41 @@ const CollapsibleTrigger = styled(CollapsiblePrimitive.Trigger)`
   }
 `;
 
-const CollapsibleContent = styled(CollapsiblePrimitive.Content)`
-  padding: 1rem;
+const StyledCollapsibleContent = styled(CollapsibleContent)`
   background-color: #2f3a3b;
   border-radius: 4px;
+  overflow: hidden;
+
+  /* Animation for smooth opening/closing */
+  &[data-state='open'] {
+    animation: slideDown 0.3s ease-out forwards;
+  }
+
+  &[data-state='closed'] {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      height: 0;
+      opacity: 0;
+    }
+    to {
+      height: var(--radix-collapsible-content-height);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      height: var(--radix-collapsible-content-height);
+      opacity: 1;
+    }
+    to {
+      height: 0;
+      opacity: 0;
+    }
+  }
 `;
 
 const FormGroup = styled.div`
@@ -126,14 +172,14 @@ const FormGroup = styled.div`
   text-align: left;
 `;
 
-const Label = styled.label`
+const StyledLabel = styled(Label)`
   display: block;
   font-size: 1rem;
   margin-bottom: 0.5rem;
   color: #ffffff;
 `;
 
-const Input = styled.input`
+const StyledInput = styled(Input)`
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #555;
@@ -148,7 +194,7 @@ const Input = styled.input`
   }
 `;
 
-const Select = styled.select`
+const StyledSelect = styled.select`
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #555;
@@ -159,7 +205,7 @@ const Select = styled.select`
   box-sizing: border-box;
 `;
 
-const Button = styled.button`
+const StyledButton = styled(Button)`
   background-color: #8b0000;
   color: #ffffff;
   padding: 0.75rem 1.5rem;
@@ -176,7 +222,7 @@ const Button = styled.button`
   }
 `;
 
-const DeleteButton = styled(Button)`
+const StyledDeleteButton = styled(Button)`
   background-color: #ff4040;
 
   &:hover {
@@ -466,216 +512,220 @@ const UserForm: React.FC = () => {
     <>
       <GlobalStyle />
       <PageContainer>
-        <FormContainer>
-          <Logo>
-            Renato <span>Frutuoso</span>
-            <div style={{ fontSize: '0.8rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
-              Consultoria Esportiva Online
-            </div>
-          </Logo>
-          <Title>{id ? 'Editar Usuário' : 'Novo Usuário'}</Title>
-          <form onSubmit={handleSubmit}>
-            {/* User Information Section */}
-            <Collapsible open={openSections.user} onOpenChange={() => toggleSection('user')}>
-              <CollapsibleTrigger>
-                <span>Dados do Usuário</span>
-                {openSections.user ? <ChevronUp /> : <ChevronDown />}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <FormGroup>
-                  <Label>Nome</Label>
-                  <Input
-                    type="text"
-                    name="name"
-                    placeholder="Nome"
-                    value={formData.name}
-                    onChange={(e) => handleChange(e, 'user', 0)}
-                    required
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={(e) => handleChange(e, 'user', 0)}
-                    required
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Senha</Label>
-                  <Input
-                    type="password"
-                    name="password"
-                    placeholder="Senha"
-                    value={formData.password}
-                    onChange={(e) => handleChange(e, 'user', 0)}
-                    required={!id}
-                  />
-                </FormGroup>
-                <FormGroup>
-                  <Label>Função</Label>
-                  <Select name="role" value={formData.role} onChange={(e) => handleChange(e, 'user', 0)}>
-                    <option value="master">Master</option>
-                    <option value="regular">Regular</option>
-                  </Select>
-                </FormGroup>
-              </CollapsibleContent>
-            </Collapsible>
+        <StyledCard>
+          <StyledCardHeader>
+            <Logo>
+              Renato <span>Frutuoso</span>
+              <div style={{ fontSize: '0.8rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+                Consultoria Esportiva Online
+              </div>
+            </Logo>
+            <StyledCardTitle>{id ? 'Editar Usuário' : 'Novo Usuário'}</StyledCardTitle>
+          </StyledCardHeader>
+          <StyledCardContent>
+            <form onSubmit={handleSubmit}>
+              {/* User Information Section */}
+              <StyledCollapsible open={openSections.user} onOpenChange={() => toggleSection('user')}>
+                <StyledCollapsibleTrigger>
+                  <span>Dados do Usuário</span>
+                  {openSections.user ? <ChevronUp /> : <ChevronDown />}
+                </StyledCollapsibleTrigger>
+                <StyledCollapsibleContent>
+                  <FormGroup>
+                    <StyledLabel>Nome</StyledLabel>
+                    <StyledInput
+                      type="text"
+                      name="name"
+                      placeholder="Nome"
+                      value={formData.name}
+                      onChange={(e) => handleChange(e, 'user', 0)}
+                      required
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <StyledLabel>Email</StyledLabel>
+                    <StyledInput
+                      type="email"
+                      name="email"
+                      placeholder="Email"
+                      value={formData.email}
+                      onChange={(e) => handleChange(e, 'user', 0)}
+                      required
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <StyledLabel>Senha</StyledLabel>
+                    <StyledInput
+                      type="password"
+                      name="password"
+                      placeholder="Senha"
+                      value={formData.password}
+                      onChange={(e) => handleChange(e, 'user', 0)}
+                      required={!id}
+                    />
+                  </FormGroup>
+                  <FormGroup>
+                    <StyledLabel>Função</StyledLabel>
+                    <StyledSelect name="role" value={formData.role} onChange={(e) => handleChange(e, 'user', 0)}>
+                      <option value="master">Master</option>
+                      <option value="regular">Regular</option>
+                    </StyledSelect>
+                  </FormGroup>
+                </StyledCollapsibleContent>
+              </StyledCollapsible>
 
-            {/* Trainings Section */}
-            <Collapsible open={openSections.trainings} onOpenChange={() => toggleSection('trainings')}>
-              <CollapsibleTrigger>
-                <span>Treinos do Usuário</span>
-                {openSections.trainings ? <ChevronUp /> : <ChevronDown />}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                {formData.trainings.map((training: Training, index: number) => (
-                  !training._destroy && (
-                    <EntryCard key={index}>
-                      <FormGroup>
-                        <Label>Nome do Exercício</Label>
-                        <Input
-                          type="text"
-                          name="exercise_name"
-                          placeholder="Nome do Exercício"
-                          value={training.exercise_name}
-                          onChange={(e) => handleChange(e, 'trainings', index)}
-                          required
-                        />
-                      </FormGroup>
-                      <FormGroup>
-                        <Label>Quantidade de Séries</Label>
-                        <Input
-                          type="number"
-                          name="serie_amount"
-                          placeholder="Quantidade de Séries"
-                          value={training.serie_amount}
-                          onChange={(e) => handleChange(e, 'trainings', index)}
-                          required
-                        />
-                      </FormGroup>
-                      <FormGroup>
-                        <Label>Quantidade de Repetições</Label>
-                        <Input
-                          type="number"
-                          name="repeat_amount"
-                          placeholder="Quantidade de Repetições"
-                          value={training.repeat_amount}
-                          onChange={(e) => handleChange(e, 'trainings', index)}
-                          required
-                        />
-                      </FormGroup>
-                      <FormGroup>
-                        <Label>URL do Vídeo (opcional)</Label>
-                        <Input
-                          type="text"
-                          name="video"
-                          placeholder="URL do Vídeo (opcional)"
-                          value={training.video}
-                          onChange={(e) => handleChange(e, 'trainings', index)}
-                        />
-                      </FormGroup>
-                      <Button type="button" onClick={() => removeTraining(index)}>
-                        Remover Treino
-                      </Button>
-                    </EntryCard>
-                  )
-                ))}
-                <Button type="button" onClick={addTraining}>
-                  Adicionar Treino
-                </Button>
-              </CollapsibleContent>
-            </Collapsible>
+              {/* Trainings Section */}
+              <StyledCollapsible open={openSections.trainings} onOpenChange={() => toggleSection('trainings')}>
+                <StyledCollapsibleTrigger>
+                  <span>Treinos do Usuário</span>
+                  {openSections.trainings ? <ChevronUp /> : <ChevronDown />}
+                </StyledCollapsibleTrigger>
+                <StyledCollapsibleContent>
+                  {formData.trainings.map((training: Training, index: number) => (
+                    !training._destroy && (
+                      <EntryCard key={index}>
+                        <FormGroup>
+                          <StyledLabel>Nome do Exercício</StyledLabel>
+                          <StyledInput
+                            type="text"
+                            name="exercise_name"
+                            placeholder="Nome do Exercício"
+                            value={training.exercise_name}
+                            onChange={(e) => handleChange(e, 'trainings', index)}
+                            required
+                          />
+                        </FormGroup>
+                        <FormGroup>
+                          <StyledLabel>Quantidade de Séries</StyledLabel>
+                          <StyledInput
+                            type="number"
+                            name="serie_amount"
+                            placeholder="Quantidade de Séries"
+                            value={training.serie_amount}
+                            onChange={(e) => handleChange(e, 'trainings', index)}
+                            required
+                          />
+                        </FormGroup>
+                        <FormGroup>
+                          <StyledLabel>Quantidade de Repetições</StyledLabel>
+                          <StyledInput
+                            type="number"
+                            name="repeat_amount"
+                            placeholder="Quantidade de Repetições"
+                            value={training.repeat_amount}
+                            onChange={(e) => handleChange(e, 'trainings', index)}
+                            required
+                          />
+                        </FormGroup>
+                        <FormGroup>
+                          <StyledLabel>URL do Vídeo (opcional)</StyledLabel>
+                          <StyledInput
+                            type="text"
+                            name="video"
+                            placeholder="URL do Vídeo (opcional)"
+                            value={training.video}
+                            onChange={(e) => handleChange(e, 'trainings', index)}
+                          />
+                        </FormGroup>
+                        <StyledButton type="button" onClick={() => removeTraining(index)}>
+                          Remover Treino
+                        </StyledButton>
+                      </EntryCard>
+                    )
+                  ))}
+                  <StyledButton type="button" onClick={addTraining}>
+                    Adicionar Treino
+                  </StyledButton>
+                </StyledCollapsibleContent>
+              </StyledCollapsible>
 
-            {/* Meals Section */}
-            <Collapsible open={openSections.meals} onOpenChange={() => toggleSection('meals')}>
-              <CollapsibleTrigger>
-                <span>Dieta do Usuário</span>
-                {openSections.meals ? <ChevronUp /> : <ChevronDown />}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                {formData.meals.map((meal: Meal, mealIndex: number) => (
-                  !meal._destroy && (
-                    <EntryCard key={mealIndex}>
-                      <FormGroup>
-                        <Label>Tipo de Refeição</Label>
-                        <Input
-                          type="text"
-                          name="meal_type"
-                          placeholder="Tipo de Refeição (ex.: Café da Manhã)"
-                          value={meal.meal_type}
-                          onChange={(e) => handleChange(e, 'meals', mealIndex)}
-                          required
-                        />
-                      </FormGroup>
-                      {meal.comidas && meal.comidas.length > 0 ? (
-                        meal.comidas.map((comida: Comida, comidaIndex: number) => (
-                          !comida._destroy && (
-                            <NestedEntryCard key={comidaIndex}>
-                              <FormGroup>
-                                <Label>Nome da Comida</Label>
-                                <Input
-                                  type="text"
-                                  name="name"
-                                  placeholder="Nome da Comida"
-                                  value={comida.name ?? ''}
-                                  onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
-                                  required
-                                />
-                              </FormGroup>
-                              <FormGroup>
-                                <Label>Quantidade</Label>
-                                <Input
-                                  type="text"
-                                  name="amount"
-                                  placeholder="Quantidade (ex.: 100g)"
-                                  value={comida.amount ?? ''}
-                                  onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
-                                  required
-                                />
-                              </FormGroup>
-                              <Button type="button" onClick={() => removeComida(mealIndex, comidaIndex)}>
-                                Remover Comida
-                              </Button>
-                            </NestedEntryCard>
-                          )
-                        ))
-                      ) : (
-                        <p>Nenhuma comida cadastrada.</p>
-                      )}
-                      <Button type="button" onClick={() => addComida(mealIndex)}>
-                        Adicionar Comida
-                      </Button>
-                      <Button type="button" onClick={() => removeMeal(mealIndex)}>
-                        Remover Refeição
-                      </Button>
-                    </EntryCard>
-                  )
-                ))}
-                <Button type="button" onClick={addMeal}>
-                  Adicionar Refeição
-                </Button>
-              </CollapsibleContent>
-            </Collapsible>
+              {/* Meals Section */}
+              <StyledCollapsible open={openSections.meals} onOpenChange={() => toggleSection('meals')}>
+                <StyledCollapsibleTrigger>
+                  <span>Dieta do Usuário</span>
+                  {openSections.meals ? <ChevronUp /> : <ChevronDown />}
+                </StyledCollapsibleTrigger>
+                <StyledCollapsibleContent>
+                  {formData.meals.map((meal: Meal, mealIndex: number) => (
+                    !meal._destroy && (
+                      <EntryCard key={mealIndex}>
+                        <FormGroup>
+                          <StyledLabel>Tipo de Refeição</StyledLabel>
+                          <StyledInput
+                            type="text"
+                            name="meal_type"
+                            placeholder="Tipo de Refeição (ex.: Café da Manhã)"
+                            value={meal.meal_type}
+                            onChange={(e) => handleChange(e, 'meals', mealIndex)}
+                            required
+                          />
+                        </FormGroup>
+                        {meal.comidas && meal.comidas.length > 0 ? (
+                          meal.comidas.map((comida: Comida, comidaIndex: number) => (
+                            !comida._destroy && (
+                              <NestedEntryCard key={comidaIndex}>
+                                <FormGroup>
+                                  <StyledLabel>Nome da Comida</StyledLabel>
+                                  <StyledInput
+                                    type="text"
+                                    name="name"
+                                    placeholder="Nome da Comida"
+                                    value={comida.name ?? ''}
+                                    onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
+                                    required
+                                  />
+                                </FormGroup>
+                                <FormGroup>
+                                  <StyledLabel>Quantidade</StyledLabel>
+                                  <StyledInput
+                                    type="text"
+                                    name="amount"
+                                    placeholder="Quantidade (ex.: 100g)"
+                                    value={comida.amount ?? ''}
+                                    onChange={(e) => handleChange(e, 'meals', mealIndex, 'comidas', comidaIndex)}
+                                    required
+                                  />
+                                </FormGroup>
+                                <StyledButton type="button" onClick={() => removeComida(mealIndex, comidaIndex)}>
+                                  Remover Comida
+                                </StyledButton>
+                              </NestedEntryCard>
+                            )
+                          ))
+                        ) : (
+                          <p>Nenhuma comida cadastrada.</p>
+                        )}
+                        <StyledButton type="button" onClick={() => addComida(mealIndex)}>
+                          Adicionar Comida
+                        </StyledButton>
+                        <StyledButton type="button" onClick={() => removeMeal(mealIndex)}>
+                          Remover Refeição
+                        </StyledButton>
+                      </EntryCard>
+                    )
+                  ))}
+                  <StyledButton type="button" onClick={addMeal}>
+                    Adicionar Refeição
+                  </StyledButton>
+                </StyledCollapsibleContent>
+              </StyledCollapsible>
 
-            {/* Form Submission Buttons */}
-            <ButtonGroup>
-              <Button type="submit">{id ? 'Atualizar' : 'Criar'}</Button>
-              {id && (
-                <DeleteButton type="button" onClick={handleDelete}>
-                  Excluir
-                </DeleteButton>
-              )}
-              <Button type="button" onClick={() => navigate('/dashboard')}>
-                Cancelar
-              </Button>
-            </ButtonGroup>
-          </form>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-        </FormContainer>
+              {/* Form Submission Buttons */}
+              <ButtonGroup>
+                <StyledButton type="submit">{id ? 'Atualizar' : 'Criar'}</StyledButton>
+                {id && (
+                  <StyledDeleteButton type="button" onClick={handleDelete}>
+                    Excluir
+                  </StyledDeleteButton>
+                )}
+                <StyledButton type="button" onClick={() => navigate('/dashboard')}>
+                  Cancelar
+                </StyledButton>
+              </ButtonGroup>
+            </form>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+          </StyledCardContent>
+        </StyledCard>
       </PageContainer>
     </>
   );
