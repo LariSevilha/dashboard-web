@@ -2,9 +2,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components'; 
+import styled, { createGlobalStyle } from 'styled-components';
 
-// Definir tipos para os dados
+// Define interfaces
 interface User {
   id: number;
   name: string;
@@ -34,23 +34,69 @@ interface Comida {
   amount: string;
 }
 
+// Global styles to reset default margins and padding
+const GlobalStyle = createGlobalStyle`
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    font-family: 'Montserrat', sans-serif;
+  }
+`;
+
+// Styled Components
+const PageContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(to bottom, #2f3a3b 50%, #8b0000 100%);
+  padding: 1rem;
+  box-sizing: border-box;
+`;
+
 const DashboardContainer = styled.div`
   width: 100%;
   max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
+  background-color: #2f3a3b;
+  border-radius: 8px;
   text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: #ffffff;
 `;
 
-const Title = styled.h1`
+const Logo = styled.div`
+  margin-bottom: 1.5rem;
+  color: #ffffff;
   font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  span {
+    color: #ff0000;
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+`;
+
+const WelcomeMessage = styled.p`
+  font-size: 1.1rem;
   margin-bottom: 2rem;
+  color: #ffffff;
 `;
 
 const EditText = styled.span`
   cursor: pointer;
-  color: #ffffff;
+  color: #ff0000;
   font-weight: bold;
 
   &:hover {
@@ -81,8 +127,9 @@ const Section = styled.div`
 `;
 
 const SubTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   margin-bottom: 1rem;
+  color: #ffffff;
 `;
 
 const UserList = styled.ul`
@@ -95,7 +142,7 @@ const UserItem = styled.li`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #2f3a3b;
+  background-color: #3a4647;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 8px;
@@ -103,8 +150,8 @@ const UserItem = styled.li`
 
 const UserName = styled.span`
   font-size: 1.1rem;
+  color: #ffffff;
 `;
- 
 
 const List = styled.ul`
   list-style: none;
@@ -112,10 +159,11 @@ const List = styled.ul`
 `;
 
 const ListItem = styled.li`
-  background-color: #2f3a3b;
+  background-color: #3a4647;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
   border-radius: 8px;
+  color: #ffffff;
 `;
 
 const ErrorMessage = styled.p`
@@ -207,38 +255,49 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <DashboardContainer>
-      <Title>Dashboard</Title>
-      {userData && (
-        <>
-          <p>Bem-vindo, {userData.email}</p>
-          
-          {userData.role === 'master' && (
+    <>
+      <GlobalStyle />
+      <PageContainer>
+        <DashboardContainer>
+          <Logo>
+            Renato <span>Frutuoso</span>
+            <div style={{ fontSize: '0.8rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
+              Consultoria Esportiva Online
+            </div>
+          </Logo>
+          <Title>Dashboard</Title>
+          {userData && (
             <>
-              <Section>
-                <SubTitle>Usuários</SubTitle>
-                {users.length > 0 ? (
-                  <UserList>
-                  {users.map((user: any) => (
-                    <UserItem key={user.id}>
-                      <UserName>{user.name}</UserName>
-                      <EditText onClick={() => navigate(`/user/${user.id}`)}>Editar</EditText>
-                    </UserItem>
-                  ))}
-                </UserList>
-                ) : (
-                  <p>Nenhum usuário cadastrado.</p>
-                )}
-              </Section>
-              <Button onClick={() => navigate('/user/new')}>Adicionar Usuário</Button>
-              <Button onClick={() => navigate('/users')}>Ver Detalhes dos Usuários</Button>
+              <WelcomeMessage>Bem-vindo, {userData.email}</WelcomeMessage>
+
+              {userData.role === 'master' && (
+                <>
+                  <Section>
+                    <SubTitle>Usuários</SubTitle>
+                    {users.length > 0 ? (
+                      <UserList>
+                        {users.map((user: User) => (
+                          <UserItem key={user.id}>
+                            <UserName>{user.name}</UserName>
+                            <EditText onClick={() => navigate(`/user/${user.id}`)}>Editar</EditText>
+                          </UserItem>
+                        ))}
+                      </UserList>
+                    ) : (
+                      <p>Nenhum usuário cadastrado.</p>
+                    )}
+                  </Section>
+                  <Button onClick={() => navigate('/user/new')}>Adicionar Usuário</Button>
+                  <Button onClick={() => navigate('/users')}>Ver Detalhes dos Usuários</Button>
+                </>
+              )}
+              <Button onClick={handleLogout}>Sair</Button>
             </>
           )}
-          <Button onClick={handleLogout}>Sair</Button>
-        </>
-      )}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-    </DashboardContainer>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+        </DashboardContainer>
+      </PageContainer>
+    </>
   );
 };
 
