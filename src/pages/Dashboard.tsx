@@ -82,12 +82,6 @@ const Logo = styled.div`
   }
 `;
 
-const Title = styled.h1`
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #ffffff;
-`;
-
 const WelcomeMessage = styled.p`
   font-size: 1.1rem;
   margin-bottom: 2rem;
@@ -132,6 +126,34 @@ const SubTitle = styled.h2`
   color: #ffffff;
 `;
 
+const SearchContainer = styled.div`
+  margin-bottom: 1.5rem;
+  text-align: left;
+`;
+
+const SearchLabel = styled.label`
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #ffffff;
+  color: #000000;
+  box-sizing: border-box;
+  
+
+  &::placeholder {
+    color: #aaaaaa;
+  }
+`;
+
 const UserList = styled.ul`
   list-style: none;
   padding: 0;
@@ -153,19 +175,6 @@ const UserName = styled.span`
   color: #ffffff;
 `;
 
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-`;
-
-const ListItem = styled.li`
-  background-color: #3a4647;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  color: #ffffff;
-`;
-
 const ErrorMessage = styled.p`
   color: #ff4040;
   margin-top: 1rem;
@@ -175,6 +184,8 @@ const ErrorMessage = styled.p`
 const Dashboard: React.FC = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);  
+  const [searchQuery, setSearchQuery] = useState<string>('');  
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const navigate = useNavigate();
@@ -208,6 +219,7 @@ const Dashboard: React.FC = () => {
           },
         });
         setUsers(usersResponse.data);
+        setFilteredUsers(usersResponse.data);  
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Erro ao carregar o dashboard';
@@ -221,6 +233,20 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData, refresh]);
+ 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    if (query.trim() === '') {
+      setFilteredUsers(users); 
+    } else {
+      const filtered = users.filter((user) =>
+        user.name.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredUsers(filtered);
+    }
+  };
 
   const handleLogout = async () => {
     const apiKey = localStorage.getItem('apiKey');
@@ -265,18 +291,27 @@ const Dashboard: React.FC = () => {
               Consultoria Esportiva Online
             </div>
           </Logo>
-          <Title>Dashboard</Title>
           {userData && (
             <>
-              <WelcomeMessage>Bem-vindo, {userData.email}</WelcomeMessage>
+              <WelcomeMessage>Bem-vindo, {userData.name}</WelcomeMessage>
 
               {userData.role === 'master' && (
                 <>
                   <Section>
                     <SubTitle>Usuários</SubTitle>
-                    {users.length > 0 ? (
+                    {/* Search Filter */}
+                    <SearchContainer>
+                      <SearchLabel>Pesquisar Usuários</SearchLabel>
+                      <SearchInput
+                        type="text"
+                        placeholder="Digite o nome do usuário..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                      />
+                    </SearchContainer>
+                    {filteredUsers.length > 0 ? (
                       <UserList>
-                        {users.map((user: User) => (
+                        {filteredUsers.map((user: User) => (
                           <UserItem key={user.id}>
                             <UserName>{user.name}</UserName>
                             <EditText onClick={() => navigate(`/user/${user.id}`)}>Editar</EditText>
@@ -284,7 +319,7 @@ const Dashboard: React.FC = () => {
                         ))}
                       </UserList>
                     ) : (
-                      <p>Nenhum usuário cadastrado.</p>
+                      <p>Nenhum usuário encontrado.</p>
                     )}
                   </Section>
                   <Button onClick={() => navigate('/user/new')}>Adicionar Usuário</Button>

@@ -156,6 +156,8 @@ const Login: React.FC = () => {
       <GlobalStyle />
       <PageContainer>
         <LoginContainer>
+        <img src="/img/logo.png" alt="Renato Frutuoso Logo" style={{ width: '100%', maxWidth: '200px' }} />
+
           <Logo>
             Renato <span>Frutuoso</span>
             <div style={{ fontSize: '0.8rem', fontWeight: 'normal', marginTop: '0.5rem' }}>
