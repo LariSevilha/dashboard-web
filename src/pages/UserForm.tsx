@@ -3,204 +3,184 @@ import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-// Cores do tema
-const theme = {
-  primary: '#3a7bd5',
-  primaryHover: '#2d62b0',
-  secondary: '#00d4ff',
-  dark: '#1a2a36',
-  darker: '#111a22',
-  light: '#f5f7fa',
-  gray: '#8a97a8',
-  lightGray: '#e0e6ed',
-  danger: '#e74c3c',
-  dangerHover: '#c0392b',
-  success: '#2ecc71',
-  warning: '#f39c12',
-  cardBg: '#1e2f3f',
-  inputBg: '#162330',
-  border: '#2c3e50',
-};
-
 const FormContainer = styled.div`
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 2rem auto;
   padding: 2rem;
-  text-align: left;
-  color: ${theme.light};
+  background: linear-gradient(145deg, #1e2a2b, #2f3a3b);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
   font-family: 'Segoe UI', 'Roboto', sans-serif;
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: ${theme.light};
+  text-align: center;
+  letter-spacing: 1.5px;
+  color: #e0e0e0;
   position: relative;
   padding-bottom: 12px;
-  
+
   &:after {
     content: '';
     position: absolute;
     bottom: 0;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%);
     width: 80px;
     height: 4px;
-    background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary});
+    background: linear-gradient(90deg, #8b0000, #a00000);
     border-radius: 2px;
   }
 `;
 
 const Form = styled.form`
-  background-color: ${theme.cardBg};
   padding: 2rem;
   border-radius: 12px;
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 16px;
-  margin-bottom: 1.2rem;
-  background-color: ${theme.inputBg};
-  border: 1px solid ${theme.border};
-  border-radius: 8px;
-  color: ${theme.light};
-  font-size: 1rem;
+  padding: 8px 12px;
+  margin-bottom: 1rem;
+  background-color: #1c2526;
+  border: 1px solid #4a5859;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: ${theme.primary};
-    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.2);
+    border-color: #8b0000;
+    box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
   }
 
   &::placeholder {
-    color: ${theme.gray};
+    color: #b0b0b0;
   }
 `;
 
 const Textarea = styled.textarea`
   width: 100%;
-  padding: 12px 16px;
-  margin-bottom: 1.2rem;
-  background-color: ${theme.inputBg};
-  border: 1px solid ${theme.border};
-  border-radius: 8px;
-  color: ${theme.light};
-  font-size: 1rem;
+  padding: 8px 12px;
+  margin-bottom: 1rem;
+  background-color: #1c2526;
+  border: 1px solid #4a5859;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
   transition: all 0.3s ease;
 
   &:focus {
     outline: none;
-    border-color: ${theme.primary};
-    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.2);
+    border-color: #8b0000;
+    box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
   }
 
   &::placeholder {
-    color: ${theme.gray};
+    color: #b0b0b0;
   }
 `;
 
 const Button = styled.button`
   width: 100%;
-  background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary});
+  background: linear-gradient(145deg, #8b0000, #a00000);
   color: #ffffff;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 1rem;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 8px rgba(139, 0, 0, 0.2);
 
   &:hover {
-    background: linear-gradient(90deg, ${theme.primaryHover}, ${theme.secondary});
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(145deg, #a00000, #b00000);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 12px rgba(139, 0, 0, 0.3);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(139, 0, 0, 0.2);
   }
 `;
 
 const SecondaryButton = styled(Button)`
-  background: ${theme.dark};
-  border: 1px solid ${theme.gray};
-  color: ${theme.light};
-  
+  background: linear-gradient(145deg, #2f3a3b, #3a4647);
+  color: #ffffff;
+
   &:hover {
-    background: ${theme.darker};
-    border-color: ${theme.lightGray};
+    background: linear-gradient(145deg, #3a4647, #4a5859);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
   }
 `;
 
 const DangerButton = styled(Button)`
-  background: ${theme.danger};
-  
+  background: linear-gradient(145deg, #ff4040, #e63939);
+
   &:hover {
-    background: ${theme.dangerHover};
+    background: linear-gradient(145deg, #e63939, #cc3333);
+    box-shadow: 0 5px 12px rgba(255, 64, 64, 0.3);
   }
 `;
 
 const AddButton = styled(Button)`
-  background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary});
+  background: linear-gradient(145deg, #8b0000, #a00000);
   opacity: 0.9;
-  margin-top: 10px;
-  
+  margin-top: 8px;
+
   &:hover {
     opacity: 1;
-    background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary});
+    background: linear-gradient(145deg, #a00000, #b00000);
   }
 `;
 
 const RemoveButton = styled.button`
-  background-color: ${theme.danger};
-  color: white;
-  padding: 8px 12px;
+  background: linear-gradient(145deg, #ff4040, #e63939);
+  color: #ffffff;
+  padding: 6px 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
-  margin-top: 10px;
-  font-size: 0.85rem;
+  margin-top: 8px;
+  font-size: 0.8rem;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
-    background-color: ${theme.dangerHover};
+    background: linear-gradient(145deg, #e63939, #cc3333);
     transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 64, 64, 0.3);
   }
 
   &:before {
     content: '×';
-    margin-right: 5px;
-    font-size: 1.2rem;
+    margin-right: 4px;
+    font-size: 1rem;
     line-height: 0;
   }
 `;
 
 const SectionTitle = styled.h3`
-  color: ${theme.light};
+  color: #ffffff;
   margin: 1.5rem 0 1rem 0;
   padding-bottom: 8px;
-  border-bottom: 2px solid ${theme.border};
+  border-bottom: 2px solid #4a5859;
   font-size: 1.2rem;
   font-weight: 600;
   position: relative;
-  
+
   &:after {
     content: '';
     position: absolute;
@@ -208,62 +188,63 @@ const SectionTitle = styled.h3`
     left: 0;
     width: 60px;
     height: 2px;
-    background: linear-gradient(90deg, ${theme.primary}, ${theme.secondary});
+    background: linear-gradient(145deg, #8b0000, #a00000);
   }
 `;
 
 const ItemContainer = styled.div`
-  background-color: ${theme.dark};
+  background: linear-gradient(145deg, #2f3a3b, #3a4647);
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 12px;
   margin-bottom: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
 
 const SubItemContainer = styled.div`
-  background-color: ${theme.darker};
+  background: #1c2526;
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-bottom: 1rem;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  
+  border-left: 4px solid #8b0000;
+
   &:hover {
-    box-shadow: 0 0 0 1px ${theme.border};
+    box-shadow: 0 0 0 1px #4a5859;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: ${theme.danger};
-  background-color: rgba(231, 76, 60, 0.1);
+  color: #ff4040;
+  background: #2f3a3b;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-top: 1rem;
   font-size: 0.9rem;
-  border-left: 4px solid ${theme.danger};
+  border-left: 4px solid #ff4040;
+  text-align: center;
 `;
 
 const LoadingIndicator = styled.div`
-  color: ${theme.light};
+  color: #ffffff;
   font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   height: 200px;
-  
+
   &:before {
     content: '';
     display: inline-block;
     width: 20px;
     height: 20px;
     margin-right: 10px;
-    border: 3px solid ${theme.light};
+    border: 3px solid #ffffff;
     border-radius: 50%;
-    border-top-color: ${theme.primary};
+    border-top-color: #8b0000;
     animation: spin 1s linear infinite;
   }
-  
+
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -273,27 +254,89 @@ const LoadingIndicator = styled.div`
 
 const InputGroup = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   width: 100%;
-  
+
+  & > ${Input}, & > ${Textarea} {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 150px;
+  }
+
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 0;
+
+    & > ${Input}, & > ${Textarea} {
+      flex: 1 1 100%;
+    }
   }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 20px;
-  
+  justify-content: flex-end;
+
   & > button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 120px;
     margin-bottom: 0;
   }
-  
+
+  & > button:only-child {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 120px;
+  }
+
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 12px;
+
+    & > button {
+      flex: 1 1 100%;
+    }
+
+    & > button:only-child {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+  }
+`;
+
+const ActionButtonGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: flex-end;
+
+  & > button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 100px;
+  }
+
+  & > button:only-child {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 100px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+
+    & > button {
+      flex: 1 1 100%;
+    }
+
+    & > button:only-child {
+      flex: 1 1 100%;
+      width: 100%;
+    }
   }
 `;
 
@@ -334,7 +377,6 @@ const UserForm: React.FC = () => {
           console.log("User data loaded:", response.data);
           const user = response.data;
           
-          // Map the API data to our form structure
           setFormData({
             id: user.id,
             name: user.name || '',
@@ -422,12 +464,10 @@ const UserForm: React.FC = () => {
   const removeTraining = (index: number) => {
     const newTrainings = [...formData.trainings_attributes];
     
-    // If it has an ID, mark for destruction instead of removing
     if (newTrainings[index].id) {
       newTrainings[index] = { ...newTrainings[index], _destroy: true };
       setFormData({ ...formData, trainings_attributes: newTrainings });
     } else {
-      // Otherwise remove it from the array
       newTrainings.splice(index, 1);
       setFormData({ ...formData, trainings_attributes: newTrainings });
     }
@@ -451,12 +491,10 @@ const UserForm: React.FC = () => {
   const removeMeal = (index: number) => {
     const newMeals = [...formData.meals_attributes];
     
-    // If it has an ID, mark for destruction instead of removing
     if (newMeals[index].id) {
       newMeals[index] = { ...newMeals[index], _destroy: true };
       setFormData({ ...formData, meals_attributes: newMeals });
     } else {
-      // Otherwise remove it from the array
       newMeals.splice(index, 1);
       setFormData({ ...formData, meals_attributes: newMeals });
     }
@@ -472,11 +510,9 @@ const UserForm: React.FC = () => {
     const newMeals = [...formData.meals_attributes];
     const comida = newMeals[mealIndex].comidas_attributes[comidaIndex];
     
-    // If it has an ID, mark for destruction instead of removing
     if (comida.id) {
       newMeals[mealIndex].comidas_attributes[comidaIndex] = { ...comida, _destroy: true };
     } else {
-      // Otherwise remove it from the array
       newMeals[mealIndex].comidas_attributes.splice(comidaIndex, 1);
     }
     
@@ -491,7 +527,6 @@ const UserForm: React.FC = () => {
       return;
     }
 
-    // Prepare payload - make sure to format it properly for the API
     const payload = {
       user: {
         name: formData.name,
@@ -540,29 +575,31 @@ const UserForm: React.FC = () => {
       <Title>{formData.id ? 'Editar Usuário' : 'Novo Usuário'}</Title>
       <Form onSubmit={handleSubmit}>
         <SectionTitle>Informações Básicas</SectionTitle>
-        <Input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Nome do Usuário"
-          required
-        />
-        <Input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          placeholder="Email do Usuário"
-          required
-        />
-        <Input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleInputChange}
-          placeholder="Senha (deixe em branco para não alterar)"
-        />
+        <InputGroup>
+          <Input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder="Nome do Usuário"
+            required
+          />
+          <Input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="Email do Usuário"
+            required
+          />
+          <Input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Senha (deixe em branco para não alterar)"
+          />
+        </InputGroup>
 
         <SectionTitle>Treinos</SectionTitle>
         {formData.trainings_attributes.map((training, index) => (
@@ -573,47 +610,53 @@ const UserForm: React.FC = () => {
                   type="number"
                   value={training.serie_amount}
                   onChange={(e) => handleTrainingChange(index, 'serie_amount', e.target.value)}
-                  placeholder={`Quantidade de Séries`}
+                  placeholder="Quantidade de Séries"
                 />
                 <Input
                   type="number"
                   value={training.repeat_amount}
                   onChange={(e) => handleTrainingChange(index, 'repeat_amount', e.target.value)}
-                  placeholder={`Quantidade de Repetições`}
+                  placeholder="Quantidade de Repetições"
+                />
+                <Input
+                  type="text"
+                  value={training.exercise_name}
+                  onChange={(e) => handleTrainingChange(index, 'exercise_name', e.target.value)}
+                  placeholder="Nome do Exercício"
+                />
+                <Input
+                  type="text"
+                  value={training.video}
+                  onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
+                  placeholder="Link do Vídeo (opcional)"
                 />
               </InputGroup>
-              <Input
-                type="text"
-                value={training.exercise_name}
-                onChange={(e) => handleTrainingChange(index, 'exercise_name', e.target.value)}
-                placeholder={`Nome do Exercício`}
-              />
-              <Input
-                type="text"
-                value={training.video}
-                onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
-                placeholder={`Link do Vídeo (opcional)`}
-              />
-              <RemoveButton type="button" onClick={() => removeTraining(index)}>
-                Remover Treino
-              </RemoveButton>
+              <ActionButtonGroup>
+                <RemoveButton type="button" onClick={() => removeTraining(index)}>
+                  Remover Treino
+                </RemoveButton>
+              </ActionButtonGroup>
             </ItemContainer>
           )
         ))}
-        <AddButton type="button" onClick={addTraining}>
-          Adicionar Treino
-        </AddButton>
+        <ActionButtonGroup>
+          <AddButton type="button" onClick={addTraining}>
+            Adicionar Treino
+          </AddButton>
+        </ActionButtonGroup>
 
         <SectionTitle>Dietas</SectionTitle>
         {formData.meals_attributes.map((meal, mealIndex) => (
           !meal._destroy && (
             <ItemContainer key={meal.id || `new-meal-${mealIndex}`}>
-              <Input
-                type="text"
-                value={meal.meal_type}
-                onChange={(e) => handleMealChange(mealIndex, 'meal_type', e.target.value)}
-                placeholder={`Tipo de Refeição (ex.: Café da Manhã)`}
-              />
+              <InputGroup>
+                <Input
+                  type="text"
+                  value={meal.meal_type}
+                  onChange={(e) => handleMealChange(mealIndex, 'meal_type', e.target.value)}
+                  placeholder="Tipo de Refeição (ex.: Café da Manhã)"
+                />
+              </InputGroup>
               
               <SectionTitle>Comidas</SectionTitle>
               {meal.comidas_attributes.map((comida, comidaIndex) => (
@@ -624,44 +667,48 @@ const UserForm: React.FC = () => {
                         type="text"
                         value={comida.name}
                         onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'name', e.target.value)}
-                        placeholder={`Nome da Comida`}
+                        placeholder="Nome da Comida"
                       />
                       <Input
                         type="text"
                         value={comida.amount}
                         onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)}
-                        placeholder={`Quantidade (ex.: 100g, 2 unidades)`}
+                        placeholder="Quantidade (ex.: 100g, 2 unidades)"
                       />
                     </InputGroup>
-                    <RemoveButton 
-                      type="button" 
-                      onClick={() => removeComida(mealIndex, comidaIndex)}
-                    >
-                      Remover Comida
-                    </RemoveButton>
+                    <ActionButtonGroup>
+                      <RemoveButton 
+                        type="button" 
+                        onClick={() => removeComida(mealIndex, comidaIndex)}
+                      >
+                        Remover Comida
+                      </RemoveButton>
+                    </ActionButtonGroup>
                   </SubItemContainer>
                 )
               ))}
-              <AddButton 
-                type="button" 
-                onClick={() => addComida(mealIndex)}
-                style={{ background: theme.success }}
-              >
-                Adicionar Comida
-              </AddButton>
-              <RemoveButton 
-                type="button" 
-                onClick={() => removeMeal(mealIndex)}
-                style={{ marginTop: "15px" }}
-              >
-                Remover Refeição
-              </RemoveButton>
+              <ActionButtonGroup>
+                <AddButton 
+                  type="button" 
+                  onClick={() => addComida(mealIndex)}
+                >
+                  Adicionar Comida
+                </AddButton>
+                <RemoveButton 
+                  type="button" 
+                  onClick={() => removeMeal(mealIndex)}
+                >
+                  Remover Refeição
+                </RemoveButton>
+              </ActionButtonGroup>
             </ItemContainer>
           )
         ))}
-        <AddButton type="button" onClick={addMeal}>
-          Adicionar Refeição
-        </AddButton>
+        <ActionButtonGroup>
+          <AddButton type="button" onClick={addMeal}>
+            Adicionar Refeição
+          </AddButton>
+        </ActionButtonGroup>
 
         <ButtonGroup>
           <Button type="submit">
