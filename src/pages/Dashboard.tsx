@@ -6,112 +6,228 @@ import styled from 'styled-components';
 const EditIcon = styled.span`
   color: #3498db;
   cursor: pointer;
-  margin: 0 0.5rem;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  &:hover {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
 `;
 
 const DeleteIcon = styled.span`
   color: #ff4040;
   cursor: pointer;
-  margin: 0 0.5rem;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  &:hover {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
 `;
 
 const DashboardContainer = styled.div`
   width: 100%;
-  max-width: 800px;
-  text-align: center;
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: linear-gradient(145deg, #1e2a2b, #2f3a3b);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   color: #ffffff;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  min-height: 80vh;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 250px 1fr;
+  }
+`;
+
+const Sidebar = styled.div`
+  background: linear-gradient(145deg, #2f3a3b, #3a4647);
+  padding: 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+`;
+
+const MainContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: linear-gradient(145deg, #1e2a2b, #2f3a3b);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 `;
 
 const Title = styled.h1`
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  letter-spacing: 1.5px;
+  color: #e0e0e0;
 `;
 
 const Info = styled.p`
   color: #b0b0b0;
   font-size: 1.1rem;
-  margin-bottom: 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-style: italic;
 `;
 
 const Button = styled.button`
   width: 100%;
-  background-color: #8b0000;
+  background: linear-gradient(145deg, #8b0000, #a00000);
   color: #ffffff;
-  padding: 0.75rem;
+  padding: 0.85rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  margin-bottom: 1rem;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(139, 0, 0, 0.2);
 
   &:hover {
-    background-color: #a00000;
+    background: linear-gradient(145deg, #a00000, #b00000);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(139, 0, 0, 0.3);
   }
 `;
 
 const UserList = styled.div`
-  margin-top: 2rem;
+  margin-top: 1rem;
 `;
 
 const UserItem = styled.div`
-  background-color: #2f3a3b;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  text-align: left;
+  background: linear-gradient(145deg, #2f3a3b, #3a4647);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
 `;
 
 const UserHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 1rem;
+  flex-wrap: wrap;
 `;
 
 const UserInfo = styled.div`
   color: #ffffff;
+  font-size: 1.2rem;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  span {
+    color: #b0b0b0;
+    font-size: 1rem;
+    font-weight: 400;
+  }
 `;
 
 const UserActions = styled.div`
   display: flex;
+  gap: 0.5rem;
+
+  a, span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #1c2526;
+    transition: background 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      background: #8b0000;
+      transform: scale(1.1);
+    }
+  }
 `;
 
 const UserDetails = styled.div`
   color: #b0b0b0;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 `;
 
 const SubTitle = styled.h3`
   color: #ffffff;
-  font-size: 1rem;
-  margin: 1rem 0 0.5rem 0;
-  border-bottom: 1px solid #4a5859;
-  padding-bottom: 5px;
+  font-size: 1.1rem;
+  margin: 1rem 0 0.75rem;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #4a5859;
 `;
 
 const DetailItem = styled.div`
   background-color: #1c2526;
-  padding: 0.75rem;
-  border-radius: 5px;
-  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid #8b0000;
 `;
 
 const ComidaItem = styled.div`
   background-color: #253132;
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border-radius: 6px;
   margin: 0.5rem 0 0.5rem 1rem;
+  border-left: 3px solid #4a5859;
 `;
 
 const ErrorMessage = styled.p`
   color: #ff4040;
-  margin-top: 1rem;
-  font-size: 0.9rem;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+  text-align: center;
+  background: #2f3a3b;
+  padding: 0.75rem;
+  border-radius: 8px;
+`;
+
+const SearchBar = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #1c2526;
+  color: #ffffff;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+  &::placeholder {
+    color: #b0b0b0;
+  }
+
+  &:focus {
+    outline: none;
+    border: 2px solid #8b0000;
+  }
 `;
 
 const Dashboard: React.FC = () => {
@@ -119,6 +235,7 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,12 +250,10 @@ const Dashboard: React.FC = () => {
       'Content-Type': 'application/json',
     };
 
-    // First load the current user data
     axios
       .get('http://localhost:3000/api/v1/dashboard', { headers })
       .then((response) => {
         setUser(response.data);
-        // After loading user data, fetch all users
         fetchUsers(headers);
       })
       .catch((err) => {
@@ -178,7 +293,6 @@ const Dashboard: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-      // Refresh user list after delete
       fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' });
     } catch (err) {
       console.error("Delete error:", err);
@@ -193,91 +307,60 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
+  const filteredUsers = users.filter((u) =>
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading && !user) return <p style={{ color: '#ffffff' }}>Carregando...</p>;
 
   return (
     <DashboardContainer>
-      <Title>Dashboard</Title>
-      {user && <Info>Bem-vindo, {user.name || user.email} ({user.role})</Info>}
+      <Sidebar>
+        <Title>Dashboard</Title>
+        {user && <Info>Bem-vindo, {user.name || user.email} ({user.role})</Info>}
+        <Link to="/dashboard/user/new">
+          <Button>Adicionar Usuário</Button>
+        </Link>
+        <Button onClick={handleLogout}>Sair</Button>
+      </Sidebar>
 
-      <Link to="/dashboard/user/new">
-        <Button>Adicionar Usuário</Button>
-      </Link>
+      <MainContent>
+        <SearchBar
+          type="text"
+          placeholder="Buscar por nome ou email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <UserList>
+          <SubTitle>Usuários Cadastrados</SubTitle>
+          {loading ? (
+            <p style={{ color: '#b0b0b0' }}>Carregando usuários...</p>
+          ) : filteredUsers.length === 0 ? (
+            <p style={{ color: '#b0b0b0' }}>Nenhum usuário encontrado.</p>
+          ) : (
+            filteredUsers.map((u) => (
+              <UserItem key={u.id}>
+                <UserHeader>
+                  <UserInfo>
+                    <strong>{u.name}</strong>
+                    <span>({u.email})</span>
+                  </UserInfo>
+                  <UserActions>
+                    <Link to={`/dashboard/user/${u.id}`}>
+                      <EditIcon title="Editar">✏️</EditIcon>
+                    </Link>
+                    <DeleteIcon onClick={() => handleDelete(u.id)} title="Excluir">🗑️</DeleteIcon>
+                  </UserActions>
+                </UserHeader>
 
-      <UserList>
-        <SubTitle>Usuários Cadastrados</SubTitle>
-        {loading ? (
-          <p style={{ color: '#b0b0b0' }}>Carregando usuários...</p>
-        ) : users.length === 0 ? (
-          <p style={{ color: '#b0b0b0' }}>Nenhum usuário cadastrado.</p>
-        ) : (
-          users.map((u) => (
-            <UserItem key={u.id}>
-              <UserHeader>
-                <UserInfo>
-                  <strong>{u.name}</strong> ({u.email})
-                </UserInfo>
-                <UserActions>
-                  <Link to={`/dashboard/user/${u.id}`}>
-                    <EditIcon title="Editar">✏️</EditIcon>
-                  </Link>
-                  <DeleteIcon onClick={() => handleDelete(u.id)} title="Excluir">🗑️</DeleteIcon>
-                </UserActions>
-              </UserHeader>
-              
-              <UserDetails>
-                <SubTitle>Treinos:</SubTitle>
-                {u.trainings && u.trainings.length > 0 ? (
-                  u.trainings.map((t: any) => (
-                    <DetailItem key={t.id || `training-${Math.random()}`}>
-                      <strong>Exercício:</strong> {t.exercise_name || 'N/A'}<br />
-                      <strong>Séries:</strong> {t.serie_amount || 'N/A'} | 
-                      <strong> Repetições:</strong> {t.repeat_amount || 'N/A'}<br />
-                      {t.video && (
-                        <div>
-                          <strong>Vídeo:</strong> <a href={t.video} target="_blank" rel="noopener noreferrer" style={{ color: '#8b0000' }}>{t.video}</a>
-                        </div>
-                      )}
-                    </DetailItem>
-                  ))
-                ) : (
-                  <p>Nenhum treino cadastrado</p>
-                )}
                 
-                <SubTitle>Dietas:</SubTitle>
-                {u.meals && u.meals.length > 0 ? (
-                  u.meals.map((m: any) => (
-                    <DetailItem key={m.id || `meal-${Math.random()}`}>
-                      <strong>Tipo:</strong> {m.meal_type || 'N/A'}
-                      
-                      {m.comidas && m.comidas.length > 0 ? (
-                        <>
-                          <strong> Comidas:</strong>
-                          {m.comidas.map((c: any) => (
-                            <ComidaItem key={c.id || `comida-${Math.random()}`}>
-                              <strong>{c.name}</strong> - Quantidade: {c.amount || (c.amount_meal && c.amount_meal.amount) || 'N/A'}
-                            </ComidaItem>
-                          ))}
-                        </>
-                      ) : (
-                        <p>Nenhuma comida cadastrada</p>
-                      )}
-                    </DetailItem>
-                  ))
-                ) : (
-                  <p>Nenhuma dieta cadastrada</p>
-                )}
-              </UserDetails>
-            </UserItem>
-          ))
-        )}
-      </UserList>
-
-      <Button onClick={handleLogout}>
-        Sair
-      </Button>
-
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+              </UserItem>
+            ))
+          )}
+        </UserList>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+      </MainContent>
     </DashboardContainer>
   );
 };
