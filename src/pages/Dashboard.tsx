@@ -19,7 +19,7 @@ const DeleteIcon = styled.span`
 
 const DashboardContainer = styled.div`
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   text-align: center;
   color: #ffffff;
 `;
@@ -62,13 +62,22 @@ const UserItem = styled.div`
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 1rem;
+  text-align: left;
+`;
+
+const UserHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 10px;
 `;
 
 const UserInfo = styled.div`
   color: #ffffff;
+`;
+
+const UserActions = styled.div`
+  display: flex;
 `;
 
 const UserDetails = styled.div`
@@ -78,8 +87,25 @@ const UserDetails = styled.div`
 `;
 
 const SubTitle = styled.h3`
-  color: #b0b0b0;
-  margin: 0.5rem 0;
+  color: #ffffff;
+  font-size: 1rem;
+  margin: 1rem 0 0.5rem 0;
+  border-bottom: 1px solid #4a5859;
+  padding-bottom: 5px;
+`;
+
+const DetailItem = styled.div`
+  background-color: #1c2526;
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+`;
+
+const ComidaItem = styled.div`
+  background-color: #253132;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0 0.5rem 1rem;
 `;
 
 const ErrorMessage = styled.p`
@@ -92,6 +118,7 @@ const Dashboard: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -101,51 +128,77 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    const headers = {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    // First load the current user data
     axios
-      .get('http://localhost:3000/api/v1/dashboard', {
-        headers: { 'X-API-Key': apiKey },
+      .get('http://localhost:3000/api/v1/dashboard', { headers })
+      .then((response) => {
+        setUser(response.data);
+        // After loading user data, fetch all users
+        fetchUsers(headers);
       })
-      .then((response) => setUser(response.data.user))
-      .catch(() => {
+      .catch((err) => {
+        console.error("Dashboard load error:", err);
         setError('Erro ao carregar o dashboard');
         localStorage.removeItem('apiKey');
         navigate('/login');
       });
-
-    fetchUsers(apiKey);
   }, [navigate]);
 
-  const fetchUsers = async (apiKey: string) => {
+  const fetchUsers = async (headers: any) => {
     try {
-      const response = await axios.get('http://localhost:3000/api/v1/users', {
-        headers: { 'X-API-Key': apiKey },
-      });
+      setLoading(true);
+      const response = await axios.get('http://localhost:3000/api/v1/users', { headers });
+      console.log("Users loaded:", response.data);
       setUsers(response.data);
+      setLoading(false);
     } catch (err) {
+      console.error("Users fetch error:", err);
       setError('Erro ao carregar usuários');
+      setLoading(false);
     }
   };
 
   const handleDelete = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) {
+      return;
+    }
+
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) return;
 
     try {
       await axios.delete(`http://localhost:3000/api/v1/users/${id}`, {
-        headers: { 'X-API-Key': apiKey },
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
       });
-      fetchUsers(apiKey);
+      // Refresh user list after delete
+      fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' });
     } catch (err) {
+      console.error("Delete error:", err);
       setError('Erro ao deletar usuário');
     }
   };
 
-  if (!user) return <p style={{ color: '#ffffff' }}>Carregando...</p>;
+  const handleLogout = () => {
+    localStorage.removeItem('apiKey');
+    localStorage.removeItem('deviceId');
+    localStorage.removeItem('userRole');
+    navigate('/login');
+  };
+
+  if (loading && !user) return <p style={{ color: '#ffffff' }}>Carregando...</p>;
 
   return (
     <DashboardContainer>
       <Title>Dashboard</Title>
-      <Info>Bem-vindo, {user.email} ({user.role})</Info>
+      {user && <Info>Bem-vindo, {user.name || user.email} ({user.role})</Info>}
 
       <Link to="/dashboard/user/new">
         <Button>Adicionar Usuário</Button>
@@ -153,50 +206,77 @@ const Dashboard: React.FC = () => {
 
       <UserList>
         <SubTitle>Usuários Cadastrados</SubTitle>
-        {users.length === 0 ? (
+        {loading ? (
+          <p style={{ color: '#b0b0b0' }}>Carregando usuários...</p>
+        ) : users.length === 0 ? (
           <p style={{ color: '#b0b0b0' }}>Nenhum usuário cadastrado.</p>
         ) : (
           users.map((u) => (
             <UserItem key={u.id}>
-              <UserInfo>
-                <strong>{u.name}</strong> ({u.email})
-                <UserDetails>
-                  <SubTitle>Treinos:</SubTitle>
-                  {u.trainings.map((t: any) => (
-                    <div key={t.id}>
-                      Exercício: {t.exercise.name}, Séries: {t.serie.amount}, Repetições: {t.repeat.amount}, Vídeo: {t.exercise.video || 'N/A'}
-                    </div>
-                  ))}
-                  <SubTitle>Dietas:</SubTitle>
-                  {u.meals.map((m: any) => (
-                    <div key={m.id}>
-                      Tipo: {m.meal_type}
-                      <div>
-                        Comidas:
-                        {m.comidas.map((c: any) => (
-                          <div key={c.id}>
-                            {c.name} - Quantidade: {c.amount || 'N/A'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </UserDetails>
-              </UserInfo>
-              <div>
-                <Link to={`/dashboard/user/${u.id}`}>
-                  <EditIcon>✏️</EditIcon>
-                </Link>
-                <DeleteIcon onClick={() => handleDelete(u.id)}>🗑️</DeleteIcon>
-              </div>
+              <UserHeader>
+                <UserInfo>
+                  <strong>{u.name}</strong> ({u.email})
+                </UserInfo>
+                <UserActions>
+                  <Link to={`/dashboard/user/${u.id}`}>
+                    <EditIcon title="Editar">✏️</EditIcon>
+                  </Link>
+                  <DeleteIcon onClick={() => handleDelete(u.id)} title="Excluir">🗑️</DeleteIcon>
+                </UserActions>
+              </UserHeader>
+              
+              <UserDetails>
+                <SubTitle>Treinos:</SubTitle>
+                {u.trainings && u.trainings.length > 0 ? (
+                  u.trainings.map((t: any) => (
+                    <DetailItem key={t.id || `training-${Math.random()}`}>
+                      <strong>Exercício:</strong> {t.exercise_name || 'N/A'}<br />
+                      <strong>Séries:</strong> {t.serie_amount || 'N/A'} | 
+                      <strong> Repetições:</strong> {t.repeat_amount || 'N/A'}<br />
+                      {t.video && (
+                        <div>
+                          <strong>Vídeo:</strong> <a href={t.video} target="_blank" rel="noopener noreferrer" style={{ color: '#8b0000' }}>{t.video}</a>
+                        </div>
+                      )}
+                    </DetailItem>
+                  ))
+                ) : (
+                  <p>Nenhum treino cadastrado</p>
+                )}
+                
+                <SubTitle>Dietas:</SubTitle>
+                {u.meals && u.meals.length > 0 ? (
+                  u.meals.map((m: any) => (
+                    <DetailItem key={m.id || `meal-${Math.random()}`}>
+                      <strong>Tipo:</strong> {m.meal_type || 'N/A'}
+                      
+                      {m.comidas && m.comidas.length > 0 ? (
+                        <>
+                          <strong> Comidas:</strong>
+                          {m.comidas.map((c: any) => (
+                            <ComidaItem key={c.id || `comida-${Math.random()}`}>
+                              <strong>{c.name}</strong> - Quantidade: {c.amount || (c.amount_meal && c.amount_meal.amount) || 'N/A'}
+                            </ComidaItem>
+                          ))}
+                        </>
+                      ) : (
+                        <p>Nenhuma comida cadastrada</p>
+                      )}
+                    </DetailItem>
+                  ))
+                ) : (
+                  <p>Nenhuma dieta cadastrada</p>
+                )}
+              </UserDetails>
             </UserItem>
           ))
         )}
       </UserList>
 
-      <Button onClick={() => { localStorage.removeItem('apiKey'); navigate('/login'); }}>
+      <Button onClick={handleLogout}>
         Sair
       </Button>
+
       {error && <ErrorMessage>{error}</ErrorMessage>}
     </DashboardContainer>
   );

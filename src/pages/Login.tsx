@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { v4 as uuidv4 } from 'uuid';
+import api from '../api/axiosInstance';
 
 const LoginContainer = styled.div`
   width: 100%;
@@ -72,16 +74,30 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    const payload = { user: { email, password } };
+    const deviceId = uuidv4();
+    const payload = { user: { email, password, device_id: deviceId } };
+    console.log('Enviando requisição de login:', payload);
     try {
       const response = await axios.post('http://localhost:3000/api/v1/users/sign_in', payload, {
         headers: { 'Content-Type': 'application/json' },
       });
-      const apiKey = response.data.api_key;
-      localStorage.setItem('apiKey', apiKey);
+      console.log('Resposta do backend:', response.data);
+      const { api_key, user } = response.data;
+      localStorage.setItem('apiKey', api_key);
+      localStorage.setItem('deviceId', deviceId);
+      localStorage.setItem('userRole', user.role);
       navigate('/dashboard');
-    } catch (err) {
-      setError('Erro ao fazer login. Verifique suas credenciais.');
+    } catch (err: any) {
+      console.error('Erro na requisição:', err);
+      let errorMessage = 'Erro ao fazer login. Verifique suas credenciais.';
+      if (err.response) {
+        errorMessage = err.response.data?.error || `Erro ${err.response.status}: ${err.response.statusText}`;
+      } else if (err.request) {
+        errorMessage = 'Erro de rede: Não foi possível conectar ao servidor. Verifique sua conexão ou o CORS.';
+      } else {
+        errorMessage = `Erro: ${err.message}`;
+      }
+      setError(errorMessage);
     }
   };
 
