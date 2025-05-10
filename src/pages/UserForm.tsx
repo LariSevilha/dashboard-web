@@ -339,6 +339,23 @@ const ActionButtonGroup = styled.div`
     }
   }
 `;
+const Select = styled.select`
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 1rem;
+  background-color: #1c2526;
+  border: 1px solid #4a5859;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #8b0000;
+    box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
+  }
+`;
 
 const UserForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -346,13 +363,28 @@ const UserForm: React.FC = () => {
     name: '',
     email: '',
     password: '',
-    trainings_attributes: [{ id: null as number | null, serie_amount: '', repeat_amount: '', exercise_name: '', video: '', _destroy: false }],
-    meals_attributes: [{ 
-      id: null as number | null, 
-      meal_type: '', 
-      _destroy: false,
-      comidas_attributes: [{ id: null as number | null, name: '', amount: '', _destroy: false }] 
-    }],
+    trainings_attributes: [
+      { 
+        id: null as number | null, 
+        serie_amount: '', 
+        repeat_amount: '', 
+        exercise_name: '', 
+        video: '', 
+        weekday: '', 
+        _destroy: false 
+      }
+    ],
+    meals_attributes: [
+      { 
+        id: null as number | null, 
+        meal_type: '', 
+        weekday: '',  
+        _destroy: false,
+        comidas_attributes: [
+          { id: null as number | null, name: '', amount: '', _destroy: false }
+        ] 
+      }
+    ],
   });
   
   const [error, setError] = useState<string | null>(null);
@@ -366,7 +398,18 @@ const UserForm: React.FC = () => {
       navigate('/login');
       return;
     }
-
+  
+    const weekdayEnumMap: Record<string, string> = {
+      "0": "sunday",
+      "1": "monday",
+      "2": "tuesday",
+      "3": "wednesday",
+      "4": "thursday",
+      "5": "friday",
+      "6": "saturday"
+    };
+    
+  
     if (id) {
       setLoading(true);
       axios
@@ -374,9 +417,8 @@ const UserForm: React.FC = () => {
           headers: { Authorization: `Bearer ${apiKey}` },
         })
         .then((response) => {
-          console.log("User data loaded:", response.data);
           const user = response.data;
-          
+  
           setFormData({
             id: user.id,
             name: user.name || '',
@@ -389,14 +431,20 @@ const UserForm: React.FC = () => {
                   repeat_amount: t.repeat_amount || '',
                   exercise_name: t.exercise_name || '',
                   video: t.video || '',
+                  weekday: typeof t.weekday === 'number'
+                  ? weekdayEnumMap[t.weekday.toString() as keyof typeof weekdayEnumMap]
+                  : t.weekday || '',                
                   _destroy: false
                 }))
-              : [{ id: null, serie_amount: '', repeat_amount: '', exercise_name: '', video: '', _destroy: false }],
+              : [{ id: null, serie_amount: '', repeat_amount: '', exercise_name: '', video: '', weekday: '', _destroy: false }],
             
             meals_attributes: user.meals && user.meals.length > 0
               ? user.meals.map((m: any) => ({
                   id: m.id,
                   meal_type: m.meal_type || '',
+                  weekday: typeof m.weekday === 'number'
+                    ? weekdayEnumMap[String(m.weekday)]
+                    : m.weekday || '',
                   _destroy: false,
                   comidas_attributes: m.comidas && m.comidas.length > 0
                     ? m.comidas.map((c: any) => ({
@@ -407,17 +455,19 @@ const UserForm: React.FC = () => {
                       }))
                     : [{ id: null, name: '', amount: '', _destroy: false }]
                 }))
-              : [{ 
-                  id: null, 
-                  meal_type: '', 
+              : [{
+                  id: null,
+                  meal_type: '',
+                  weekday: '',
                   _destroy: false,
-                  comidas_attributes: [{ id: null, name: '', amount: '', _destroy: false }] 
+                  comidas_attributes: [{ id: null, name: '', amount: '', _destroy: false }]
                 }]
           });
+  
           setLoading(false);
         })
         .catch((err) => {
-          console.error("Error loading user:", err);
+          console.error("Erro ao carregar usuário:", err);
           setError('Erro ao carregar dados do usuário');
           setLoading(false);
         });
@@ -425,6 +475,7 @@ const UserForm: React.FC = () => {
       setLoading(false);
     }
   }, [id, navigate]);
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -456,7 +507,7 @@ const UserForm: React.FC = () => {
       ...formData,
       trainings_attributes: [
         ...formData.trainings_attributes, 
-        { id: null, serie_amount: '', repeat_amount: '', exercise_name: '', video: '', _destroy: false }
+        { id: null, serie_amount: '', repeat_amount: '', exercise_name: '', video: '', weekday: '', _destroy: false }
       ],
     });
   };
@@ -481,6 +532,7 @@ const UserForm: React.FC = () => {
         { 
           id: null, 
           meal_type: '', 
+          weekday: '',
           _destroy: false,
           comidas_attributes: [{ id: null, name: '', amount: '', _destroy: false }] 
         }
@@ -606,6 +658,20 @@ const UserForm: React.FC = () => {
           !training._destroy && (
             <ItemContainer key={training.id || `new-training-${index}`}>
               <InputGroup>
+              <Select
+                value={training.weekday ?? ''}
+                onChange={(e) => handleTrainingChange(index, 'weekday', e.target.value)}
+              >
+                <option value="">Dia da Semana</option>
+                <option value="sunday">Domingo</option>
+                <option value="monday">Segunda-feira</option>
+                <option value="tuesday">Terça-feira</option>
+                <option value="wednesday">Quarta-feira</option>
+                <option value="thursday">Quinta-feira</option>
+                <option value="friday">Sexta-feira</option>
+                <option value="saturday">Sábado</option>
+              </Select> 
+
                 <Input
                   type="number"
                   value={training.serie_amount}
@@ -650,6 +716,19 @@ const UserForm: React.FC = () => {
           !meal._destroy && (
             <ItemContainer key={meal.id || `new-meal-${mealIndex}`}>
               <InputGroup>
+              <Select
+                value={meal.weekday ?? ''}
+                onChange={(e) => handleMealChange(mealIndex, 'weekday', e.target.value)}
+              >
+                <option value="">Dia da Semana</option>
+                <option value="sunday">Domingo</option>
+                <option value="monday">Segunda-feira</option>
+                <option value="tuesday">Terça-feira</option>
+                <option value="wednesday">Quarta-feira</option>
+                <option value="thursday">Quinta-feira</option>
+                <option value="friday">Sexta-feira</option>
+                <option value="saturday">Sábado</option>
+              </Select> 
                 <Input
                   type="text"
                   value={meal.meal_type}
