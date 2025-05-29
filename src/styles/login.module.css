@@ -1,0 +1,73 @@
+.loginContainer {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .title {
+    color: #ffffff;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    background-color: #2f3a3b;
+    border: 1px solid #2f3a3b;
+    border-radius: 8px;
+    color: #b0b0b0;
+    font-size: 1rem;
+  }
+  
+  .input::placeholder {
+    color: #b0b0b0;
+  }
+  
+  .forgotPasswordLink {
+    display: block;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+  
+  .forgotPasswordLink:hover {
+    text-decoration: underline;
+  }
+  
+  .button {
+    width: 100%;
+    background-color: #8b0000;
+    color: #ffffff;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .button:hover {
+    background-color: #a00000;
+  }
+  
+  .errorMessage {
+    color: #ff4040;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .rememberMeContainer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: #b0b0b0;
+    font-size: 0.9rem;
+  }
+  
+  .rememberMeContainer input {
+    margin-right: 0.5rem;
+  }
