@@ -9,41 +9,54 @@
   --border-color: #e2e8f0; /* Cor das bordas */
   --text-color: #1e293b; /* Texto principal */
   --text-muted: #64748b; /* Texto secundário */
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Shadow mais suave */
   --transition: all 0.3s ease;
+  --border-radius: 0.375rem; /* 6px */
+  --border-radius-lg: 0.5rem; /* 8px */
+  --spacing-xs: 0.5rem; /* 8px */
+  --spacing-sm: 0.75rem; /* 12px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
 }
 
 /* Container principal */
 .container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 1.5rem;
+  max-width: 1200px; /* Increased for desktop */
+  margin: var(--spacing-lg) auto;
+  padding: var(--spacing-lg);
   background-color: var(--background-color);
-  border-radius: 12px;
+  border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Título principal */
 .container h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text-color);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-lg);
   text-align: center;
+  width: 100%;
 }
 
 /* Navegação de abas */
 .tabNav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  width: 100%;
+  justify-content: center;
   border-bottom: 2px solid var(--border-color);
 }
 
 .tabButton {
-  flex: 1;
-  padding: 0.75rem 1rem;
+  flex: 1 1 120px;
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-muted);
@@ -52,10 +65,13 @@
   cursor: pointer;
   transition: var(--transition);
   position: relative;
+  text-align: center;
 }
 
-.tabButton:hover {
+.tabButton:hover,
+.tabButton:focus {
   color: var(--primary-color);
+  outline: none;
 }
 
 .tabButton.active {
@@ -75,18 +91,21 @@
 
 /* Seções do formulário */
 .section {
-  margin-bottom: 2rem;
+  width: 100%;
+  margin-bottom: var(--spacing-xl);
 }
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
 
 .sectionHeader h3 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-color);
 }
@@ -95,11 +114,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
 }
 
 .sectionSubheader h4 {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 500;
   color: var(--text-color);
 }
@@ -107,16 +128,19 @@
 /* Grupos de input */
 .inputGroup {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .inputGroup label {
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--spacing-xs);
   transition: var(--transition);
 }
 
@@ -128,13 +152,13 @@
 .inputGroup input,
 .inputGroup select {
   width: 100%;
-  padding: 0.75rem;
-  padding-left: 2.5rem; /* Espaço para ícone */
+  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) calc(var(--spacing-md) + 1.5rem);
   font-size: 1rem;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   background-color: var(--card-background);
   transition: var(--transition);
+  box-sizing: border-box;
 }
 
 .inputGroup input:focus,
@@ -146,8 +170,8 @@
 
 .inputGroup .inputIcon {
   position: absolute;
-  left: 0.75rem;
-  top: 50%;
+  left: var(--spacing-md);
+  top: calc(50% + var(--spacing-xs));
   transform: translateY(-50%);
   color: var(--text-muted);
   transition: var(--transition);
@@ -165,8 +189,8 @@
 
 .passwordToggleIcon {
   position: absolute;
-  right: 0.75rem;
-  top: 50%;
+  right: var(--spacing-md);
+  top: calc(50% + var(--spacing-xs));
   transform: translateY(-50%);
   background: none;
   border: none;
@@ -175,7 +199,8 @@
   transition: var(--transition);
 }
 
-.passwordToggleIcon:hover {
+.passwordToggleIcon:hover,
+.passwordToggleIcon:focus {
   color: var(--primary-color);
 }
 
@@ -185,15 +210,18 @@
 }
 
 .fileInput {
-  padding: 0.75rem;
-  font-size: 0.9rem;
+  padding: var(--spacing-sm);
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .fileName {
   display: block;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
+  margin-top: var(--spacing-xs);
+  font-size: 0.875rem;
   color: var(--text-muted);
+  word-break: break-word;
 }
 
 .fileLabel {
@@ -202,20 +230,20 @@
 }
 
 .fileNameText {
-  margin-left: 0.5rem;
+  margin-left: var(--spacing-xs);
 }
 
 .fileHint {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
-  margin-top: 0.5rem;
+  margin-top: var(--spacing-xs);
 }
 
 /* Link para PDF atual */
 .currentPdf {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
+  margin-top: var(--spacing-xs);
+  font-size: 0.875rem;
   color: var(--text-muted);
 }
 
@@ -224,21 +252,29 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
 }
 
 .currentPdf a:hover {
   text-decoration: underline;
 }
 
-/* Cartões de grupo (Treinos, Refeições, PDFs) */
+/* Cartões de grupo */
 .groupCard {
   background-color: var(--card-background);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
+}
+
+/* Seção de grupo para alinhamento em grade */
+.sectionGroup {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns for PDFs section */
+  gap: var(--spacing-md);
+  align-items: start;
 }
 
 /* Botões */
@@ -250,11 +286,11 @@
 .cancelButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   border: none;
   cursor: pointer;
   transition: var(--transition);
@@ -307,46 +343,46 @@
 
 /* Botão de remover comida */
 .removeFoodButton {
-  padding: 0.5rem;
+  padding: var(--spacing-xs);
   font-size: 0.8rem;
   line-height: 1;
 }
 
 /* Seção de comidas */
 .foodSection {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
   border-top: 1px solid var(--border-color);
 }
 
 .foodItem {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  margin-bottom: 0.75rem;
-}
-
-.foodItem .inputGroup {
-  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--spacing-md);
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
 }
 
 /* Ações do formulário */
 .formActions {
   display: flex;
-  gap: 1rem;
+  gap: var(--spacing-md);
   justify-content: flex-end;
-  margin-top: 2rem;
+  margin-top: var(--spacing-xl);
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 /* Mensagem de erro */
 .errorMessage {
-  margin-top: 1rem;
-  padding: 0.75rem;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
   background-color: #fee2e2;
   color: var(--error-color);
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  width: 100%;
 }
 
 /* Loading */
@@ -354,10 +390,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--spacing-xs);
   font-size: 1rem;
   color: var(--text-muted);
-  margin: 2rem 0;
+  margin: var(--spacing-xl) 0;
 }
 
 .spinAnimation {
@@ -370,38 +406,110 @@
   }
 }
 
+/* Basic Info Grid */
+.basicInfo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three columns for Basic Info */
+  gap: var(--spacing-md);
+}
+
 /* Responsividade */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .container {
+    max-width: 90%;
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) auto;
+  }
+
+  .sectionGroup {
+    grid-template-columns: repeat(2, 1fr); /* Maintain two columns */
+  }
+
+  .basicInfo {
+    grid-template-columns: repeat(2, 1fr); /* Two columns for tablet */
+  }
+}
+
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
-    margin: 1rem;
+    padding: var(--spacing-sm);
+    margin: var(--spacing-sm);
   }
 
   .tabNav {
     flex-direction: column;
-    gap: 0.25rem;
+    align-items: stretch;
+    gap: var(--spacing-xs);
   }
 
   .tabButton {
     width: 100%;
     text-align: left;
+    padding: var(--spacing-sm);
   }
 
-  .groupCard {
-    padding: 0.75rem;
+  .sectionGroup,
+  .basicInfo {
+    grid-template-columns: 1fr; /* Single column for mobile */
   }
 
   .foodItem {
-    flex-direction: column;
-    align-items: stretch;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
   }
 
   .formActions {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
+    align-items: stretch;
   }
 
   .formActions button {
     width: 100%;
+    padding: var(--spacing-sm);
+  }
+
+  .sectionHeader,
+  .sectionSubheader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .container h1 {
+    font-size: 1.5rem;
+  }
+
+  .sectionHeader h3 {
+    font-size: 1.25rem;
+  }
+
+  .sectionSubheader h4 {
+    font-size: 1rem;
+  }
+
+  .inputGroup input,
+  .inputGroup select {
+    font-size: 0.875rem;
+    padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) calc(var(--spacing-xs) + 1.5rem);
+  }
+
+  .addButton,
+  .submitButton,
+  .cancelButton {
+    font-size: 0.85rem;
+  }
+
+  .sectionGroup,
+  .basicInfo {
+    grid-template-columns: 1fr;
   }
 }

@@ -14,11 +14,25 @@ const WeekdayOptions = [
   { value: 'saturday', label: 'Sábado' },
 ];
  
-const calculateExpirationDate = (registrationDate: string): string => {
-  if (!registrationDate) return 'Não definida';
-  const date = new Date(registrationDate);
-  date.setMonth(date.getMonth() + 1);
-  return date.toISOString().split('T')[0]; 
+const calculateExpirationDate = (registrationDate: string): Date | null => {
+  if (!registrationDate) return null;
+  
+  try {
+    const date = new Date(registrationDate);
+    
+    // Verifica se a data é válida
+    if (isNaN(date.getTime())) {
+      console.error('Data de registro inválida:', registrationDate);
+      return null;
+    }
+    
+    // Adiciona 30 dias ao invés de 1 mês (para ser mais preciso)
+    date.setDate(date.getDate() + 30);
+    return date;
+  } catch (error) {
+    console.error('Erro ao calcular data de expiração:', error);
+    return null;
+  }
 };
 
 const Dashboard: React.FC = () => {
@@ -61,6 +75,17 @@ const Dashboard: React.FC = () => {
       setLoading(true);
       const response = await axios.get('http://localhost:3000/api/v1/users', { headers });
       console.log('Users loaded:', response.data);
+      
+      // Debug: verificar os dados dos usuários
+      response.data.forEach((user: any, index: number) => {
+        console.log(`Usuário ${index + 1}:`, {
+          name: user.name,
+          email: user.email,
+          registration_date: user.registration_date,
+          created_at: user.created_at
+        });
+      });
+      
       setUsers(response.data);
       setLoading(false);
     } catch (err) {
@@ -151,13 +176,16 @@ const Dashboard: React.FC = () => {
                       🗑️
                     </span>
                   </div>
-                </div>
-                <div className={styles.userDetails}>
-                  <div className={styles.detailItem}>
-                    <strong>Data de Expiração:</strong> 
-                    {u.registration_date ? format(new Date(calculateExpirationDate(u.registration_date)), 'dd/MM/yyyy') : 'Data não disponível'}
-                  </div>
-                </div>
+                </div> 
+                <div className={styles.detailItem}>
+                  <strong>Data de Expiração:</strong> 
+                  {u.registration_date ? 
+                    (() => {
+                      const expirationDate = calculateExpirationDate(u.registration_date);
+                      return expirationDate ? format(new Date(expirationDate), 'dd/MM/yyyy') : 'Data não disponível';
+                    })() 
+                    : 'Data não disponível'}
+                </div> 
               </div>
             ))
           )}

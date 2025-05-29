@@ -126,9 +126,10 @@ interface Training {
 interface WeeklyPdf {
   id: number | null;
   weekday: string;
-  pdf_file: File | null; // Changed from 'pdf' to 'pdf_file' to store the actual file
-  pdf_url?: string; // Optional for existing PDFs, received from API
-  pdf_filename?: string; // Add filename property for display
+  pdf_file: File | null;
+  pdf_url?: string;
+  pdf_filename?: string;
+  notes?: string; // Added third field
   _destroy: boolean;
 }
 
@@ -974,63 +975,65 @@ const UserForm: React.FC = () => {
 
         {/* PDFs Tab Content */}
         {activeTab === 'pdfs' && (
-          <div className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <h3>PDFs Semanais</h3>
-              <button type="button" className={styles.addButton} onClick={addPdf} aria-label="Adicionar novo PDF">
-                <Icons.Plus /> Adicionar PDF
-              </button>
-            </div>
-            {formData.weekly_pdfs_attributes.map((pdfItem, index) =>
-              !pdfItem._destroy ? (
-                <div className={styles.groupCard} key={pdfItem.id || `pdf-${index}`}>
-                  <div className={styles.sectionGroup}>
-                    <SelectField
-                      label="Dia da Semana"
-                      value={pdfItem.weekday}
-                      onChange={(e) => handlePdfChange(index, 'weekday', e.target.value)}
-                      options={WeekdayOptions}
-                      icon={<Icons.Calendar />}
-                      required  
-                    />
-                    <FileInputField
-                      label="Upload PDF"
-                      name={`pdf-${index}-file`}
-                      onChange={(e) => handlePdfChange(index, 'pdf_file', e.target.files ? e.target.files[0] : null)}
-                      icon={<Icons.File />}
-                      required={!pdfItem.id && !pdfItem.pdf_url && !pdfItem.pdf_file}  
-                      currentFileName={
-                        pdfItem.pdf_file
-                          ? pdfItem.pdf_file.name  
-                          : pdfItem.pdf_url
-                          ? pdfItem.pdf_url.split('/').pop()  
-                          : undefined
-                      }  
-                    />
-                    {pdfItem.pdf_url && !pdfItem.pdf_file && ( 
-                      <p className={styles.currentPdf}>
-                        PDF atual:{' '}
-                        <a href={pdfItem.pdf_url} target="_blank" rel="noopener noreferrer">
-                          <Icons.Download /> Baixar PDF
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                  <div className={styles.buttonRow}>
-                    <button
-                      type="button"
-                      className={styles.removeButton}
-                      onClick={() => removePdf(index)}
-                      aria-label="Remover PDF"
-                    >
-                      <Icons.Minus /> Remover PDF
-                    </button>
-                  </div>
-                </div>
-              ) : null
-            )}
+  <div className={styles.section}>
+    <div className={styles.sectionHeader}>
+      <h3>PDFs Semanais</h3>
+      <button type="button" className={styles.addButton} onClick={addPdf} aria-label="Adicionar novo PDF">
+        <Icons.Plus /> Adicionar PDF
+      </button>
+    </div>
+    {formData.weekly_pdfs_attributes.map((pdfItem, index) =>
+      !pdfItem._destroy ? (
+        <div className={styles.groupCard} key={pdfItem.id || `pdf-${index}`}>
+          <div className={styles.sectionGroup}>
+            <SelectField
+              label="Dia da Semana"
+              value={pdfItem.weekday}
+              onChange={(e) => handlePdfChange(index, 'weekday', e.target.value)}
+              options={WeekdayOptions}
+              icon={<Icons.Calendar />}
+              required
+            />
+            <FileInputField
+              label="Upload PDF"
+              name={`pdf-${index}-file`}
+              onChange={(e) => handlePdfChange(index, 'pdf_file', e.target.files ? e.target.files[0] : null)}
+              icon={<Icons.File />}
+              required={!pdfItem.id && !pdfItem.pdf_url && !pdfItem.pdf_file}
+              currentFileName={
+                pdfItem.pdf_file
+                  ? pdfItem.pdf_file.name
+                  : pdfItem.pdf_url
+                  ? pdfItem.pdf_url.split('/').pop()
+                  : undefined
+              }
+            />
+            <InputField
+              label="Notas (opcional)"
+              type="text"
+              name={`pdf-${index}-notes`}
+              value={pdfItem.notes || ''}
+              onChange={(e) => handlePdfChange(index, 'notes', e.target.value)}
+              placeholder="Adicione notas aqui"
+              optional
+              icon={<Icons.File />}
+            />
           </div>
-        )}
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={styles.removeButton}
+              onClick={() => removePdf(index)}
+              aria-label="Remover PDF"
+            >
+              <Icons.Minus /> Remover PDF
+            </button>
+          </div>
+        </div>
+      ) : null
+    )}
+  </div>
+)}
 
         <div className={styles.formActions}>
           <button
