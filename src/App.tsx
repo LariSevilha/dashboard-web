@@ -1,106 +1,137 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserForm from './pages/UserForm';
+import styles from './App.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-// Estilos Globais
-const AppContainer = styled.div`
-  font-family: 'Arial', sans-serif;
-  min-height: 100vh;
-  background-color: #1c2526;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const Header = styled.header`
-  padding: 2rem 0;
-  text-align: center;
-`;
-
-const LogoImage = styled.img`
-  width: 200px;
-  height: auto;
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  padding: 1rem;
-`;
-
-const Footer = styled.footer`
-  padding: 1rem 0;
-  text-align: center;
-  color: #b0b0b0;
-  font-size: 0.9rem;
-`;
-
-const FooterLine = styled.div`
-  width: 100px;
-  height: 2px;
-  background-color: #8b0000;
-  margin: 0 auto 0.5rem auto;
-`;
+// Optional: Include Toaster if Shadcn UI is installed
+// import { Toaster } from '@/components/ui/toaster';
 
 const App: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loggedInUser = localStorage.getItem('apiKey');
+    setIsLoading(false);
+  }, []);
+
   const isAuthenticated = () => !!localStorage.getItem('apiKey');
 
   const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
   };
 
-  return (
-    <AppContainer>
-      <Header>
-        <LogoImage
-          src="https://via.placeholder.com/200x60?text=Renato+Frutuoso"
-          alt="Renato Frutuoso - Consultoria Esportiva Online"
+  if (isLoading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <motion.div
+          className={styles.spinner}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ peito: 0.5 }}
         />
-      </Header>
-      <MainContent>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard/user/new"
-              element={
-                <ProtectedRoute>
-                  <UserForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard/user/:id"
-              element={
-                <ProtectedRoute>
-                  <UserForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to={isAuthenticated() ? '/dashboard' : '/login'} />} />
-            <Route path="*" element={<h1 style={{ color: 'white' }}>404 - Página não encontrada</h1>} />
-          </Routes>
-        </Router>
-      </MainContent>
-      <Footer>
-        <FooterLine />
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.appContainer}> 
+      <header className={styles.header}>
+        <motion.img
+          className={styles.logoImage}
+          src="https://storage.googleapis.com/hostinger-horizons-assets-prod/a8d82ed5-8e56-4ea8-8bed-143e8e595a3d/cff3f6c0c2a3fa166f7947d1d442b113.png"
+          alt="Renato Frutuoso - Consultoria Esportiva Online"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        />
+      </header>
+      <main className={styles.mainContent}>
+        <AnimatePresence mode="wait">
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <motion.div
+                      key="dashboard"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Dashboard />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/user/new"
+                element={
+                  <ProtectedRoute>
+                    <motion.div
+                      key="user-new"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <UserForm />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/user/:id"
+                element={
+                  <ProtectedRoute>
+                    <motion.div
+                      key="user-edit"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <UserForm />
+                    </motion.div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to={isAuthenticated() ? '/dashboard' : '/login'} />} />
+              <Route
+                path="*"
+                element={
+                  <motion.div
+                    key="not-found"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <h1 className={styles.notFound}>404 - Página não encontrada</h1>
+                  </motion.div>
+                }
+              />
+            </Routes>
+          </Router>
+        </AnimatePresence>
+      </main>
+      <footer className={styles.footer}>
+        <motion.div
+          className={styles.footerLine}
+          initial={{ width: 0 }}
+          animate={{ width: '6rem' }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+        />
         Renato Frutuoso - CREF 0000
-      </Footer>
-    </AppContainer>
+      </footer>
+    </div>
   );
 };
 

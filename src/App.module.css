@@ -1,0 +1,106 @@
+/* Importando a mesma fonte usada no login e dashboard */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Variáveis para consistência */
+:root {
+  --primary-bg: #000000; /* Fundo preto, como no LoginPage */
+  --gold-accent: #ceac5e; /* Cor dourada */
+  --text-primary: #ffffff; /* Texto principal */
+  --text-secondary: #94a3b8; /* Texto secundário */
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+.appContainer {
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header { 
+  text-align: center;
+}
+
+.logoImage {
+  width: 200px;
+  height: auto;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
+}
+
+.footer {
+  padding: 1rem 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.footerLine {
+  width: 6rem;
+  height: 0.1rem;
+  background-color: var(--gold-accent);
+  margin: 0 auto 0.5rem auto;
+  opacity: 0.5;
+  border-radius: var(--border-radius);
+}
+
+.loadingContainer {
+  min-height: 100vh;
+  background-color: var(--primary-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 4rem;
+  height: 4rem;
+  border: 4px solid var(--gold-accent);
+  border-top: 4px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.notFound {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .header {
+    padding: 1.5rem 0;
+  }
+
+  .logoImage {
+    width: 150px;
+  }
+
+  .mainContent {
+    padding: 0.5rem;
+  }
+
+  .footer {
+    font-size: 0.8rem;
+  }
+}

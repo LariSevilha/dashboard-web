@@ -1,73 +1,274 @@
+/* Importando a mesma fonte usada no dashboard para consistência */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Variáveis para consistência com os primeiros códigos */
+:root {
+  --primary-bg: #1a1a1a; /* Cinza escuro, quase preto */
+  --input-bg: #2d2d2d; /* Fundo dos inputs */
+  --gold-accent: #ceac5e; /* Cor dourada para bordas, textos e botões */
+  --text-primary: #ffffff; /* Texto principal */
+  --text-secondary: #94a3b8; /* Texto secundário */
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #000000; /* Fundo preto, como no LoginPage */
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0;
+  display: flex; /* Use flexbox no body para garantir que o contêiner principal seja centralizado */
+  justify-content: center; /* Centraliza horizontalmente */
+  align-items: center; /* Centraliza verticalmente */
+  min-height: 100vh; /* Ocupa a altura total da viewport */
+}
+
+/* Container principal do login */
 .loginContainer {
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background: var(--primary-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  /* Remover text-align: center; daqui se queremos alinhamento de bloco à esquerda */
+
+  /* Use flexbox for internal layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centraliza os itens horizontalmente dentro do container */
+  gap: 1.5rem; /* Consistent spacing between elements */
+  box-sizing: border-box; /* Garante que padding não aumente a largura total */
+}
+
+/* Título */
+.title {
+  color: var(--gold-accent);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0; /* Já é controlado pelo gap */
+  width: 100%; /* Garante que o título ocupe a largura total e possa ser centralizado */
+  text-align: center; /* Centraliza o texto do título */
+}
+
+/* Input container for labels and inputs */
+.inputGroup {
+  width: 100%; /* Garante que o grupo de input ocupe a largura total */
+  display: flex; /* Adicionado para organizar label e input */
+  flex-direction: column; /* Coloca label acima do input */
+  align-items: flex-start; /* Alinha o label e input à esquerda dentro do inputGroup */
+}
+
+.inputGroup label {
+  color: var(--gold-accent);
+  font-size: 1rem;
+  margin-bottom: 0.5rem; /* Espaçamento entre o label e o input */
+}
+
+/* Input */
+.input {
+  width: 100%; /* Garante que o input preencha a largura do inputGroup */
+  padding: 0.75rem;
+  background-color: var(--input-bg);
+  border: 2px solid var(--gold-accent);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: var(--transition);
+  box-sizing: border-box; /* Inclui padding e border na largura total */
+}
+
+.input::placeholder {
+  color: var(--text-secondary);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #e6c47e; /* Tom dourado mais claro para foco */
+  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.3);
+}
+
+/* Link de "Esqueceu a senha" */
+.forgotPasswordLink {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: var(--transition);
+  width: 100%; /* Garante que o link ocupe a largura total */
+  text-align: center; /* Centraliza o texto do link */
+}
+
+.forgotPasswordLink:hover {
+  color: var(--gold-accent);
+  text-decoration: underline;
+}
+
+/* Botão de login */
+.button {
+  width: 100%; /* Garante que o botão preencha a largura total */
+  padding: 0.75rem;
+  background-color: var(--gold-accent);
+  color: #000000;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  box-sizing: border-box; /* Inclui padding e border na largura total */
+}
+
+.button:hover {
+  background-color: #e6c47e; /* Tom dourado mais claro para hover */
+  transform: translateY(-2px);
+}
+
+/* Mensagem de erro e sucesso */
+.errorMessage,
+.successMessage {
+  width: 100%; /* Garante que ocupe a largura total */
+  color: #ef4444; /* Error color */
+  font-size: 0.9rem;
+  background: var(--input-bg);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  text-align: center; /* Centraliza o texto da mensagem */
+  box-sizing: border-box; /* Inclui padding e border na largura total */
+}
+
+.successMessage {
+  color: #22c55e; /* Success color */
+}
+
+
+/* Container do "Lembrar-me" */
+.rememberMeContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centraliza o checkbox e o texto */
+  width: 100%; /* Garante que ocupe a largura total para centralizar */
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.rememberMeContainer input {
+  margin-right: 0.5rem;
+  accent-color: var(--gold-accent); /* Cor dourada para o checkbox */
+}
+
+/* Linha decorativa no final, similar ao LoginPage */
+.loginContainer::after {
+  content: '';
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8rem;
+  height: 0.1rem;
+  background-color: var(--gold-accent);
+  opacity: 0.5;
+  border-radius: var(--border-radius);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .loginContainer {
+    padding: 1.5rem;
+    max-width: 90%;
   }
-  
+
   .title {
-    color: #ffffff;
     font-size: 1.5rem;
-    margin-bottom: 1.5rem;
   }
-  
-  .input {
-    width: 100%;
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-    background-color: #2f3a3b;
-    border: 1px solid #2f3a3b;
-    border-radius: 8px;
-    color: #b0b0b0;
-    font-size: 1rem;
-  }
-  
-  .input::placeholder {
-    color: #b0b0b0;
-  }
-  
-  .forgotPasswordLink {
-    display: block;
-    color: #b0b0b0;
-    font-size: 0.9rem;
-    text-decoration: none;
-    margin-bottom: 1rem;
-  }
-  
-  .forgotPasswordLink:hover {
-    text-decoration: underline;
-  }
-  
+
+  .input,
   .button {
-    width: 100%;
-    background-color: #8b0000;
-    color: #ffffff;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    font-size: 0.95rem;
   }
-  
-  .button:hover {
-    background-color: #a00000;
-  }
-  
-  .errorMessage {
-    color: #ff4040;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-  }
-  
-  .rememberMeContainer {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: #b0b0b0;
-    font-size: 0.9rem;
-  }
-  
-  .rememberMeContainer input {
-    margin-right: 0.5rem;
-  }
+}
+
+/* Container para o input de senha com ícone */
+.passwordContainer {
+  position: relative;
+  width: 100%; /* Garante que ocupe a largura total */
+  display: flex; /* Adicionado para organizar label e input */
+  flex-direction: column; /* Coloca label acima do input */
+  align-items: flex-start; /* Alinha o label e input à esquerda */
+}
+
+.passwordContainer label {
+  color: var(--gold-accent);
+  font-size: 1rem;
+  margin-bottom: 0.5rem; /* Espaçamento entre o label e o input */
+}
+
+.passwordContainer .input {
+  padding-right: 2.5rem; /* Espaço para o ícone */
+}
+
+.passwordContainer .togglePassword {
+  position: absolute;
+  top: 50%; /* Ajuste a posição vertical baseada na altura do input */
+  right: 0.75rem;
+  transform: translateY(calc(0.5rem + 50%)); /* Ajusta para descer com o label */
+  /* Explicação: 0.5rem é o margin-bottom do label, 50% da altura do input. */
+  /* Ou, uma abordagem mais simples: ajustar a partir da base do input */
+  /* top: calc(1rem + 0.75rem + 0.5rem); */ /* (label font-size + input padding-top + label margin-bottom) - Isso pode variar */
+  /* Melhor: usar flexbox e alinhamento, ou um top/bottom mais inteligente */
+
+  /* Melhorando o alinhamento do ícone: */
+  top: initial; /* Reset */
+  bottom: 0.75rem; /* Alinhar com a base do input */
+  transform: none; /* Reset */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100% - 1rem - 0.5rem); /* Altura do input menos o padding top/bottom e margin-bottom do label */
+  /* top: 50%; */ /* Para um alinhamento mais preciso, precisaria de JS ou de um container flex para o input+toggle */
+
+  /* Vou manter a abordagem anterior e ajustar um pouco para a posição do input */
+  /* A forma mais robusta é envolver o input e o botão de toggle em um novo container flex */
+  /* Vamos tentar essa abordagem de `top` */
+  top: calc(2rem + 0.5rem); /* 2rem (altura do label + margin-bottom do label) + 0.75rem (padding top do input) */
+  /* Essa é uma estimativa. A melhor forma é flex no contêiner do input e do botão. */
+  /* Vamos fazer o container da senha ser um flex row para input e toggle */
+}
+
+/* NOVO: Container interno para input e toggle na senha */
+.passwordInputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.passwordInputWrapper .input {
+  width: 100%;
+  padding-right: 2.5rem; /* Espaço para o ícone */
+  box-sizing: border-box;
+}
+
+.passwordInputWrapper .togglePassword {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  transition: var(--transition);
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordInputWrapper .togglePassword:hover {
+  color: var(--gold-accent);
+}
