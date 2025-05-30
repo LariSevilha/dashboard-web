@@ -1,32 +1,40 @@
-/* Variáveis para cores e espaçamentos */
+/* Importando a mesma fonte usada no dashboard */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Variáveis para consistência com o dashboard */
 :root {
-  --primary-color: #2563eb; /* Azul moderno */
-  --secondary-color: #64748b; /* Cinza suave */
-  --accent-color: #10b981; /* Verde para ações positivas */
-  --error-color: #ef4444; /* Vermelho para erros */
-  --background-color: #f8fafc; /* Fundo claro */
-  --card-background: #ffffff; /* Fundo dos cartões */
-  --border-color: #e2e8f0; /* Cor das bordas */
-  --text-color: #1e293b; /* Texto principal */
-  --text-muted: #64748b; /* Texto secundário */
-  --shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Shadow mais suave */
+  --primary-bg: #000000;
+  --input-bg: #2d2d2d;
+  --gold-accent: #ceac5e;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --border-radius: 8px;
   --transition: all 0.3s ease;
-  --border-radius: 0.375rem; /* 6px */
-  --border-radius-lg: 0.5rem; /* 8px */
-  --spacing-xs: 0.5rem; /* 8px */
-  --spacing-sm: 0.75rem; /* 12px */
-  --spacing-md: 1rem; /* 16px */
-  --spacing-lg: 1.5rem; /* 24px */
-  --spacing-xl: 2rem; /* 32px */
+  --error-color: #ef4444;
+}
+
+/* Reset básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--primary-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
 }
 
 /* Container principal */
 .container {
-  max-width: 1200px; /* Increased for desktop */
-  margin: var(--spacing-lg) auto;
-  padding: var(--spacing-lg);
-  background-color: var(--background-color);
-  border-radius: var(--border-radius-lg);
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--input-bg);
+  border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -37,8 +45,8 @@
 .container h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-color);
-  margin-bottom: var(--spacing-lg);
+  color: var(--gold-accent);
+  margin-bottom: 1.5rem;
   text-align: center;
   width: 100%;
 }
@@ -47,19 +55,18 @@
 .tabNav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
+  gap: 1rem;
+  margin-bottom: 2rem;
   width: 100%;
   justify-content: center;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--gold-accent);
 }
 
 .tabButton {
-  flex: 1 1 120px;
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -70,12 +77,12 @@
 
 .tabButton:hover,
 .tabButton:focus {
-  color: var(--primary-color);
+  color: var(--gold-accent);
   outline: none;
 }
 
 .tabButton.active {
-  color: var(--primary-color);
+  color: var(--gold-accent);
   font-weight: 600;
 }
 
@@ -86,49 +93,49 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: var(--primary-color);
+  background-color: var(--gold-accent);
 }
 
 /* Seções do formulário */
 .section {
   width: 100%;
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 2rem;
 }
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 1rem;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  gap: 1rem;
 }
 
 .sectionHeader h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--gold-accent);
 }
 
 .sectionSubheader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0.75rem;
   flex-wrap: wrap;
-  gap: var(--spacing-sm);
+  gap: 0.75rem;
 }
 
 .sectionSubheader h4 {
   font-size: 1.25rem;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--text-primary);
 }
 
 /* Grupos de input */
 .inputGroup {
   position: relative;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -137,26 +144,27 @@
 .inputGroup label {
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: var(--spacing-xs);
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
   transition: var(--transition);
 }
 
 .inputGroup.filled label,
 .inputGroup:focus-within label {
-  color: var(--primary-color);
+  color: var(--gold-accent);
 }
 
 .inputGroup input,
 .inputGroup select {
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) calc(var(--spacing-md) + 1.5rem);
+  padding: 0.75rem 0.75rem 0.75rem calc(0.75rem + 1.5rem);
   font-size: 1rem;
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--gold-accent);
   border-radius: var(--border-radius);
-  background-color: var(--card-background);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
   transition: var(--transition);
   box-sizing: border-box;
 }
@@ -164,22 +172,29 @@
 .inputGroup input:focus,
 .inputGroup select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #e6c47e;
+  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.3);
 }
 
 .inputGroup .inputIcon {
   position: absolute;
-  left: var(--spacing-md);
-  top: calc(50% + var(--spacing-xs));
+  left: 0.75rem;
+  top: calc(50% + 0.5rem);
   transform: translateY(-50%);
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: var(--transition);
 }
 
 .inputGroup.filled .inputIcon,
 .inputGroup:focus-within .inputIcon {
-  color: var(--primary-color);
+  color: var(--gold-accent);
+}
+
+.inputGroup.optional label::after {
+  content: '(opcional)';
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: 0.5rem;
 }
 
 /* Campo de senha */
@@ -189,19 +204,19 @@
 
 .passwordToggleIcon {
   position: absolute;
-  right: var(--spacing-md);
-  top: calc(50% + var(--spacing-xs));
+  right: 0.75rem;
+  top: calc(50% + 0.5rem);
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   transition: var(--transition);
 }
 
 .passwordToggleIcon:hover,
 .passwordToggleIcon:focus {
-  color: var(--primary-color);
+  color: var(--gold-accent);
 }
 
 /* Campo de arquivo */
@@ -210,49 +225,51 @@
 }
 
 .fileInput {
-  padding: var(--spacing-sm);
-  font-size: 0.875rem;
+  padding: 0.75rem;
+  font-size: 0.9rem;
   width: 100%;
   box-sizing: border-box;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 2px solid var(--gold-accent);
+  border-radius: var(--border-radius);
 }
 
 .fileName {
   display: block;
-  margin-top: var(--spacing-xs);
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
   word-break: break-word;
 }
 
 .fileLabel {
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--text-primary);
 }
 
 .fileNameText {
-  margin-left: var(--spacing-xs);
+  margin-left: 0.5rem;
 }
 
 .fileHint {
   display: block;
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-top: var(--spacing-xs);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
 }
 
-/* Link para PDF atual */
 .currentPdf {
-  margin-top: var(--spacing-xs);
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .currentPdf a {
-  color: var(--primary-color);
+  color: var(--gold-accent);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: 0.5rem;
 }
 
 .currentPdf a:hover {
@@ -261,19 +278,25 @@
 
 /* Cartões de grupo */
 .groupCard {
-  background-color: var(--card-background);
+  background: #1a1a1a;
   border-radius: var(--border-radius);
-  padding: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
   box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--gold-accent);
+  transition: var(--transition);
+}
+
+.groupCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 /* Seção de grupo para alinhamento em grade */
 .sectionGroup {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Two columns for PDFs section */
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
   align-items: start;
 }
 
@@ -286,25 +309,29 @@
 .cancelButton {
   display: inline-flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
   border-radius: var(--border-radius);
   border: none;
   cursor: pointer;
   transition: var(--transition);
+  box-shadow: var(--shadow);
 }
 
 .addButton,
-.addFoodButton {
-  background-color: var(--accent-color);
-  color: #ffffff;
+.addFoodButton,
+.submitButton {
+  background-color: var(--gold-accent);
+  color: #000000;
 }
 
 .addButton:hover,
-.addFoodButton:hover {
-  background-color: #059669;
+.addFoodButton:hover,
+.submitButton:hover {
+  background-color: #e6c47e;
+  transform: translateY(-2px);
 }
 
 .removeButton,
@@ -315,73 +342,66 @@
 
 .removeButton:hover,
 .removeFoodButton:hover {
-  background-color: #dc2626;
-}
-
-.submitButton {
-  background-color: var(--primary-color);
-  color: #ffffff;
-}
-
-.submitButton:hover {
-  background-color: #1d4ed8;
-}
-
-.submitButton:disabled {
-  background-color: var(--secondary-color);
-  cursor: not-allowed;
+  background-color: #f87171;
+  transform: translateY(-2px);
 }
 
 .cancelButton {
-  background-color: var(--secondary-color);
-  color: #ffffff;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 2px solid var(--gold-accent);
 }
 
 .cancelButton:hover {
-  background-color: #475569;
+  background-color: #3a3a3a;
+  transform: translateY(-2px);
 }
 
-/* Botão de remover comida */
+.submitButton:disabled {
+  background-color: #3a3a3a;
+  cursor: not-allowed;
+}
+
 .removeFoodButton {
-  padding: var(--spacing-xs);
-  font-size: 0.8rem;
-  line-height: 1;
+  padding: 0.5rem;
+  font-size: 0.9rem;
 }
 
 /* Seção de comidas */
 .foodSection {
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--border-color);
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gold-accent);
 }
 
 .foodItem {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
-  gap: var(--spacing-md);
+  gap: 1rem;
   align-items: center;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0.75rem;
 }
 
 /* Ações do formulário */
 .formActions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: 1rem;
   justify-content: flex-end;
-  margin-top: var(--spacing-xl);
+  margin-top: 2rem;
   width: 100%;
   flex-wrap: wrap;
 }
 
 /* Mensagem de erro */
 .errorMessage {
-  margin-top: var(--spacing-md);
-  padding: var(--spacing-sm);
-  background-color: #fee2e2;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--input-bg);
   color: var(--error-color);
   border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   width: 100%;
 }
 
@@ -390,13 +410,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-xs);
+  gap: 0.5rem;
   font-size: 1rem;
-  color: var(--text-muted);
-  margin: var(--spacing-xl) 0;
+  color: var(--text-secondary);
+  margin: 2rem 0;
 }
 
-.spinAnimation {
+.loading::after {
+  content: '';
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid var(--gold-accent);
+  border-top-color: transparent;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
@@ -406,80 +432,89 @@
   }
 }
 
+/* Skeleton UI */
+.skeleton {
+  animation: pulse 1.5s infinite;
+}
+
+.skeletonText {
+  background: #3a3a3a;
+  height: 1rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 /* Basic Info Grid */
 .basicInfo {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Three columns for Basic Info */
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
 }
 
 /* Responsividade */
-@media (min-width: 1200px) {
-  .container {
-    max-width: 1200px;
-  }
-}
-
 @media (max-width: 1024px) {
   .container {
     max-width: 90%;
-    padding: var(--spacing-md);
-    margin: var(--spacing-md) auto;
+    padding: 1.5rem;
   }
 
-  .sectionGroup {
-    grid-template-columns: repeat(2, 1fr); /* Maintain two columns */
-  }
-
+  .sectionGroup,
   .basicInfo {
-    grid-template-columns: repeat(2, 1fr); /* Two columns for tablet */
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
   .container {
-    padding: var(--spacing-sm);
-    margin: var(--spacing-sm);
+    padding: 1rem;
+    margin: 1rem;
   }
 
   .tabNav {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--spacing-xs);
+    gap: 0.5rem;
   }
 
   .tabButton {
     width: 100%;
     text-align: left;
-    padding: var(--spacing-sm);
-  }
-
-  .sectionGroup,
-  .basicInfo {
-    grid-template-columns: 1fr; /* Single column for mobile */
+    padding: 0.75rem;
   }
 
   .foodItem {
     grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
+    gap: 0.75rem;
   }
 
   .formActions {
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 0.75rem;
     align-items: stretch;
   }
 
   .formActions button {
     width: 100%;
-    padding: var(--spacing-sm);
+    padding: 0.75rem;
   }
 
   .sectionHeader,
   .sectionSubheader {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-xs);
+    gap: 0.5rem;
   }
 }
 
@@ -498,18 +533,13 @@
 
   .inputGroup input,
   .inputGroup select {
-    font-size: 0.875rem;
-    padding: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) calc(var(--spacing-xs) + 1.5rem);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.5rem 0.5rem calc(0.5rem + 1.5rem);
   }
 
   .addButton,
   .submitButton,
   .cancelButton {
-    font-size: 0.85rem;
-  }
-
-  .sectionGroup,
-  .basicInfo {
-    grid-template-columns: 1fr;
+    font-size: 0.9rem;
   }
 }
