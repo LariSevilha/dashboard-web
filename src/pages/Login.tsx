@@ -53,7 +53,7 @@ const Login: React.FC = () => {
         localStorage.removeItem('savedPassword');
       }
 
-      setSuccess(`Bem-vindo, ${user.email}!`);
+      setSuccess(`Bem-vindo, ${user.name || user.email}!`);
       setError(null);
       setTimeout(() => navigate('/dashboard'), 2000); // Delay to show success message
     } catch (err: any) {
@@ -71,8 +71,6 @@ const Login: React.FC = () => {
   };
 
   return (
-    // Removi as classes Tailwind de flex e centering aqui, pois o body CSS vai lidar com isso
-    // Deixei apenas o min-h-screen bg-black, se você quiser manter o fundo preto do Tailwind.
     <div className="min-h-screen bg-black">
       <motion.div
         className={styles.loginContainer}
