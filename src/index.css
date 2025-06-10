@@ -11,3 +11,93 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --primary-bg: #1a1a1a;
+  --input-bg: #2d2d2d;
+  --gold-accent: #ceac5e;
+  --gold-accent-light: #e6c47e;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #000000;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 2rem;
+}
+
+.dashboard {
+  max-width: 600px;
+  margin: auto;
+  padding: 2rem;
+  background: var(--primary-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
+.dashboard h1 {
+  text-align: center;
+  color: var(--gold-accent);
+  font-size: 1.8rem;
+}
+
+.addUserButton {
+  background-color: var(--gold-accent);
+  color: #000;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.addUserButton:hover {
+  background-color: var(--gold-accent-light);
+  transform: translateY(-2px);
+}
+
+.optionsContainer {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.optionButton {
+  background-color: var(--input-bg);
+  border: 2px solid var(--gold-accent);
+  color: var(--text-primary);
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+}
+
+.optionButton:hover {
+  background-color: var(--gold-accent-light);
+  color: #000;
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

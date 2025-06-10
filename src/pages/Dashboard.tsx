@@ -4,12 +4,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { debounce } from 'lodash';
 import styles from '../styles/dashboard.module.css';
+import '../index.css';
+
 interface User {
   id: number;
   name: string | null;
   email: string | null;
   registration_date: string | null;
   role: string;
+  plan_duration: string;
 }
 
 interface WeekdayOption {
@@ -27,7 +30,7 @@ const WeekdayOptions: WeekdayOption[] = [
   { value: 'saturday', label: 'Sábado' },
 ];
 
-const calculateExpirationDate = (registrationDate: string): Date | null => {
+const calculateExpirationDate = (registrationDate: string, planDuration: string): Date | null => {
   if (!registrationDate) return null;
   try {
     const date = new Date(registrationDate);
@@ -35,7 +38,13 @@ const calculateExpirationDate = (registrationDate: string): Date | null => {
       console.error('Data de registro inválida:', registrationDate);
       return null;
     }
-    date.setDate(date.getDate() + 30);
+    if (planDuration === 'annual') {
+      date.setMonth(date.getMonth() + 12);
+    } else if (planDuration === 'semi_annual') {
+      date.setMonth(date.getMonth() + 6);
+    } else {
+      date.setMonth(date.getMonth() + 1); // Padrão: mensal
+    }
     return date;
   } catch (error) {
     console.error('Erro ao calcular data de expiração:', error);
@@ -44,6 +53,7 @@ const calculateExpirationDate = (registrationDate: string): Date | null => {
 };
 
 const Dashboard: React.FC = () => {
+  const [showOptions, setShowOptions] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -51,6 +61,12 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
+
+  const filteredUsers = users.filter(
+    (u) =>
+      (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   useEffect(() => {
     const apiKey = localStorage.getItem('apiKey');
@@ -118,7 +134,6 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  // Debounced search handler
   const debouncedSearch = useCallback(
     debounce((value: string) => setSearchTerm(value), 300),
     []
@@ -127,12 +142,6 @@ const Dashboard: React.FC = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value);
   };
-
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className={styles.dashboardContainer}>
@@ -144,9 +153,26 @@ const Dashboard: React.FC = () => {
               Bem-vindo, {user.name || user.email} ({user.role})
             </p>
           )}
-          <Link to="/dashboard/user/new" className={styles.buttonAdd}>
-            <i className="fas fa-user-plus"></i> Adicionar Usuário
-          </Link>
+          <div className={styles.menuItem}>
+            <button
+              className={styles.buttonAdd}
+              onClick={() => setShowOptions(!showOptions)}
+              aria-expanded={showOptions}
+              aria-controls="add-user-options"
+            >
+              <i className="fas fa-user-plus"></i> Adicionar Usuário
+            </button>
+            {showOptions && (
+              <div id="add-user-options" className={styles.subMenu}>
+                <Link to="/dashboard/user/new?type=pdf" className={styles.subMenuItem}>
+                  <i className="fas fa-file-pdf"></i> Adicionar PDF
+                </Link>
+                <Link to="/dashboard/user/new?type=manual" className={styles.subMenuItem}>
+                  <i className="fas fa-edit"></i> Cadastrar Manual
+                </Link>
+              </div>
+            )}
+          </div>
           <button className={styles.buttonLogout} onClick={handleLogout}>
             <i className="fas fa-sign-out-alt"></i> Sair
           </button>
@@ -155,13 +181,16 @@ const Dashboard: React.FC = () => {
         <main className={styles.mainContent}>
           <header className={styles.header}>
             <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
-            <input
-              className={styles.searchBar}
-              type="text"
-              placeholder="Buscar por nome ou email..."
-              onChange={handleSearchChange}
-              aria-label="Buscar usuários por nome ou email"
-            />
+            <div className={styles.searchContainer}>
+              <span className={styles.searchIcon}>🔍</span>
+              <input
+                className={styles.searchBar}
+                type="text"
+                placeholder="Buscar por nome ou email..."
+                onChange={handleSearchChange}
+                aria-label="Buscar usuários por nome ou email"
+              />
+            </div>
           </header>
           {loading ? (
             <div className={styles.loading}>Carregando...</div>
@@ -181,7 +210,7 @@ const Dashboard: React.FC = () => {
                     <strong>Data de Expiração:</strong>
                     {u.registration_date
                       ? (() => {
-                          const expirationDate = calculateExpirationDate(u.registration_date);
+                          const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
                           return expirationDate
                             ? format(new Date(expirationDate), 'dd/MM/yyyy')
                             : 'Data não disponível';
@@ -210,4 +239,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 
