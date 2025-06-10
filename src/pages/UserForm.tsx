@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import * as Icons from '../components/Icons';
+import BasicInfoForm from './BasicInfoForm';
+import TrainingForm from './TrainingForm';
+import MealForm from './MealForm';
+import PdfForm from './PdfForm';
+import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
-import '../index.css';
+import * as Icons from '../components/Icons';
 
+// Interfaces
 interface Training {
   id: number | null;
   serie_amount: string;
@@ -52,119 +57,6 @@ interface FormDataInterface {
   plan_type: string;
   plan_duration: string;
 }
-
-const PlanDurationOptions = [
-  { value: 'monthly', label: 'Mensal' },
-  { value: 'semi_annual', label: 'Semestral' },
-  { value: 'annual', label: 'Anual' },
-];
-
-const WeekdayOptions = [
-  { value: 'sunday', label: 'Domingo' },
-  { value: 'monday', label: 'Segunda-feira' },
-  { value: 'tuesday', label: 'Terça-feira' },
-  { value: 'wednesday', label: 'Quarta-feira' },
-  { value: 'thursday', label: 'Quinta-feira' },
-  { value: 'friday', label: 'Sexta-feira' },
-  { value: 'saturday', label: 'Sábado' },
-];
-
-const InputField: React.FC<{
-  label: string;
-  type: string;
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
-  required?: boolean;
-  icon?: React.ReactNode;
-  optional?: boolean;
-}> = ({ label, type, name, value, onChange, placeholder, required = false, icon, optional = false }) => {
-  return (
-    <div className={`${styles.inputGroup} ${value ? styles.filled : ''}`}>
-      <label>
-        {icon && <span className={styles.inputIcon}>{icon}</span>}
-        {label}
-        {optional && <span className={styles.optionalLabel}>(opcional)</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        aria-required={required}
-      />
-    </div>
-  );
-};
-
-const SelectField: React.FC<{
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  name: string;
-  options: { value: string; label: string }[];
-  icon?: React.ReactNode;
-  required?: boolean;
-}> = ({ label, value, onChange, name, options, icon, required = false }) => {
-  return (
-    <div className={`${styles.inputGroup} ${value ? styles.filled : ''}`}>
-      <label>
-        {icon && <span className={styles.inputIcon}>{icon}</span>}
-        {label}
-      </label>
-      <select name={name} value={value} onChange={onChange} required={required} aria-required={required}>
-        <option value="">Selecione...</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-};
-
-const FileInputField: React.FC<{
-  label: string;
-  name: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  icon?: React.ReactNode;
-  required?: boolean;
-  currentFileName?: string;
-  hasExistingFile?: boolean;
-}> = ({ label, name, onChange, icon, required = false, currentFileName, hasExistingFile = false }) => {
-  return (
-    <div className={`${styles.inputGroup} ${styles.fileInputGroup} ${hasExistingFile || currentFileName ? styles.filled : ''}`}>
-      <label>
-        {icon && <span className={styles.inputIcon}>{icon}</span>}
-        {label}
-        {currentFileName && (
-          <span className={styles.fileName}>
-            <span className={styles.fileLabel}>Arquivo atual:</span>
-            <span className={styles.fileNameText}>{currentFileName}</span>
-          </span>
-        )}
-      </label>
-      <input
-        type="file"
-        name={name}
-        onChange={onChange}
-        accept=".pdf"
-        required={required && !hasExistingFile}
-        aria-required={required && !hasExistingFile}
-        className={styles.fileInput}
-      />
-      {hasExistingFile && (
-        <small className={styles.fileHint}>
-          Selecione um novo arquivo para substituir o atual, ou deixe em branco para manter o arquivo existente.
-        </small>
-      )}
-    </div>
-  );
-};
 
 const UserForm: React.FC = () => {
   const initialFormState: FormDataInterface = {
@@ -225,64 +117,38 @@ const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
 
-  const extractFilenameFromUrl = (url: string): string | undefined => {
-    if (!url) return undefined;
-    const parts = url.split('/');
-    return parts[parts.length - 1];
-  };
+  const extractFilenameFromUrl = (url: string): string | undefined => (url ? url.split('/').pop() : undefined);
 
   useEffect(() => {
-    console.log('UserForm useEffect running', { id, location: location.search });
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
-      console.log('No API key found, redirecting to login');
       navigate('/login');
       return;
     }
 
     const queryParams = new URLSearchParams(location.search);
     const planTypeFromUrl = queryParams.get('type') as 'manual' | 'pdf' | null;
-    console.log('Plan type from URL:', planTypeFromUrl);
 
     if (id) {
-      console.log('Fetching user data for ID:', id);
       setLoading(true);
       axios
-        .get(`http://localhost:3000/api/v1/users/${id}`, {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        })
+        .get(`http://localhost:3000/api/v1/users/${id}`, { headers: { Authorization: `Bearer ${apiKey}` } })
         .then((response) => {
-          console.log('User data fetched:', response.data);
           const user = response.data;
+          const loadedPdfs = user.weekly_pdfs?.length
+            ? user.weekly_pdfs.map((p: any) => ({
+                id: p.id,
+                weekday: p.weekday || '',
+                pdf_file: null,
+                pdf_url: p.pdf_url,
+                pdf_filename: p.pdf_filename || extractFilenameFromUrl(p.pdf_url),
+                notes: p.notes || '',
+                _destroy: false,
+              }))
+            : [initialFormState.weekly_pdfs_attributes[0]];
 
-          const loadedPdfs =
-            user.weekly_pdfs && user.weekly_pdfs.length > 0
-              ? user.weekly_pdfs.map((p: any) => ({
-                  id: p.id,
-                  weekday: p.weekday || '',
-                  pdf_file: null,
-                  pdf_url: p.pdf_url,
-                  pdf_filename: p.pdf_filename || (p.pdf_url ? extractFilenameFromUrl(p.pdf_url) : undefined),
-                  notes: p.notes || '',
-                  _destroy: false,
-                }))
-              : [
-                  {
-                    id: null,
-                    weekday: '',
-                    pdf_file: null,
-                    pdf_url: undefined,
-                    pdf_filename: undefined,
-                    notes: '',
-                    _destroy: false,
-                  },
-                ];
-
-          const hasActivePdfs = loadedPdfs.some(
-            (p: WeeklyPdf) => !p._destroy && (p.pdf_url || p.pdf_file)
-          );
+          const hasActivePdfs = loadedPdfs.some((p: WeeklyPdf) => !p._destroy && (p.pdf_url || p.pdf_file));
           const inferredPlanType = hasActivePdfs ? 'pdf' : user.plan_type || 'manual';
-          console.log('Inferred plan type:', inferredPlanType, 'Has active PDFs:', hasActivePdfs);
 
           setFormData({
             id: user.id || null,
@@ -290,121 +156,62 @@ const UserForm: React.FC = () => {
             email: user.email || '',
             password: '',
             phone_number: user.phone_number || '',
-            trainings_attributes:
-              inferredPlanType === 'manual' && user.trainings?.length > 0
-                ? user.trainings.map((t: any) => ({
-                    id: t.id || null,
-                    serie_amount: t.serie_amount || '',
-                    repeat_amount: t.repeat_amount || '',
-                    exercise_name: t.exercise_name || '',
-                    video: t.video || '',
-                    weekday: t.weekday || '',
-                    _destroy: false,
-                  }))
-                : [
-                    {
-                      id: null,
-                      serie_amount: '',
-                      repeat_amount: '',
-                      exercise_name: '',
-                      video: '',
-                      weekday: '',
-                      _destroy: false,
-                    },
-                  ],
-            meals_attributes:
-              inferredPlanType === 'manual' && user.meals?.length > 0
-                ? user.meals.map((m: any) => ({
-                    id: m.id || null,
-                    meal_type: m.meal_type || '',
-                    weekday: m.weekday || '',
-                    _destroy: false,
-                    comidas_attributes:
-                      m.comidas && m.comidas.length > 0
-                        ? m.comidas.map((c: any) => ({
-                            id: c.id || null,
-                            name: c.name || '',
-                            amount: c.amount || '',
-                            _destroy: false,
-                          }))
-                        : [
-                            {
-                              id: null,
-                              name: '',
-                              amount: '',
-                              _destroy: false,
-                            },
-                          ],
-                  }))
-                : [
-                    {
-                      id: null,
-                      meal_type: '',
-                      weekday: '',
-                      _destroy: false,
-                      comidas_attributes: [
-                        {
-                          id: null,
-                          name: '',
-                          amount: '',
-                          _destroy: false,
-                        },
-                      ],
-                    },
-                  ],
+            trainings_attributes: inferredPlanType === 'manual' && user.trainings?.length
+              ? user.trainings.map((t: any) => ({
+                  id: t.id || null,
+                  serie_amount: t.serie_amount || '',
+                  repeat_amount: t.repeat_amount || '',
+                  exercise_name: t.exercise_name || '',
+                  video: t.video || '',
+                  weekday: t.weekday || '',
+                  _destroy: false,
+                }))
+              : [initialFormState.trainings_attributes[0]],
+            meals_attributes: inferredPlanType === 'manual' && user.meals?.length
+              ? user.meals.map((m: any) => ({
+                  id: m.id || null,
+                  meal_type: m.meal_type || '',
+                  weekday: m.weekday || '',
+                  _destroy: false,
+                  comidas_attributes: m.comidas?.length
+                    ? m.comidas.map((c: any) => ({
+                        id: c.id || null,
+                        name: c.name || '',
+                        amount: c.amount || '',
+                        _destroy: false,
+                      }))
+                    : [initialFormState.meals_attributes[0].comidas_attributes[0]],
+                }))
+              : [initialFormState.meals_attributes[0]],
             weekly_pdfs_attributes: loadedPdfs,
             plan_type: inferredPlanType,
             plan_duration: user.plan_duration || '',
           });
-
           setActiveTab(inferredPlanType === 'pdf' ? 'pdfs' : 'basic');
-          console.log('Form data set:', formData);
           setLoading(false);
         })
         .catch((err) => {
-          console.error('Error fetching user:', err.response?.data || err.message);
           setError('Erro ao carregar dados do usuário');
           setLoading(false);
         });
     } else {
-      console.log('Initializing form for new user');
-      setFormData({
-        ...initialFormState,
-        plan_type: planTypeFromUrl || 'manual', // Default to 'manual' if no type
-      });
+      setFormData({ ...initialFormState, plan_type: planTypeFromUrl || 'manual' });
       setActiveTab(planTypeFromUrl === 'pdf' ? 'pdfs' : 'basic');
       setLoading(false);
-      console.log('Initial form data:', formData);
     }
   }, [id, navigate, location.search]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    console.log('Input changed:', { name, value });
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  const addTraining = () => {
+  const addTraining = () =>
     setFormData({
       ...formData,
-      trainings_attributes: [
-        ...formData.trainings_attributes,
-        {
-          id: null,
-          serie_amount: '',
-          repeat_amount: '',
-          exercise_name: '',
-          video: '',
-          weekday: '',
-          _destroy: false,
-        },
-      ],
+      trainings_attributes: [...formData.trainings_attributes, { ...initialFormState.trainings_attributes[0] }],
     });
-  };
 
   const handleTrainingChange = (index: number, field: string, value: string) => {
     const updatedTrainings = [...formData.trainings_attributes];
@@ -414,36 +221,16 @@ const UserForm: React.FC = () => {
 
   const removeTraining = (index: number) => {
     const updatedTrainings = [...formData.trainings_attributes];
-    if (updatedTrainings[index].id) {
-      updatedTrainings[index]._destroy = true;
-    } else {
-      updatedTrainings.splice(index, 1);
-    }
+    if (updatedTrainings[index].id) updatedTrainings[index]._destroy = true;
+    else updatedTrainings.splice(index, 1);
     setFormData({ ...formData, trainings_attributes: updatedTrainings });
   };
 
-  const addMeal = () => {
+  const addMeal = () =>
     setFormData({
       ...formData,
-      meals_attributes: [
-        ...formData.meals_attributes,
-        {
-          id: null,
-          meal_type: '',
-          weekday: '',
-          _destroy: false,
-          comidas_attributes: [
-            {
-              id: null,
-              name: '',
-              amount: '',
-              _destroy: false,
-            },
-          ],
-        },
-      ],
+      meals_attributes: [...formData.meals_attributes, { ...initialFormState.meals_attributes[0] }],
     });
-  };
 
   const handleMealChange = (mealIndex: number, field: string, value: string) => {
     const updatedMeals = [...formData.meals_attributes];
@@ -453,22 +240,14 @@ const UserForm: React.FC = () => {
 
   const removeMeal = (mealIndex: number) => {
     const updatedMeals = [...formData.meals_attributes];
-    if (updatedMeals[mealIndex].id) {
-      updatedMeals[mealIndex]._destroy = true;
-    } else {
-      updatedMeals.splice(mealIndex, 1);
-    }
+    if (updatedMeals[mealIndex].id) updatedMeals[mealIndex]._destroy = true;
+    else updatedMeals.splice(mealIndex, 1);
     setFormData({ ...formData, meals_attributes: updatedMeals });
   };
 
   const addComida = (mealIndex: number) => {
     const updatedMeals = [...formData.meals_attributes];
-    updatedMeals[mealIndex].comidas_attributes.push({
-      id: null,
-      name: '',
-      amount: '',
-      _destroy: false,
-    });
+    updatedMeals[mealIndex].comidas_attributes.push({ ...initialFormState.meals_attributes[0].comidas_attributes[0] });
     setFormData({ ...formData, meals_attributes: updatedMeals });
   };
 
@@ -483,32 +262,17 @@ const UserForm: React.FC = () => {
   const removeComida = (mealIndex: number, comidaIndex: number) => {
     const updatedMeals = [...formData.meals_attributes];
     const updatedComidas = [...updatedMeals[mealIndex].comidas_attributes];
-    if (updatedComidas[comidaIndex].id) {
-      updatedComidas[comidaIndex]._destroy = true;
-    } else {
-      updatedComidas.splice(comidaIndex, 1);
-    }
+    if (updatedComidas[comidaIndex].id) updatedComidas[comidaIndex]._destroy = true;
+    else updatedComidas.splice(comidaIndex, 1);
     updatedMeals[mealIndex].comidas_attributes = updatedComidas;
     setFormData({ ...formData, meals_attributes: updatedMeals });
   };
 
-  const addPdf = () => {
+  const addPdf = () =>
     setFormData({
       ...formData,
-      weekly_pdfs_attributes: [
-        ...formData.weekly_pdfs_attributes,
-        {
-          id: null,
-          weekday: '',
-          pdf_file: null,
-          pdf_url: undefined,
-          pdf_filename: undefined,
-          notes: '',
-          _destroy: false,
-        },
-      ],
+      weekly_pdfs_attributes: [...formData.weekly_pdfs_attributes, { ...initialFormState.weekly_pdfs_attributes[0] }],
     });
-  };
 
   const handlePdfChange = (index: number, field: string, value: any) => {
     const updatedPdfs = [...formData.weekly_pdfs_attributes];
@@ -518,11 +282,8 @@ const UserForm: React.FC = () => {
 
   const removePdf = (index: number) => {
     const updatedPdfs = [...formData.weekly_pdfs_attributes];
-    if (updatedPdfs[index].id) {
-      updatedPdfs[index]._destroy = true;
-    } else {
-      updatedPdfs.splice(index, 1);
-    }
+    if (updatedPdfs[index].id) updatedPdfs[index]._destroy = true;
+    else updatedPdfs.splice(index, 1);
     setFormData({ ...formData, weekly_pdfs_attributes: updatedPdfs });
   };
 
@@ -552,7 +313,7 @@ const UserForm: React.FC = () => {
             data.append(`user[trainings_attributes][${index}][_destroy]`, 'true');
           }
         } else {
-          if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id.toString());
+          if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id?.toString() || '');
           data.append(`user[trainings_attributes][${index}][serie_amount]`, training.serie_amount);
           data.append(`user[trainings_attributes][${index}][repeat_amount]`, training.repeat_amount);
           data.append(`user[trainings_attributes][${index}][exercise_name]`, training.exercise_name);
@@ -568,7 +329,7 @@ const UserForm: React.FC = () => {
             data.append(`user[meals_attributes][${mealIndex}][_destroy]`, 'true');
           }
         } else {
-          if (meal.id) data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id.toString());
+          if (meal.id) data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id?.toString() || '');
           data.append(`user[meals_attributes][${mealIndex}][meal_type]`, meal.meal_type);
           data.append(`user[meals_attributes][${mealIndex}][weekday]`, meal.weekday);
 
@@ -588,7 +349,7 @@ const UserForm: React.FC = () => {
               if (comida.id)
                 data.append(
                   `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`,
-                  comida.id.toString()
+                  comida.id?.toString() || ''
                 );
               data.append(
                 `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][name]`,
@@ -631,48 +392,31 @@ const UserForm: React.FC = () => {
       formData.weekly_pdfs_attributes.forEach((pdfItem, index) => {
         if (pdfItem.id) data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdfItem.id.toString());
         if (pdfItem.weekday) data.append(`user[weekly_pdfs_attributes][${index}][weekday]`, pdfItem.weekday);
-        if (pdfItem.pdf_file) {
-          data.append(`user[weekly_pdfs_attributes][${index}][pdf]`, pdfItem.pdf_file);
-        }
+        if (pdfItem.pdf_file) data.append(`user[weekly_pdfs_attributes][${index}][pdf]`, pdfItem.pdf_file);
         if (pdfItem.notes) data.append(`user[weekly_pdfs_attributes][${index}][notes]`, pdfItem.notes);
         data.append(`user[weekly_pdfs_attributes][${index}][_destroy]`, pdfItem._destroy.toString());
       });
     }
 
-    const headers = {
-      Authorization: `Bearer ${apiKey}`,
-    };
-
     try {
       setError(null);
-      if (formData.id) {
-        await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
-      } else {
-        await axios.post('http://localhost:3000/api/v1/users', data, { headers });
-      }
+      const headers = { Authorization: `Bearer ${apiKey}` };
+      if (formData.id) await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
+      else await axios.post('http://localhost:3000/api/v1/users', data, { headers });
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('Erro ao salvar usuário:', err.response?.data || err.message);
-      const errorMessage = err.response?.data?.errors
-        ? err.response.data.errors.join(', ')
-        : err.response?.data?.error || err.message;
+      const errorMessage = err.response?.data?.errors?.join(', ') || err.response?.data?.error || err.message;
       setError(`Erro ao salvar usuário: ${errorMessage}`);
     } finally {
       setFormSubmitting(false);
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div className={styles.errorMessage}>{error}</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className={styles.errorMessage}>{error}</div>;
 
   return (
     <div className={styles.formContainer}>
-    
       <div className={styles.layout}>
         <div className={styles.sidebar}>
           <button
@@ -710,303 +454,43 @@ const UserForm: React.FC = () => {
             </button>
           )}
         </div>
-
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
             {activeTab === 'basic' && (
-              <div className={styles.section}>
-                <h3>Informações Básicas</h3>
-                <div className={styles.basicInfo}>
-                  <InputField
-                    label="Nome do aluno"
-                    type="text"
-                    name="name" // Corrigido de "Nome completo"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Nome completo"
-                    required
-                    icon={<Icons.User />}
-                  />
-                  <InputField
-                    label="Email do aluno"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="email@exemplo.com"
-                    required
-                    icon={<Icons.Email />}
-                  />
-                  <InputField
-                    label="Número de Telefone"
-                    type="tel"
-                    name="phone_number"
-                    value={formData.phone_number || ''}
-                    onChange={handleInputChange}
-                    placeholder="+5511999999999"
-                    required
-                    icon={<Icons.User />}
-                  />
-                  <div
-                    className={`${styles.inputGroup} ${styles.passwordWrapper} ${
-                      formData.password ? styles.filled : ''
-                    }`}
-                  >
-                    <label>
-                      <span className={styles.inputIcon}>
-                        <Icons.Password />
-                      </span>
-                      Senha do aluno
-                    </label>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password || ''}
-                      onChange={handleInputChange}
-                      placeholder="Senha"
-                      aria-label="Senha do aluno"
-                    />
-                    <button
-                      type="button"
-                      className={styles.passwordToggleIcon}
-                      onClick={togglePasswordVisibility}
-                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                    >
-                      {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
-                    </button>
-                  </div> 
-                  <SelectField
-                    label="Duração do Plano"
-                    value={formData.plan_duration}
-                    onChange={handleInputChange}
-                    name="plan_duration"
-                    options={PlanDurationOptions}
-                    icon={<Icons.Calendar />}
-                    required
-                  />
-                </div>
-              </div>
+              <BasicInfoForm
+                formData={formData}
+                handleInputChange={handleInputChange}
+                showPassword={showPassword}
+                togglePasswordVisibility={togglePasswordVisibility}
+              />
             )}
-
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h3>Treinos</h3>
-                  <button type="button" className={styles.addButton} onClick={addTraining} aria-label="Adicionar novo treino">
-                    <Icons.Plus /> Adicionar Treino
-                  </button>
-                </div>
-                <small className={styles.fileHint}>
-                  Nota: O cadastro de treinos é opcional. Você pode adicionar apenas dietas, se preferir.
-                </small>
-                {formData.trainings_attributes.map((training, index) =>
-                  !training._destroy ? (
-                    <div className={styles.groupCard} key={training.id || `training-${index}`}>
-                      <div className={styles.sectionGroup}>
-                        <SelectField
-                          label="Dia da Semana"
-                          value={training.weekday}
-                          onChange={(e) => handleTrainingChange(index, 'weekday', e.target.value)}
-                          options={WeekdayOptions}
-                          icon={<Icons.Calendar />}
-                          name={`training-${index}-weekday`}
-                        />
-                        <InputField
-                          label="Exercício"
-                          type="text"
-                          name={`training-${index}-exercise_name`}
-                          value={training.exercise_name}
-                          onChange={(e) => handleTrainingChange(index, 'exercise_name', e.target.value)}
-                          placeholder="Nome do exercício"
-                          icon={<Icons.Food />}
-                        />
-                        <InputField
-                          label="Séries"
-                          type="number"
-                          name={`training-${index}-serie_amount`}
-                          value={training.serie_amount}
-                          onChange={(e) => handleTrainingChange(index, 'serie_amount', e.target.value)}
-                          placeholder="3"
-                        />
-                        <InputField
-                          label="Repetições"
-                          type="number"
-                          name={`training-${index}-repeat_amount`}
-                          value={training.repeat_amount}
-                          onChange={(e) => handleTrainingChange(index, 'repeat_amount', e.target.value)}
-                          placeholder="12"
-                        />
-                        <InputField
-                          label="Vídeo (opcional)"
-                          type="text"
-                          name={`training-${index}-video`}
-                          value={training.video}
-                          onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
-                          placeholder="URL do vídeo"
-                          optional
-                        />
-                      </div>
-                      <div className={styles.buttonRow}>
-                        <button
-                          type="button"
-                          className={styles.removeButton}
-                          onClick={() => removeTraining(index)}
-                          aria-label="Remover treino"
-                        >
-                          <Icons.Minus /> Remover Treino
-                        </button>
-                      </div>
-                    </div>
-                  ) : null
-                )}
-              </div>
+              <TrainingForm
+                trainings={formData.trainings_attributes}
+                handleTrainingChange={handleTrainingChange}
+                removeTraining={removeTraining}
+                addTraining={addTraining}
+              />
             )}
-
             {activeTab === 'meals' && formData.plan_type === 'manual' && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h3>Dietas</h3>
-                  <button type="button" className={styles.addButton} onClick={addMeal} aria-label="Adicionar nova refeição">
-                    <Icons.Plus /> Adicionar Refeição
-                  </button>
-                </div>
-                <small className={styles.fileHint}>
-                  Nota: O cadastro de dietas é opcional. Você pode adicionar apenas treinos, se preferir.
-                </small>
-                {formData.meals_attributes.map((meal, mealIndex) =>
-                  !meal._destroy ? (
-                    <div className={styles.groupCard} key={meal.id || `meal-${mealIndex}`}>
-                      <div className={styles.sectionGroup}>
-                        <SelectField
-                          label="Dia da Semana"
-                          value={meal.weekday}
-                          onChange={(e) => handleMealChange(mealIndex, 'weekday', e.target.value)}
-                          options={WeekdayOptions}
-                          icon={<Icons.Calendar />}
-                          name={`meal-${mealIndex}-weekday`}
-                        />
-                        <InputField
-                          label="Tipo da Refeição"
-                          type="text"
-                          name={`meal-${mealIndex}-meal_type`}
-                          value={meal.meal_type}
-                          onChange={(e) => handleMealChange(mealIndex, 'meal_type', e.target.value)}
-                          placeholder="Café da manhã"
-                          icon={<Icons.Food />}
-                        />
-                      </div>
-
-                      <div className={styles.foodSection}>
-                        <div className={styles.sectionSubheader}>
-                          <h4>Comidas</h4>
-                          <button
-                            type="button"
-                            className={styles.addFoodButton}
-                            onClick={() => addComida(mealIndex)}
-                            aria-label="Adicionar nova comida"
-                          >
-                            <Icons.Plus /> Adicionar Comida
-                          </button>
-                        </div>
-                        {meal.comidas_attributes.map((comida, comidaIndex) =>
-                          !comida._destroy ? (
-                            <div className={styles.foodItem} key={comida.id || `comida-${comidaIndex}`}>
-                              <InputField
-                                label="Nome"
-                                type="text"
-                                name={`comida-${mealIndex}-${comidaIndex}-name`}
-                                value={comida.name}
-                                onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'name', e.target.value)}
-                                placeholder="Alimento"
-                                icon={<Icons.Food />}
-                              />
-                              <InputField
-                                label="Quantidade"
-                                type="text"
-                                name={`comida-${mealIndex}-${comidaIndex}-amount`}
-                                value={comida.amount}
-                                onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)}
-                                placeholder="100g"
-                              />
-                              <button
-                                type="button"
-                                className={styles.removeButton}
-                                onClick={() => removeComida(mealIndex, comidaIndex)}
-                                aria-label="Remover comida"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ) : null
-                        )}
-                      </div>
-                      <div className={styles.buttonRow}>
-                        <button
-                          type="button"
-                          className={styles.removeButton}
-                          onClick={() => removeMeal(mealIndex)}
-                          aria-label="Remover refeição"
-                        >
-                          <Icons.Minus /> Remover Refeição
-                        </button>
-                      </div>
-                    </div>
-                  ) : null
-                )}
-              </div>
+              <MealForm
+                meals={formData.meals_attributes}
+                handleMealChange={handleMealChange}
+                removeMeal={removeMeal}
+                addMeal={addMeal}
+                handleComidaChange={handleComidaChange}
+                removeComida={removeComida}
+                addComida={addComida}
+              />
             )}
-
             {activeTab === 'pdfs' && formData.plan_type === 'pdf' && (
-              <div className={styles.section}>
-                <div className={styles.sectionHeader}>
-                  <h3>PDFs Semanais</h3>
-                  <button type="button" className={styles.addButton} onClick={addPdf} aria-label="Adicionar novo PDF">
-                    <Icons.Plus /> Adicionar PDF
-                  </button>
-                </div>
-                {formData.weekly_pdfs_attributes.map((pdfItem, index) =>
-                  !pdfItem._destroy ? (
-                    <div className={styles.groupCard} key={pdfItem.id || `pdf-${index}`}>
-                      <div className={styles.sectionGroup}>
-                        <FileInputField
-                          label="Upload PDF"
-                          name={`pdf-${index}-file`}
-                          onChange={(e) => handlePdfChange(index, 'pdf_file', e.target.files ? e.target.files[0] : null)}
-                          icon={<Icons.File />}
-                          required={!pdfItem.id && !pdfItem.pdf_url && !pdfItem.pdf_file}
-                          currentFileName={
-                            pdfItem.pdf_filename ||
-                            (pdfItem.pdf_file ? pdfItem.pdf_file.name : undefined)
-                          }
-                          hasExistingFile={!!pdfItem.pdf_url}
-                        />
-                        <InputField
-                          label="Notas (opcional)"
-                          type="text"
-                          name={`pdf-${index}-notes`}
-                          value={pdfItem.notes || ''}
-                          onChange={(e) => handlePdfChange(index, 'notes', e.target.value)}
-                          placeholder="Adicione notas aqui"
-                          optional
-                          icon={<Icons.File />}
-                        />
-                      </div>
-                      <div className={styles.buttonRow}>
-                        <button
-                          type="button"
-                          className={styles.removeButton}
-                          onClick={() => removePdf(index)}
-                          aria-label="Remover PDF"
-                        >
-                          <Icons.Minus /> Remover PDF
-                        </button>
-                      </div>
-                    </div>
-                  ) : null
-                )}
-              </div>
+              <PdfForm
+                weeklyPdfs={formData.weekly_pdfs_attributes}
+                handlePdfChange={handlePdfChange}
+                removePdf={removePdf}
+                addPdf={addPdf}
+              />
             )}
-
             <div className={styles.formActions}>
               <button
                 type="button"
@@ -1022,25 +506,16 @@ const UserForm: React.FC = () => {
                 disabled={formSubmitting}
                 aria-label="Salvar usuário"
               >
-                {formSubmitting ? (
-                  <Icons.Loading />
-                ) : (
-                  <>
-                    <Icons.Save /> {formData.id ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
-                  </>
-                )}
+                {formSubmitting ? <Icons.Loading /> : <Icons.Save />}
+                {formData.id ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
               </button>
             </div>
           </form>
-          {error && (
-            <div className={styles.errorMessage} role="alert">
-              {error}
-            </div>
-          )}
+          {error && <div className={styles.errorMessage} role="alert">{error}</div>}
         </div>
       </div>
     </div>
   );
 };
 
-export default UserForm; 
+export default UserForm;
