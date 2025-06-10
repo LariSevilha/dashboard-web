@@ -1,211 +1,139 @@
-/* Importando a mesma fonte usada no dashboard */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* Variáveis para consistência com o dashboard */
-:root {
-  --primary-bg: #000000;
-  --input-bg: #2d2d2d;
-  --gold-accent: #ceac5e;
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  --border-radius: 8px;
-  --transition: all 0.3s ease;
-  --error-color: #ef4444;
-}
-
-/* Reset básico */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
+.formContainer {
+  display: flex;
+  min-height: 100vh;
   background-color: var(--primary-bg);
   color: var(--text-primary);
+}
+
+.layout {
+  display: flex;
+  width: 100%;
   min-height: 100vh;
 }
 
-/* Container principal */
-.container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: var(--input-bg);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
+.sidebar {
+  width: 280px;
+  background-color: var(--input-bg);
+  padding: 20px;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-
-/* Título principal */
-.container h1 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--gold-accent);
-  margin-bottom: 1.5rem;
-  text-align: center;
-  width: 100%;
-}
-
-/* Navegação de abas */
-.tabNav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  width: 100%;
-  justify-content: center;
-  border-bottom: 2px solid var(--gold-accent);
-}
-
-.tabButton {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  text-align: center;
-}
-
-.tabButton:hover,
-.tabButton:focus {
-  color: var(--gold-accent);
-  outline: none;
-}
-
-.tabButton.active {
-  color: var(--gold-accent);
-  font-weight: 600;
-}
-
-.tabButton.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
+  gap: 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  position: fixed;
   left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: var(--gold-accent);
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
 }
 
-/* Seções do formulário */
+.sidebarButton {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: none;
+  padding: 12px 20px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 500;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebarButton.active {
+  background-color: rgba(var(--gold-accent), 0.1);
+  color: var(--gold-accent);
+  border-left: 3px solid var(--gold-accent);
+}
+
+.sidebarButton:hover {
+  background-color: rgba(var(--gold-accent), 0.2);
+  color: var(--gold-accent);
+}
+
+.content {
+  flex: 1;
+  background-color: var(--primary-bg);
+  padding: 40px;
+  margin-left: 280px;
+  min-height: 100vh;
+  overflow-y: auto;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+}
+
 .section {
-  width: 100%;
-  margin-bottom: 2rem;
+  margin-bottom: 20px;
 }
 
 .sectionHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+  margin-bottom: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-.sectionHeader h3 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: var(--gold-accent);
+.sectionGroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
-.sectionSubheader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+.basicInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
 }
 
-.sectionSubheader h4 {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-/* Grupos de input */
 .inputGroup {
   position: relative;
-  margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
-  width: 100%;
 }
 
 .inputGroup label {
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 5px;
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-  transition: var(--transition);
-}
-
-.inputGroup.filled label,
-.inputGroup:focus-within label {
-  color: var(--gold-accent);
+  gap: 5px;
 }
 
 .inputGroup input,
 .inputGroup select {
-  width: 100%;
-  padding: 0.75rem 0.75rem 0.75rem calc(0.75rem + 1.5rem);
-  font-size: 1rem;
-  border: 2px solid var(--gold-accent);
-  border-radius: var(--border-radius);
+  padding: 10px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 4px;
+  font-size: 14px;
   background-color: var(--input-bg);
   color: var(--text-primary);
-  transition: var(--transition);
-  box-sizing: border-box;
 }
 
-.inputGroup input:focus,
-.inputGroup select:focus {
-  outline: none;
-  border-color: #e6c47e;
-  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.3);
+.inputGroup.filled input,
+.inputGroup.filled select {
+  background-color: rgba(var(--input-bg), 0.8);
 }
 
-.inputGroup .inputIcon {
-  position: absolute;
-  left: 0.75rem;
-  top: calc(50% + 0.5rem);
-  transform: translateY(-50%);
+.inputIcon {
   color: var(--text-secondary);
-  transition: var(--transition);
 }
 
-.inputGroup.filled .inputIcon,
-.inputGroup:focus-within .inputIcon {
-  color: var(--gold-accent);
-}
-
-.inputGroup.optional label::after {
-  content: '(opcional)';
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-left: 0.5rem;
-}
-
-/* Campo de senha */
 .passwordWrapper {
   position: relative;
 }
 
 .passwordToggleIcon {
   position: absolute;
-  right: 0.75rem;
-  top: calc(50% + 0.5rem);
+  right: 10px;
+  top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
@@ -214,332 +142,199 @@ body {
   transition: var(--transition);
 }
 
-.passwordToggleIcon:hover,
-.passwordToggleIcon:focus {
+.passwordToggleIcon hovered {
   color: var(--gold-accent);
 }
 
-/* Campo de arquivo */
 .fileInputGroup {
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .fileInput {
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  width: 100%;
-  box-sizing: border-box;
+  padding: 10px;
+  background-color: var(--input-bg);
   color: var(--text-primary);
-  background: var(--input-bg);
-  border: 2px solid var(--gold-accent);
-  border-radius: var(--border-radius);
 }
 
 .fileName {
-  display: block;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 12px;
   color: var(--text-secondary);
-  word-break: break-word;
-}
-
-.fileLabel {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.fileNameText {
-  margin-left: 0.5rem;
+  margin-top: 5px;
 }
 
 .fileHint {
-  display: block;
-  font-size: 0.85rem;
+  font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  margin-top: 5px;
 }
 
-.currentPdf {
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.currentPdf a {
-  color: var(--gold-accent);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.currentPdf a:hover {
-  text-decoration: underline;
-}
-
-/* Cartões de grupo */
 .groupCard {
-  background: #1a1a1a;
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: var(--shadow);
-  border: 2px solid var(--gold-accent);
-  transition: var(--transition);
-}
-
-.groupCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-}
-
-/* Seção de grupo para alinhamento em grade */
-.sectionGroup {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  align-items: start;
-}
-
-/* Botões */
-.addButton,
-.addFoodButton,
-.removeButton,
-.removeFoodButton,
-.submitButton,
-.cancelButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: var(--border-radius);
-  border: none;
-  cursor: pointer;
-  transition: var(--transition);
-  box-shadow: var(--shadow);
-}
-
-.addButton,
-.addFoodButton,
-.submitButton {
-  background-color: var(--gold-accent);
-  color: #000000;
-}
-
-.addButton:hover,
-.addFoodButton:hover,
-.submitButton:hover {
-  background-color: #e6c47e;
-  transform: translateY(-2px);
-}
-
-.removeButton,
-.removeFoodButton {
-  background-color: var(--error-color);
-  color: #ffffff;
-}
-
-.removeButton:hover,
-.removeFoodButton:hover {
-  background-color: #f87171;
-  transform: translateY(-2px);
-}
-
-.cancelButton {
   background-color: var(--input-bg);
-  color: var(--text-primary);
-  border: 2px solid var(--gold-accent);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  margin-bottom: 15px;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  backdrop-filter: blur(10px);
 }
 
-.cancelButton:hover {
-  background-color: #3a3a3a;
-  transform: translateY(-2px);
-}
-
-.submitButton:disabled {
-  background-color: #3a3a3a;
-  cursor: not-allowed;
-}
-
-.removeFoodButton {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-}
-
-/* Seção de comidas */
 .foodSection {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--gold-accent);
+  margin-top: 15px;
+  padding-left: 20px;
+}
+
+.sectionSubheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .foodItem {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 1rem;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 10px;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 10px;
 }
 
-/* Ações do formulário */
+.addButton,
+.addFoodButton {
+  background-color: var(--gold-accent);
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.addButton:hover,
+.addFoodButton:hover {
+  background-color: var(--gold-accent-light);
+}
+
+.removeButton {
+  background-color: #e74c3c;
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+
+.removeButton:hover {
+  background-color: #c0392b;
+}
+
+.buttonRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
 .formActions {
   display: flex;
-  gap: 1rem;
   justify-content: flex-end;
-  margin-top: 2rem;
-  width: 100%;
-  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-/* Mensagem de erro */
-.errorMessage {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--input-bg);
-  color: var(--error-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  text-align: center;
-  font-size: 0.9rem;
-  width: 100%;
-}
-
-/* Loading */
-.loading {
+.cancelButton {
+  background-color: var(--text-secondary);
+  color: var(--text-primary);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin: 2rem 0;
+  gap: 5px;
+  transition: var(--transition);
 }
 
-.loading::after {
-  content: '';
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 3px solid var(--gold-accent);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.cancelButton:hover {
+  background-color: rgba(var(--text-secondary), 0.8);
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Skeleton UI */
-.skeleton {
-  animation: pulse 1.5s infinite;
-}
-
-.skeletonText {
-  background: #3a3a3a;
-  height: 1rem;
+.submitButton {
+  background-color: #2ecc71;
+  color: var(--text-primary);
+  border: none;
+  padding: 10px 20px;
   border-radius: 4px;
-  margin: 0.5rem 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: var(--transition);
 }
 
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-  100% {
-    opacity: 1;
-  }
+.submitButton:hover {
+  background-color: #27ae60;
 }
 
-/* Basic Info Grid */
-.basicInfo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+.submitButton:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
 }
 
-/* Responsividade */
+.errorMessage {
+  color: #e74c3c;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.optionalLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-left: 5px;
+}
+
 @media (max-width: 1024px) {
-  .container {
-    max-width: 90%;
-    padding: 1.5rem;
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .content {
+    margin-left: 0;
+  }
+}
 
-  .sectionGroup,
+@media (max-width: 640px) {
+  .sidebar {
+    width: 100%;
+  }
+  
+  .content {
+    padding: 20px 16px;
+  }
+  
+  .sectionHeader h3 {
+    font-size: 18px;
+  }
+  
   .basicInfo {
     grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-    margin: 1rem;
+  
+  .sectionGroup {
+    grid-template-columns: 1fr;
   }
-
-  .tabNav {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-
-  .tabButton {
-    width: 100%;
-    text-align: left;
-    padding: 0.75rem;
-  }
-
+  
   .foodItem {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .formActions {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-
-  .formActions button {
-    width: 100%;
-    padding: 0.75rem;
-  }
-
-  .sectionHeader,
-  .sectionSubheader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .container h1 {
-    font-size: 1.5rem;
-  }
-
-  .sectionHeader h3 {
-    font-size: 1.25rem;
-  }
-
-  .sectionSubheader h4 {
-    font-size: 1rem;
-  }
-
-  .inputGroup input,
-  .inputGroup select {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.5rem 0.5rem calc(0.5rem + 1.5rem);
-  }
-
-  .addButton,
-  .submitButton,
-  .cancelButton {
-    font-size: 0.9rem;
   }
 }

@@ -53,11 +53,6 @@ interface FormDataInterface {
   plan_duration: string;
 }
 
-const PlanTypeOptions = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'pdf', label: 'PDF' },
-];
-
 const PlanDurationOptions = [
   { value: 'monthly', label: 'Mensal' },
   { value: 'semi_annual', label: 'Semestral' },
@@ -677,7 +672,7 @@ const UserForm: React.FC = () => {
 
   return (
     <div className={styles.formContainer}>
-      <h1>{formData.id ? 'Editar Usuário' : 'Novo Usuário'}</h1>
+    
       <div className={styles.layout}>
         <div className={styles.sidebar}>
           <button
@@ -779,16 +774,7 @@ const UserForm: React.FC = () => {
                     >
                       {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
                     </button>
-                  </div>
-                  <SelectField
-                    label="Tipo de Plano"
-                    value={formData.plan_type}
-                    onChange={handleInputChange}
-                    name="plan_type"
-                    options={PlanTypeOptions}
-                    icon={<Icons.File />}
-                    required
-                  />
+                  </div> 
                   <SelectField
                     label="Duração do Plano"
                     value={formData.plan_duration}
