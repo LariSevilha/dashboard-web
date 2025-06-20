@@ -225,3 +225,38 @@ export const Loading: React.FC = () => (
     <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
   </svg>
 );
+
+export const UserPlus: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Ícone de adicionar usuário"
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+    <line x1="19" y1="8" x2="19" y2="14"></line>
+    <line x1="22" y1="11" x2="16" y2="11"></line>
+  </svg>
+);
+
+export const Dumbbell: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Ícone de halter"
+  >
+    <path d="M15 12H9m6 0l-3-3m3 3l-3 3m3-3v6m-9-6v6m0-6l3-3m-3 3l3 3"></path>
+  </svg>
+);

@@ -187,7 +187,7 @@ const UserForm: React.FC = () => {
             plan_type: inferredPlanType,
             plan_duration: user.plan_duration || '',
           });
-          setActiveTab(inferredPlanType === 'pdf' ? 'pdfs' : 'basic');
+          setActiveTab('basic'); // Sempre inicia no cadastro do cliente ao editar
           setLoading(false);
         })
         .catch((err) => {
@@ -196,7 +196,7 @@ const UserForm: React.FC = () => {
         });
     } else {
       setFormData({ ...initialFormState, plan_type: planTypeFromUrl || 'manual' });
-      setActiveTab(planTypeFromUrl === 'pdf' ? 'pdfs' : 'basic');
+      setActiveTab('basic'); // Sempre inicia no cadastro do cliente ao criar novo
       setLoading(false);
     }
   }, [id, navigate, location.search]);
@@ -418,13 +418,17 @@ const UserForm: React.FC = () => {
   return (
     <div className={styles.formContainer}>
       <div className={styles.layout}>
-        <div className={styles.sidebar}>
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarHeader}>
+            <div className={styles.brandLogo}>RF</div>
+            <h2 className={styles.title}>Formulário</h2>
+          </div>
           <button
             type="button"
             className={`${styles.sidebarButton} ${activeTab === 'basic' ? styles.active : ''}`}
             onClick={() => setActiveTab('basic')}
           >
-            Informações Básicas
+            <Icons.User /> Informações Básicas
           </button>
           {formData.plan_type === 'manual' && (
             <>
@@ -433,14 +437,14 @@ const UserForm: React.FC = () => {
                 className={`${styles.sidebarButton} ${activeTab === 'trainings' ? styles.active : ''}`}
                 onClick={() => setActiveTab('trainings')}
               >
-                Treinos
+                <Icons.Dumbbell /> Treinos
               </button>
               <button
                 type="button"
                 className={`${styles.sidebarButton} ${activeTab === 'meals' ? styles.active : ''}`}
                 onClick={() => setActiveTab('meals')}
               >
-                Dietas
+                <Icons.Food /> Dietas
               </button>
             </>
           )}
@@ -450,10 +454,10 @@ const UserForm: React.FC = () => {
               className={`${styles.sidebarButton} ${activeTab === 'pdfs' ? styles.active : ''}`}
               onClick={() => setActiveTab('pdfs')}
             >
-              PDFs Semanais
+              <Icons.File /> PDFs Semanais
             </button>
           )}
-        </div>
+        </aside>
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
             {activeTab === 'basic' && (
@@ -503,7 +507,7 @@ const UserForm: React.FC = () => {
               <button
                 type="submit"
                 className={styles.submitButton}
-                disabled={formSubmitting}
+                disabled={formSubmitting || (formData.plan_type === 'pdf' && !formData.weekly_pdfs_attributes.some(pdf => pdf.pdf_file || pdf.pdf_url))}
                 aria-label="Salvar usuário"
               >
                 {formSubmitting ? <Icons.Loading /> : <Icons.Save />}
