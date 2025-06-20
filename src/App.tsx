@@ -122,15 +122,7 @@ const App: React.FC = () => {
           </Router>
         </AnimatePresence>
       </main>
-      <footer className={styles.footer}>
-        <motion.div
-          className={styles.footerLine}
-          initial={{ width: 0 }}
-          animate={{ width: '6rem' }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        />
-        Renato Frutuoso - CREF 0000
-      </footer>
+       
     </div>
   );
 };

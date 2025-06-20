@@ -11,16 +11,28 @@ const Login: React.FC = () => {
   const [deviceId, setDeviceId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedDeviceId = localStorage.getItem('deviceId');
+    const savedEmail = localStorage.getItem('savedEmail');
+    const savedPassword = localStorage.getItem('savedPassword');
+    const remembered = localStorage.getItem('rememberMe') === 'true';
+
     if (storedDeviceId) {
       setDeviceId(storedDeviceId);
     } else {
       const newDeviceId = Math.random().toString(36).substring(2);
       localStorage.setItem('deviceId', newDeviceId);
       setDeviceId(newDeviceId);
+    }
+
+    if (remembered && savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
     }
   }, []);
 
@@ -36,6 +48,17 @@ const Login: React.FC = () => {
       });
       localStorage.setItem('apiKey', response.data.api_key);
       localStorage.setItem('userRole', response.data.role);
+
+      if (rememberMe) {
+        localStorage.setItem('savedEmail', email);
+        localStorage.setItem('savedPassword', password);
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('savedEmail');
+        localStorage.removeItem('savedPassword');
+        localStorage.removeItem('rememberMe');
+      }
+
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
@@ -45,41 +68,63 @@ const Login: React.FC = () => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div className={styles.loginContainer}>
       <h1 className={styles.title}>Login</h1>
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.inputGroup}>
-          <label>
-            <span className={styles.inputIcon}>
-              <Icons.Email />
-            </span>
-            Email
-          </label>
+          <label htmlFor="email">Email</label>
+          <span className={styles.inputIcon}>
+            <Icons.Email />
+          </span>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="email@exemplo.com"
             required
             aria-required="true"
+            className={styles.input}
           />
         </div>
         <div className={styles.inputGroup}>
-          <label>
-            <span className={styles.inputIcon}>
-              <Icons.Password />
-            </span>
-            Senha
-          </label>
+          <label htmlFor="password">Senha</label>
+          <span className={styles.inputIcon}>
+            <Icons.Password />
+          </span>
           <input
-            type="password"
+            id="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Senha"
             required
             aria-required="true"
+            className={styles.input}
           />
+            <button
+            type="button"
+            className={styles.togglePassword}
+            onClick={togglePasswordVisibility}
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+            {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
+            </button>
+        </div>
+        <div className={styles.rememberMeContainer}>
+          <input
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            aria-label="Salvar login"
+          />
+          <label htmlFor="rememberMe">Salvar login</label>
         </div>
         {error && (
           <div className={styles.errorMessage} role="alert">
@@ -94,4 +139,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login; 
+export default Login;

@@ -1,26 +1,56 @@
+/* Variáveis de tema para facilitar manutenção */
+:root {
+  --primary-bg: #1a1a1a; /* Fundo escuro elegante */
+  --input-bg: #2a2a2a; /* Fundo dos inputs */
+  --text-primary: #ffffff; /* Texto principal */
+  --text-secondary: #a0a0a0; /* Texto secundário */
+  --gold-accent: #d4af37; /* Dourado principal */
+  --gold-accent-light: #e6c670; /* Dourado claro para hover */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra suave */
+  --border-radius: 8px; /* Bordas arredondadas */
+  --transition: all 0.3s ease; /* Transição suave */
+}
+
 .loginContainer {
   width: 100%;
-  max-width: 400px;
-  padding: 2rem;
-  background: var(--primary-bg);
+  max-width: 420px;
+  padding: 2.5rem;
+  background: var(--input-bg); /* cor de fundo do container */
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Left-align content */
-  gap: 1.5rem;
+  align-items: center;
+  gap: 2rem;
   box-sizing: border-box;
-  margin: auto;
+  margin: 0 auto;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .title {
   color: var(--gold-accent);
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   margin: 0;
+  text-align: center;
+  background: linear-gradient(90deg, var(--gold-accent), var(--gold-accent-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.form {
   width: 100%;
-  text-align: left; /* Left-align title */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .inputGroup {
@@ -28,19 +58,38 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  position: relative;
 }
 
 .inputGroup label {
-  color: var(--gold-accent);
-  font-size: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
   margin-bottom: 0.5rem;
+  transition: var(--transition);
+}
+
+.inputGroup:hover label {
+  color: var(--gold-accent);
+}
+
+.inputIcon {
+  position: absolute;
+  top: 2.75rem;
+  left: 1rem;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+
+.inputGroup:hover .inputIcon {
+  color: var(--gold-accent);
 }
 
 .input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.75rem 2.5rem 0.75rem 2.5rem; /* Espaço para o ícone e o botão de toggle */
   background-color: var(--input-bg);
-  border: 2px solid var(--gold-accent);
+  border: 2px solid transparent;
   border-radius: var(--border-radius);
   color: var(--text-primary);
   font-size: 1rem;
@@ -50,27 +99,19 @@
 
 .input::placeholder {
   color: var(--text-secondary);
+  opacity: 0.7;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--gold-accent-light);
-  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.3);
+  border-color: var(--gold-accent);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2);
+  background-color: #303030;
 }
 
-.passwordInputWrapper {
-  position: relative;
-  width: 100%;
-}
-
-.passwordInputWrapper .input {
-  width: 100%;
-  padding-right: 2.5rem;
-}
-
-.passwordInputWrapper .togglePassword {
+.togglePassword {
   position: absolute;
-  top: 50%;
+  top: 70%;
   right: 0.75rem;
   transform: translateY(-50%);
   cursor: pointer;
@@ -82,44 +123,58 @@
   padding: 0;
 }
 
-.passwordInputWrapper .togglePassword:hover {
+.togglePassword:hover {
   color: var(--gold-accent);
-}
-
-.forgotPasswordLink {
-  display: block;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  text-decoration: none;
-  transition: var(--transition);
-  width: 100%;
-  text-align: left; /* Left-align link */
-}
-
-.forgotPasswordLink:hover {
-  color: var(--gold-accent);
-  text-decoration: underline;
 }
 
 .rememberMeContainer {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Left-align checkbox */
-  width: 100%;
+  gap: 0.5rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .rememberMeContainer input {
-  margin-right: 0.5rem;
+  margin: 0;
   accent-color: var(--gold-accent);
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
-.button {
+.rememberMeContainer label {
+  margin: 0;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.rememberMeContainer:hover label {
+  color: var(--gold-accent);
+}
+
+.errorMessage {
   width: 100%;
+  color: #ef4444;
+  font-size: 0.85rem;
+  background: rgba(239, 68, 68, 0.1);
   padding: 0.75rem;
-  background-color: var(--gold-accent);
-  color: #000000;
+  border-radius: var(--border-radius);
+  text-align: center;
+  box-shadow: var(--shadow);
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.submitButton {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(90deg, var(--gold-accent), var(--gold-accent-light));
+  color: #1a1a1a;
   border: none;
   border-radius: var(--border-radius);
   font-size: 1rem;
@@ -127,53 +182,69 @@
   cursor: pointer;
   transition: var(--transition);
   box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.button:hover {
-  background-color: var(--gold-accent-light);
-  transform: translateY(-2px);
+.submitButton:hover {
+  background: linear-gradient(90deg, var(--gold-accent-light), var(--gold-accent));
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
 }
 
-.errorMessage,
-.successMessage {
-  width: 100%;
-  color: #ef4444;
-  font-size: 0.9rem;
-  background: var(--input-bg);
-  padding: 0.5rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  text-align: left; /* Left-align messages */
-}
-
-.successMessage {
-  color: #22c55e;
+.submitButton:disabled {
+  background: var(--text-secondary);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .loginContainer::after {
   content: '';
   position: absolute;
-  bottom: -2.5rem;
-  left: 0; /* Left-align decorative line */
-  width: 8rem;
-  height: 0.1rem;
-  background-color: var(--gold-accent);
-  opacity: 0.5;
+  bottom: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-accent), transparent);
   border-radius: var(--border-radius);
 }
 
 @media (max-width: 768px) {
   .loginContainer {
-    padding: 1.5rem;
+    padding: 2rem;
     max-width: 90%;
+    margin: 0 auto;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .input,
+  .submitButton {
+    font-size: 0.95rem;
+    padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+  }
+
+  .submitButton {
+    padding: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .loginContainer {
+    padding: 1.5rem;
   }
 
   .title {
     font-size: 1.5rem;
   }
 
-  .input,
-  .button {
-    font-size: 0.95rem;
+  .inputGroup label {
+    font-size: 0.9rem;
   }
-} 
+}
