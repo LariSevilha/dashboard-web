@@ -59,6 +59,8 @@ const Dashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
 
@@ -68,10 +70,15 @@ const Dashboard: React.FC = () => {
       (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+
   useEffect(() => {
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey || userRole !== 'master') {
-      navigate('/dashboard');
+      navigate('/login');
       return;
     }
 
@@ -141,17 +148,29 @@ const Dashboard: React.FC = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value);
+    setCurrentPage(1); // Reseta para a primeira página ao buscar
   };
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.contentWrapper}>
         <aside className={styles.sidebar}>
-          <h1 className={styles.title}>Dashboard</h1>
+          <div className={styles.sidebarHeader}>
+            <div className={styles.brandLogo}>RF</div>
+            <h2 className={styles.title}>Dashboard</h2>
+          </div>
           {user && (
-            <p className={styles.info}>
-              Bem-vindo, {user.name || user.email} ({user.role})
-            </p>
+            <div className={styles.info}>
+              <div className={styles.userAvatar}>
+                {user.name ? user.name[0] : user.email?.[0]}
+              </div>
+              <div className={styles.userInfo}>
+                <div className={styles.userName}>{user.name || user.email}</div>
+                <div className={styles.userRole}>{user.role}</div>
+              </div>
+            </div>
           )}
           <div className={styles.menuItem}>
             <button
@@ -177,7 +196,6 @@ const Dashboard: React.FC = () => {
             <i className="fas fa-sign-out-alt"></i> Sair
           </button>
         </aside>
-
         <main className={styles.mainContent}>
           <header className={styles.header}>
             <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
@@ -190,53 +208,76 @@ const Dashboard: React.FC = () => {
                 onChange={handleSearchChange}
                 aria-label="Buscar usuários por nome ou email"
               />
-            </div>
-          </header>
-          {loading ? (
-            <div className={styles.loading}>Carregando...</div>
-          ) : error ? (
-            <p className={styles.errorMessage}>{error}</p>
-          ) : filteredUsers.length === 0 ? (
-            <p className={styles.empty}>Nenhum usuário encontrado.</p>
-          ) : (
-            <div className={styles.userList}>
-              {filteredUsers.map((u) => (
-                <div key={u.id} className={styles.userItem}>
-                  <div className={styles.userInfo}>
-                    <strong>{u.name || 'Nome não disponível'}</strong>
-                    <span>({u.email || 'Email não disponível'})</span>
-                  </div>
-                  <div className={styles.detailItem}>
-                    <strong>Data de Expiração:</strong>
-                    {u.registration_date
-                      ? (() => {
-                          const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
-                          return expirationDate
-                            ? format(new Date(expirationDate), 'dd/MM/yyyy')
-                            : 'Data não disponível';
-                        })()
-                      : 'Data não disponível'}
-                  </div>
-                  <div className={styles.userActions}>
-                    <Link to={`/dashboard/user/${u.id}`} aria-label={`Editar usuário ${u.name}`}>
-                      <span className={styles.editIcon}>✏️</span>
-                    </Link>
+            </div> 
+            </header>
+            {loading ? (
+              <div className={styles.loading}>Carregando...</div>
+            ) : error ? (
+              <p className={styles.errorMessage}>{error}</p>
+            ) : filteredUsers.length === 0 ? (
+              <p className={styles.empty}>Nenhum usuário encontrado.</p>
+            ) : (
+              <>
+                <div className={styles.userList}>
+                  {currentUsers.map((u) => (
+                    <div key={u.id} className={styles.userItem}>
+                      <div className={styles.userInfo}>
+                        <strong>{u.name || 'Nome não disponível'}</strong>
+                        <span>({u.email || 'Email não disponível'})</span>
+                      </div>
+                      <div className={styles.detailItem}>
+                        <strong>Data de Expiração:</strong>
+                        {u.registration_date
+                          ? (() => {
+                              const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
+                              return expirationDate
+                                ? format(new Date(expirationDate), 'dd/MM/yyyy')
+                                : 'Data não disponível';
+                            })()
+                          : 'Data não disponível'}
+                      </div>
+                      <div className={styles.userActions}>
+                        <Link to={`/dashboard/user/${u.id}`} aria-label={`Editar usuário ${u.name}`}>
+                          <span className={styles.editIcon}><i className="fas fa-edit"></i></span>
+                        </Link>
+                        <button
+                          className={styles.deleteIcon}
+                          onClick={() => handleDelete(u.id)}
+                          aria-label={`Excluir usuário ${u.name}`}
+                        >
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {filteredUsers.length > usersPerPage && (
+                  <div className={styles.pagination}>
                     <button
-                      className={styles.deleteIcon}
-                      onClick={() => handleDelete(u.id)}
-                      aria-label={`Excluir usuário ${u.name}`}
+                      className={styles.paginationButton}
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
                     >
-                      🗑️
+                      Anterior
+                    </button>
+                    <span className={styles.paginationInfo}>
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      className={styles.paginationButton}
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Próximo
                     </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+                )}
+              </>
+            )}
+          </main>
+        </div>
+      </div> 
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
