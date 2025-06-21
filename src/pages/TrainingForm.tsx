@@ -20,9 +20,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
           <Icons.Plus /> Adicionar Treino
         </button>
       </div>
-      <small className={styles.fileHint}>
-        Nota: O cadastro de treinos é opcional. Você pode adicionar apenas dietas, se preferir.
-      </small>
+      
       {trainings.map((training, index) =>
         !training._destroy ? (
           <div className={styles.groupCard} key={training.id || `training-${index}`}>

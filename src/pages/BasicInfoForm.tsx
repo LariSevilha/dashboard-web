@@ -9,6 +9,7 @@ interface BasicInfoProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   showPassword: boolean;
   togglePasswordVisibility: () => void;
+  generateRandomPassword: () => void;
 }
 
 const BasicInfoForm: React.FC<BasicInfoProps> = ({
@@ -16,6 +17,7 @@ const BasicInfoForm: React.FC<BasicInfoProps> = ({
   handleInputChange,
   showPassword,
   togglePasswordVisibility,
+  generateRandomPassword,
 }) => {
   return (
     <div className={styles.section}>
@@ -49,7 +51,7 @@ const BasicInfoForm: React.FC<BasicInfoProps> = ({
           onChange={handleInputChange}
           placeholder="+5511999999999"
           required
-          // icon={<Icons.Phone />}
+          icon={<Icons.Phone />}
         />
         <div className={`${styles.inputGroup} ${styles.passwordWrapper} ${formData.password ? styles.filled : ''}`}>
           <label>
@@ -71,6 +73,14 @@ const BasicInfoForm: React.FC<BasicInfoProps> = ({
             aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
           >
             {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
+          </button>
+          <button
+            type="button"
+            className={styles.generatePasswordButton}
+            onClick={generateRandomPassword}
+            aria-label="Gerar senha aleatória"
+          >
+            <Icons.Refresh /> Gerar Senha Aleatória
           </button>
         </div>
         <SelectField

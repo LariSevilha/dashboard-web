@@ -34,16 +34,7 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
                 }
                 hasExistingFile={!!pdfItem.pdf_url}
               />
-              <InputField
-                label="Notas (opcional)"
-                type="text"
-                name={`pdf-${index}-notes`}
-                value={pdfItem.notes || ''}
-                onChange={(e) => handlePdfChange(index, 'notes', e.target.value)}
-                placeholder="Adicione notas aqui"
-                optional
-                icon={<Icons.File />}
-              />
+             
             </div>
             <div className={styles.buttonRow}>
               <button

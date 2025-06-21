@@ -260,3 +260,34 @@ export const Dumbbell: React.FC = () => (
     <path d="M15 12H9m6 0l-3-3m3 3l-3 3m3-3v6m-9-6v6m0-6l3-3m-3 3l3 3"></path>
   </svg>
 );
+export const Phone: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Ícone de telefone"
+  >
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.88 19.88 0 0 1-8.63-3.07A19.51 19.51 0 0 1 3.15 8.81 19.88 19.88 0 0 1 .08 0.08 2 2 0 0 1 2 0h3a2 2 0 0 1 2 1.72c.2 1.53.74 3.01 1.59 4.35a2 2 0 0 1-.45 2.44l-1.27 1.27a16 16 0 0 0 7.27 7.27l1.27-1.27a2 2 0 0 1 2.44-.45c1.34.85 2.82 1.39 4.35 1.59a2 2 0 0 1 1.72 2z" />
+  </svg>
+);
+export const Refresh: React.FC = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-label="Ícone de atualizar"
+  >
+    <polyline points="23 4 23 10 17 10"></polyline>
+    <path d="M1 20a11 11 0 0 1 11-11c2.39 0 4.58.83 6.29 2.21L23 4"></path>
+  </svg>
+);

@@ -119,6 +119,16 @@ const UserForm: React.FC = () => {
 
   const extractFilenameFromUrl = (url: string): string | undefined => (url ? url.split('/').pop() : undefined);
 
+  const generateRandomPassword = (length = 12) => {
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
+    }
+    return password;
+  };
+
   useEffect(() => {
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
@@ -187,7 +197,7 @@ const UserForm: React.FC = () => {
             plan_type: inferredPlanType,
             plan_duration: user.plan_duration || '',
           });
-          setActiveTab('basic'); // Sempre inicia no cadastro do cliente ao editar
+          setActiveTab('basic');
           setLoading(false);
         })
         .catch((err) => {
@@ -196,7 +206,7 @@ const UserForm: React.FC = () => {
         });
     } else {
       setFormData({ ...initialFormState, plan_type: planTypeFromUrl || 'manual' });
-      setActiveTab('basic'); // Sempre inicia no cadastro do cliente ao criar novo
+      setActiveTab('basic');
       setLoading(false);
     }
   }, [id, navigate, location.search]);
@@ -401,8 +411,20 @@ const UserForm: React.FC = () => {
     try {
       setError(null);
       const headers = { Authorization: `Bearer ${apiKey}` };
-      if (formData.id) await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
-      else await axios.post('http://localhost:3000/api/v1/users', data, { headers });
+      let response;
+      if (formData.id) {
+        response = await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
+      } else {
+        response = await axios.post('http://localhost:3000/api/v1/users', data, { headers });
+      }
+      if (!formData.id) {
+        const phoneNumber = formData.phone_number.replace(/\D/g, '');
+        await axios.post('http://localhost:3000/api/v1/send-whatsapp', {
+          phoneNumber,
+          email: formData.email,
+          password: formData.password
+        }, { headers });
+      }
       navigate('/dashboard');
     } catch (err: any) {
       const errorMessage = err.response?.data?.errors?.join(', ') || err.response?.data?.error || err.message;
@@ -466,6 +488,7 @@ const UserForm: React.FC = () => {
                 handleInputChange={handleInputChange}
                 showPassword={showPassword}
                 togglePasswordVisibility={togglePasswordVisibility}
+                generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
               />
             )}
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (

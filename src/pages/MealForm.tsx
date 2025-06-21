@@ -46,9 +46,7 @@ const MealForm: React.FC<MealProps> = ({
           <Icons.Plus /> Adicionar Refeição
         </button>
       </div>
-      <small className={styles.fileHint}>
-        Nota: O cadastro de dietas é opcional. Você pode adicionar apenas treinos, se preferir.
-      </small>
+      
       {meals.map((meal, mealIndex) =>
         !meal._destroy ? (
           <div className={styles.groupCard} key={meal.id || `meal-${mealIndex}`}>
