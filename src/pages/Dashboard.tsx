@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { debounce } from 'lodash';
 import styles from '../styles/dashboard.module.css';
 import '../index.css';
+import { PlanDurationOptions } from './FormConstants';
 
 interface User {
   id: number;
@@ -14,21 +15,6 @@ interface User {
   role: string;
   plan_duration: string;
 }
-
-interface WeekdayOption {
-  value: string;
-  label: string;
-}
-
-const WeekdayOptions: WeekdayOption[] = [
-  { value: 'sunday', label: 'Domingo' },
-  { value: 'monday', label: 'Segunda-feira' },
-  { value: 'tuesday', label: 'Terça-feira' },
-  { value: 'wednesday', label: 'Quarta-feira' },
-  { value: 'thursday', label: 'Quinta-feira' },
-  { value: 'friday', label: 'Sexta-feira' },
-  { value: 'saturday', label: 'Sábado' },
-];
 
 const calculateExpirationDate = (registrationDate: string, planDuration: string): Date | null => {
   if (!registrationDate) return null;
@@ -60,14 +46,24 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState<string>('all'); // 'all', 'monthly', 'semi_annual', 'annual'
   const usersPerPage = 5;
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
 
-  const filteredUsers = users.filter(
+  // Sort users by registration_date (most recent first)
+  const sortedUsers = [...users].sort((a, b) => {
+    const dateA = a.registration_date ? new Date(a.registration_date).getTime() : 0;
+    const dateB = b.registration_date ? new Date(b.registration_date).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  // Filter users by search term and active tab
+  const filteredUsers = sortedUsers.filter(
     (u) =>
-      (u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+      (activeTab === 'all' || u.plan_duration === activeTab) &&
+      ((u.name && u.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   const indexOfLastUser = currentPage * usersPerPage;
@@ -148,10 +144,20 @@ const Dashboard: React.FC = () => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value);
-    setCurrentPage(1); // Reseta para a primeira página ao buscar
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page on tab change
+  };
+
+  const getPlanLabel = (value: string) => {
+    const option = PlanDurationOptions.find((opt) => opt.value === value);
+    return option ? option.label : value;
+  };
 
   return (
     <div className={styles.dashboardContainer}>
@@ -208,75 +214,95 @@ const Dashboard: React.FC = () => {
                 onChange={handleSearchChange}
                 aria-label="Buscar usuários por nome ou email"
               />
-            </div> 
-            </header>
-            {loading ? (
-              <div className={styles.loading}>Carregando...</div>
-            ) : error ? (
-              <p className={styles.errorMessage}>{error}</p>
-            ) : filteredUsers.length === 0 ? (
-              <p className={styles.empty}>Nenhum usuário encontrado.</p>
-            ) : (
-              <>
-                <div className={styles.userList}>
-                  {currentUsers.map((u) => (
-                    <div key={u.id} className={styles.userItem}>
-                      <div className={styles.userInfo}>
-                        <strong>{u.name || 'Nome não disponível'}</strong>
-                        <span>({u.email || 'Email não disponível'})</span>
-                      </div>
-                      <div className={styles.detailItem}>
-                        <strong>Data de Expiração:</strong>
-                        {u.registration_date
-                          ? (() => {
-                              const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
-                              return expirationDate
-                                ? format(new Date(expirationDate), 'dd/MM/yyyy')
-                                : 'Data não disponível';
-                            })()
-                          : 'Data não disponível'}
-                      </div>
-                      <div className={styles.userActions}>
-                        <Link to={`/dashboard/user/${u.id}`} aria-label={`Editar usuário ${u.name}`}>
-                          <span className={styles.editIcon}><i className="fas fa-edit"></i></span>
-                        </Link>
-                        <button
-                          className={styles.deleteIcon}
-                          onClick={() => handleDelete(u.id)}
-                          aria-label={`Excluir usuário ${u.name}`}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
+            </div>
+          </header>
+          <div className={styles.tabContainer}>
+            <button
+              className={`${styles.tabButton} ${activeTab === 'all' ? styles.activeTab : ''}`}
+              onClick={() => handleTabChange('all')}
+            >
+              Todos
+            </button>
+            {PlanDurationOptions.map((option) => (
+              <button
+                key={option.value}
+                className={`${styles.tabButton} ${activeTab === option.value ? styles.activeTab : ''}`}
+                onClick={() => handleTabChange(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {loading ? (
+            <div className={styles.loading}>Carregando...</div>
+          ) : error ? (
+            <p className={styles.errorMessage}>{error}</p>
+          ) : filteredUsers.length === 0 ? (
+            <p className={styles.empty}>Nenhum usuário encontrado.</p>
+          ) : (
+            <>
+              <div className={styles.userList}>
+                {currentUsers.map((u) => (
+                  <div key={u.id} className={styles.userItem}>
+                    <div className={styles.userInfo}>
+                      <strong>{u.name || 'Nome não disponível'}</strong>
+                      <span>({u.email || 'Email não disponível'})</span>
                     </div>
-                  ))}
-                </div>
-                {filteredUsers.length > usersPerPage && (
-                  <div className={styles.pagination}>
-                    <button
-                      className={styles.paginationButton}
-                      onClick={() => paginate(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      Anterior
-                    </button>
-                    <span className={styles.paginationInfo}>
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <button
-                      className={styles.paginationButton}
-                      onClick={() => paginate(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      Próximo
-                    </button>
+                    <div className={styles.detailItem}>
+                      <strong>Data de Expiração:</strong>
+                      {u.registration_date
+                        ? (() => {
+                            const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
+                            return expirationDate
+                              ? format(new Date(expirationDate), 'dd/MM/yyyy')
+                              : 'Data não disponível';
+                          })()
+                        : 'Data não disponível'}
+                    </div>
+                    <div className={styles.detailItem}>
+                      <strong>Plano:</strong> {getPlanLabel(u.plan_duration)}
+                    </div>
+                    <div className={styles.userActions}>
+                      <Link to={`/dashboard/user/${u.id}`} aria-label={`Editar usuário ${u.name}`}>
+                        <span className={styles.editIcon}><i className="fas fa-edit"></i></span>
+                      </Link>
+                      <button
+                        className={styles.deleteIcon}
+                        onClick={() => handleDelete(u.id)}
+                        aria-label={`Excluir usuário ${u.name}`}
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </div>
-                )}
-              </>
-            )}
-          </main>
-        </div>
-      </div> 
+                ))}
+              </div>
+              {filteredUsers.length > usersPerPage && (
+                <div className={styles.pagination}>
+                  <button
+                    className={styles.paginationButton}
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </button>
+                  <span className={styles.paginationInfo}>
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <button
+                    className={styles.paginationButton}
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Próximo
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
+    </div>
   );
 };
 
