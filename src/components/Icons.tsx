@@ -291,3 +291,8 @@ export const Refresh: React.FC = () => (
     <path d="M1 20a11 11 0 0 1 11-11c2.39 0 4.58.83 6.29 2.21L23 4"></path>
   </svg>
 );
+export const ChevronDown = ({ style }: { style?: React.CSSProperties }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" style={style}>
+    <path d="M4 6L8 10L12 6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);

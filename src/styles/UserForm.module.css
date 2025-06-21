@@ -323,11 +323,43 @@
   backdrop-filter: blur(15px);
   box-shadow: var(--shadow);
   transition: var(--transition);
+  overflow: hidden;
 }
 
 .groupCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(206, 172, 94, 0.2);
+}
+
+.groupCard.collapsed {
+  padding: 16px 28px;
+  max-height: 60px;
+}
+
+.groupCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.groupCardHeader:hover {
+  color: var(--gold-accent);
+}
+
+.groupCardContent {
+  max-height: 1000px;
+  opacity: 1;
+  transition: max-height 0.5s ease, opacity 0.3s ease;
+}
+
+.groupCard.collapsed .groupCardContent {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
 }
 
 .foodSection {
