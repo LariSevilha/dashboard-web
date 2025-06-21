@@ -7,7 +7,7 @@
   --gold-accent: #ceac5e; /* Cor dourada */
   --text-primary: #ffffff; /* Texto principal */
   --text-secondary: #94a3b8; /* Texto secundário */
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --shadow: 0 0 12px #ceac5e;
   --glow: 0 0 12px rgba(206, 172, 94, 0.5);
   --border-radius: 12px;
   --transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -15,8 +15,7 @@
 
 .formContainer {
   display: flex;
-  min-height: 100vh;
-  background: linear-gradient(180deg, var(--primary-bg) 0%, #1a1a1a 100%);
+  min-height: 100vh; 
   color: var(--text-primary);
   overflow-x: hidden;
 }
@@ -111,12 +110,10 @@
 }
 
 .content {
-  flex: 1;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.95), rgba(26, 26, 26, 0.9));
+  flex: 1; 
   min-height: 100vh;
   overflow-y: auto;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
+  border-radius: var(--border-radius);   
   margin-left: 300px;
   padding: 48px;
 }
@@ -126,7 +123,7 @@
   padding: 24px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
+  /* box-shadow: var(--shadow); */
 }
 
 .sectionHeader {
