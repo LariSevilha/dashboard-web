@@ -1,4 +1,3 @@
-/* Importing a modern, elegant font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Variables for consistency, aligned with UserForm.module.css */
@@ -73,6 +72,15 @@ body {
   cursor: pointer;
   backdrop-filter: blur(20px);
   transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 1024px) {
+  .mobileMenuToggle {
+    display: flex;
+  }
 }
 
 .mobileMenuToggle:hover {
@@ -89,10 +97,16 @@ body {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 999;
+  z-index: 998;
   backdrop-filter: blur(4px);
   opacity: 0;
-  transition: var(--transition-smooth);
+  transition: opacity var(--transition-smooth);
+}
+
+@media (max-width: 1024px) {
+  .sidebarOverlay {
+    display: block;
+  }
 }
 
 .sidebarOverlay.active {
@@ -111,9 +125,20 @@ body {
   top: 0;
   height: 100vh;
   z-index: 1000;
-  transition: var(--transition-smooth);
+  transition: transform var(--transition-smooth);
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-medium);
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
 }
 
 .sidebarHeader {
@@ -139,6 +164,12 @@ body {
   padding: 4px;
   border-radius: 4px;
   transition: var(--transition-fast);
+}
+
+@media (max-width: 1024px) {
+  .sidebarCloseButton {
+    display: block;
+  }
 }
 
 .sidebarCloseButton:hover {
@@ -274,8 +305,15 @@ body {
   padding: var(--content-padding);
   margin-left: var(--sidebar-width);
   min-height: 100vh;
-  transition: var(--transition-smooth);
+  transition: margin-left var(--transition-smooth);
   width: calc(100% - var(--sidebar-width));
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 .header {
@@ -288,6 +326,12 @@ body {
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
   animation: fadeIn 0.5s ease-out;
+}
+
+@media (max-width: 1024px) {
+  .header {
+    margin-top: 70px;
+  }
 }
 
 .subtitle {
@@ -489,7 +533,7 @@ body {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  padding-top: 8px;
+  padding-top: 4px;
   border-top: 1px solid var(--border);
 }
 
@@ -500,7 +544,7 @@ body {
   cursor: pointer;
   font-size: 16px;
   padding: 6px;
-  border-radius: var(--border-radius-small);
+  border-radius: 50%;
   transition: var(--transition-smooth);
   display: flex;
   align-items: center;
@@ -512,7 +556,7 @@ body {
 
 .editIcon {
   color: var(--gold-accent);
-  background: var(--surface);
+  background: inherit;
 }
 
 .editIcon:hover {
@@ -522,7 +566,7 @@ body {
 
 .deleteIcon {
   color: #ef4444;
-  background: var(--surface);
+  background: none;
 }
 
 .deleteIcon:hover {
@@ -631,49 +675,17 @@ body {
   }
 }
 
-@media (max-width: 1024px) {
-  :root {
-    --content-padding: 24px;
-    --grid-columns: 2;
-  }
-  
-  .mobileMenuToggle {
-    display: block;
-  }
-  
-  .sidebarOverlay {
-    display: block;
-  }
-  
+@media (min-width: 768px) and (max-width: 1024px) {
   .sidebar {
-    transform: translateX(-100%);
-    transition: var(--transition-smooth);
-    width: 280px;
+    width: 260px;
   }
-  
-  .sidebar.open {
-    transform: translateX(0);
+
+  .userList {
+    grid-template-columns: repeat(2, 1fr);
   }
-  
-  .sidebarCloseButton {
-    display: block;
-  }
-  
-  .mainContent {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .header {
-    margin-top: 60px;
-  }
-  
-  .subtitle {
-    font-size: 22px;
-  }
-  
+
   .searchBar {
-    width: 200px;
+    width: 250px;
   }
 }
 
@@ -682,7 +694,7 @@ body {
     --content-padding: 16px;
     --grid-columns: 1;
   }
-  
+
   .header {
     flex-direction: column;
     align-items: stretch;
@@ -869,7 +881,7 @@ body {
     font-size: 12px;
     width: 100%;
     text-align: center;
-    margin: 8px 0 0 0;
+    margin: 8px 0;
   }
 }
 
@@ -898,9 +910,8 @@ body {
 .tabButton:focus-visible,
 .editIcon:focus-visible,
 .deleteIcon:focus-visible,
-.paginationButton:focus-visible,
 .mobileMenuToggle:focus-visible,
-.sidebarCloseButton:focus-visible {
+.sidebarCloseButton:focus {
   outline: 2px solid var(--gold-accent);
   outline-offset: 2px;
 }
@@ -927,4 +938,4 @@ body {
     break-inside: avoid;
     page-break-inside: avoid;
   }
-}
+} 

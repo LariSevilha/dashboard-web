@@ -47,9 +47,66 @@ const Dashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<string>('all'); // 'all', 'monthly', 'semi_annual', 'annual'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
   const usersPerPage = 5;
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
+
+  // Verificar se é mobile/tablet
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.querySelector(`.${styles.sidebar}`);
+      const toggle = document.querySelector(`.${styles.mobileMenuToggle}`);
+      
+      if (isMobileMenuOpen && sidebar && toggle && 
+          !sidebar.contains(event.target as Node) && 
+          !toggle.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
+  // Prevenir scroll do body quando menu está aberto
+  useEffect(() => {
+    if (isMobileMenuOpen && isMobile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen, isMobile]);
+
+  // Fechar menu ao redimensionar para desktop
+  useEffect(() => {
+    if (!isMobile && isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isMobile, isMobileMenuOpen]);
 
   // Sort users by registration_date (most recent first)
   const sortedUsers = [...users].sort((a, b) => {
@@ -159,49 +216,111 @@ const Dashboard: React.FC = () => {
     return option ? option.label : value;
   };
 
+  // Função para toggle do menu mobile
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  // Função para fechar menu mobile
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  // Função para fechar menu ao clicar em links (para mobile)
+  const handleLinkClick = () => {
+    if (isMobile) {
+      closeMobileMenu();
+    }
+  };
+
   return (
     <div className={styles.dashboardContainer}>
+      {/* Botão toggle do menu mobile */}
+      {isMobile && (
+        <button
+          className={styles.mobileMenuToggle}
+          onClick={toggleMobileMenu}
+          aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={isMobileMenuOpen}
+        >
+          <i className={isMobileMenuOpen ? "fas fa-times" : "fas fa-bars"} />
+        </button>
+      )}
+
+      {/* Overlay para mobile */}
+      {isMobile && (
+        <div 
+          className={`${styles.sidebarOverlay} ${isMobileMenuOpen ? styles.active : ''}`}
+          onClick={closeMobileMenu}
+          aria-hidden={!isMobileMenuOpen}
+        />
+      )}
+
       <div className={styles.contentWrapper}>
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${isMobile && isMobileMenuOpen ? styles.open : ''}`}>
           <div className={styles.sidebarHeader}>
+            {/* Botão para fechar menu mobile */}
+            {isMobile && (
+              <button
+                className={styles.sidebarCloseButton}
+                onClick={closeMobileMenu}
+                aria-label="Fechar menu"
+              >
+                <i className="fas fa-times" />
+              </button>
+            )}
             <div className={styles.brandLogo}>RF</div>
             <h2 className={styles.title}>Dashboard</h2>
           </div>
-          {user && (
-            <div className={styles.info}>
-              <div className={styles.userAvatar}>
-                {user.name ? user.name[0] : user.email?.[0]}
-              </div>
-              <div className={styles.userInfo}>
-                <div className={styles.userName}>{user.name || user.email}</div>
-                <div className={styles.userRole}>{user.role}</div>
-              </div>
-            </div>
-          )}
-          <div className={styles.menuItem}>
-            <button
-              className={styles.buttonAdd}
-              onClick={() => setShowOptions(!showOptions)}
-              aria-expanded={showOptions}
-              aria-controls="add-user-options"
-            >
-              <i className="fas fa-user-plus"></i> Adicionar Usuário
-            </button>
-            {showOptions && (
-              <div id="add-user-options" className={styles.subMenu}>
-                <Link to="/dashboard/user/new?type=pdf" className={styles.subMenuItem}>
-                  <i className="fas fa-file-pdf"></i> Adicionar PDF
-                </Link>
-                <Link to="/dashboard/user/new?type=manual" className={styles.subMenuItem}>
-                  <i className="fas fa-edit"></i> Cadastrar Manual
-                </Link>
+          
+          <div className={styles.sidebarContent}>
+            {user && (
+              <div className={styles.info}>
+                <div className={styles.userAvatar}>
+                  {user.name ? user.name[0] : user.email?.[0]}
+                </div>
+                <div className={styles.userInfo}>
+                  <div className={styles.userName}>{user.name || user.email}</div>
+                  <div className={styles.userRole}>{user.role}</div>
+                </div>
               </div>
             )}
+            
+            <div className={styles.menuItem}>
+              <button
+                className={styles.buttonAdd}
+                onClick={() => setShowOptions(!showOptions)}
+                aria-expanded={showOptions}
+                aria-controls="add-user-options"
+              >
+                <i className="fas fa-user-plus" /> Adicionar Usuário
+              </button>
+              {showOptions && (
+                <div id="add-user-options" className={styles.subMenu}>
+                  <Link 
+                    to="/dashboard/user/new?type=pdf" 
+                    className={styles.subMenuItem}
+                    onClick={handleLinkClick}
+                  >
+                    <i className="fas fa-file-pdf" /> Adicionar PDF
+                  </Link>
+                  <Link 
+                    to="/dashboard/user/new?type=manual" 
+                    className={styles.subMenuItem}
+                    onClick={handleLinkClick}
+                  >
+                    <i className="fas fa-edit" /> Cadastrar Manual
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
+          
           <button className={styles.buttonLogout} onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i> Sair
+            <i className="fas fa-sign-out-alt" /> Sair
           </button>
         </aside>
+        
         <main className={styles.mainContent}>
           <header className={styles.header}>
             <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
@@ -216,6 +335,7 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </header>
+          
           <div className={styles.tabContainer}>
             <button
               className={`${styles.tabButton} ${activeTab === 'all' ? styles.activeTab : ''}`}
@@ -233,6 +353,7 @@ const Dashboard: React.FC = () => {
               </button>
             ))}
           </div>
+          
           {loading ? (
             <div className={styles.loading}>Carregando...</div>
           ) : error ? (
@@ -263,15 +384,19 @@ const Dashboard: React.FC = () => {
                       <strong>Plano:</strong> {getPlanLabel(u.plan_duration)}
                     </div>
                     <div className={styles.userActions}>
-                      <Link to={`/dashboard/user/${u.id}`} aria-label={`Editar usuário ${u.name}`}>
-                        <span className={styles.editIcon}><i className="fas fa-edit"></i></span>
+                      <Link 
+                        to={`/dashboard/user/${u.id}`} 
+                        aria-label={`Editar usuário ${u.name}`}
+                        onClick={handleLinkClick}
+                      >
+                        <span className={styles.editIcon}><i className="fas fa-edit" /></span>
                       </Link>
                       <button
                         className={styles.deleteIcon}
                         onClick={() => handleDelete(u.id)}
                         aria-label={`Excluir usuário ${u.name}`}
                       >
-                        <i className="fas fa-trash"></i>
+                        <i className="fas fa-trash" />
                       </button>
                     </div>
                   </div>
@@ -306,4 +431,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 
