@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import BasicInfoForm from './BasicInfoForm';
@@ -8,6 +8,7 @@ import PdfForm from './PdfForm';
 import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
 import * as Icons from '../components/Icons';
+import SelectField from '../components/ SelectField';
 
 // Interfaces
 interface Training {
@@ -59,53 +60,56 @@ interface FormDataInterface {
 }
 
 const UserForm: React.FC = () => {
-  const initialFormState: FormDataInterface = {
-    id: null,
-    name: '',
-    email: '',
-    password: '',
-    phone_number: '',
-    trainings_attributes: [
-      {
-        id: null,
-        serie_amount: '',
-        repeat_amount: '',
-        exercise_name: '',
-        video: '',
-        weekday: '',
-        _destroy: false,
-      },
-    ],
-    meals_attributes: [
-      {
-        id: null,
-        meal_type: '',
-        weekday: '',
-        _destroy: false,
-        comidas_attributes: [
-          {
-            id: null,
-            name: '',
-            amount: '',
-            _destroy: false,
-          },
-        ],
-      },
-    ],
-    weekly_pdfs_attributes: [
-      {
-        id: null,
-        weekday: '',
-        pdf_file: null,
-        pdf_url: undefined,
-        pdf_filename: undefined,
-        notes: '',
-        _destroy: false,
-      },
-    ],
-    plan_type: '',
-    plan_duration: '',
-  };
+  const initialFormState = useMemo<FormDataInterface>(
+    () => ({
+      id: null,
+      name: '',
+      email: '',
+      password: '',
+      phone_number: '',
+      trainings_attributes: [
+        {
+          id: null,
+          serie_amount: '',
+          repeat_amount: '',
+          exercise_name: '',
+          video: '',
+          weekday: '',
+          _destroy: false,
+        },
+      ],
+      meals_attributes: [
+        {
+          id: null,
+          meal_type: '',
+          weekday: '',
+          _destroy: false,
+          comidas_attributes: [
+            {
+              id: null,
+              name: '',
+              amount: '',
+              _destroy: false,
+            },
+          ],
+        },
+      ],
+      weekly_pdfs_attributes: [
+        {
+          id: null,
+          weekday: '',
+          pdf_file: null,
+          pdf_url: undefined,
+          pdf_filename: undefined,
+          notes: '',
+          _destroy: false,
+        },
+      ],
+      plan_type: '',
+      plan_duration: '',
+    }),
+    []
+  );
 
   const [formData, setFormData] = useState<FormDataInterface>(initialFormState);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +213,7 @@ const UserForm: React.FC = () => {
       setActiveTab('basic');
       setLoading(false);
     }
-  }, [id, navigate, location.search]);
+  }, [id, navigate, location.search, initialFormState]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -411,18 +415,15 @@ const UserForm: React.FC = () => {
     try {
       setError(null);
       const headers = { Authorization: `Bearer ${apiKey}` };
-      let response;
       if (formData.id) {
-        response = await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
+        await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
       } else {
-        response = await axios.post('http://localhost:3000/api/v1/users', data, { headers });
-      }
-      if (!formData.id) {
+        await axios.post('http://localhost:3000/api/v1/users', data, { headers });
         const phoneNumber = formData.phone_number.replace(/\D/g, '');
         await axios.post('http://localhost:3000/api/v1/send-whatsapp', {
           phoneNumber,
           email: formData.email,
-          password: formData.password
+          password: formData.password,
         }, { headers });
       }
       navigate('/dashboard');
@@ -433,6 +434,8 @@ const UserForm: React.FC = () => {
       setFormSubmitting(false);
     }
   };
+
+   
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className={styles.errorMessage}>{error}</div>;
@@ -483,13 +486,15 @@ const UserForm: React.FC = () => {
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
             {activeTab === 'basic' && (
-              <BasicInfoForm
-                formData={formData}
-                handleInputChange={handleInputChange}
-                showPassword={showPassword}
-                togglePasswordVisibility={togglePasswordVisibility}
-                generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
-              />
+              <>
+                <BasicInfoForm
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  showPassword={showPassword}
+                  togglePasswordVisibility={togglePasswordVisibility}
+                  generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
+                />
+              </>
             )}
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (
               <TrainingForm

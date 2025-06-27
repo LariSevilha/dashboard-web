@@ -1,7 +1,8 @@
 import React from 'react';
-import { InputField, FileInputField } from '../components/UserFormComponents';
+import { FileInputField, SelectField } from '../components/UserFormComponents';
 import * as Icons from '../components/Icons';
 import styles from '../styles/UserForm.module.css';
+import { WeekdayOptions } from './FormConstants';
 
 interface PdfProps {
   weeklyPdfs: any[];
@@ -23,6 +24,7 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
         !pdfItem._destroy ? (
           <div className={styles.groupCard} key={pdfItem.id || `pdf-${index}`}>
             <div className={styles.sectionGroup}>
+              
               <FileInputField
                 label="Upload PDF"
                 name={`pdf-${index}-file`}
@@ -34,7 +36,6 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
                 }
                 hasExistingFile={!!pdfItem.pdf_url}
               />
-             
             </div>
             <div className={styles.buttonRow}>
               <button

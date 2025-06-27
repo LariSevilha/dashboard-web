@@ -1,0 +1,246 @@
+/* Metrics view */
+.metricsView {
+    width: 100%;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeIn 0.5s ease-out;
+  }
+  
+  @media (max-width: 1024px) {
+    .header {
+      margin-top: 70px;
+    }
+  }
+  
+  .subtitle {
+    background: linear-gradient(135deg, var(--gold-accent), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    text-align: left;
+    text-transform: uppercase;
+    margin: 0;
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  .metricsActions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  
+  .downloadButton {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  }
+  
+  .downloadButton:hover {
+    background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+  }
+  
+  .downloadButton:active {
+    transform: translateY(0);
+  }
+  
+  .filtersContainer {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+  }
+  
+  .filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 150px;
+  }
+  
+  .filterGroup label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #b0b0b0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .filterSelect {
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .filterSelect:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  .filterSelect:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+  
+  .filterSelect option {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .metricsDetails {
+    margin-top: 24px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .metricsDetails h4 {
+    margin: 0 0 16px 0;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .planDetails {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+  
+  .planDetail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .planName {
+    font-weight: 500;
+    color: #e0e0e0;
+  }
+  
+  .planCount {
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  
+  .kpiContainer {
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  
+  .kpiCard {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .kpiCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+  }
+  
+  .kpiCard h4 {
+    margin: 0 0 8px 0;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .kpiCard p {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  
+  .chartContainer {
+    margin-bottom: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 300px;
+  }
+  
+  @media (max-width: 768px) {
+    .filtersContainer {
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .filterGroup {
+      min-width: unset;
+    }
+    
+    .metricsActions {
+      flex-direction: column;
+      width: 100%;
+      gap: 8px;
+    }
+    
+    .downloadButton {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .planDetails {
+      grid-template-columns: 1fr;
+    }
+    
+    .kpiContainer {
+      grid-template-columns: 1fr;
+    }
+  }

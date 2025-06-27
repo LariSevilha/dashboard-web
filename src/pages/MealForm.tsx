@@ -42,7 +42,7 @@ const MealForm: React.FC<MealProps> = ({
 
   const handleAddMeal = () => {
     addMeal();
-    setOpenIndex(meals.length); // Open the newly added meal
+    setOpenIndex(meals.length);
   };
 
   const toggleMeal = (index: number) => {

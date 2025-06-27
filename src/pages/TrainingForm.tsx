@@ -16,7 +16,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
 
   const handleAddTraining = () => {
     addTraining();
-    setOpenIndex(trainings.length); // Open the newly added training
+    setOpenIndex(trainings.length);
   };
 
   const toggleTraining = (index: number) => {
@@ -30,7 +30,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
         <button type="button" className={styles.addButton} onClick={handleAddTraining} aria-label="Adicionar novo treino">
           <Icons.Plus /> Adicionar Treino
         </button>
-      </div> 
+      </div>
       {trainings.map((training, index) =>
         !training._destroy ? (
           <div

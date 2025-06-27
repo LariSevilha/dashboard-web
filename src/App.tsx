@@ -12,118 +12,22 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 // import { Toaster } from '@/components/ui/toaster';
 
 const App: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loggedInUser = localStorage.getItem('apiKey');
-    setIsLoading(false);
-  }, []);
-
-  const isAuthenticated = () => !!localStorage.getItem('apiKey');
-
-  const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
-  };
-
-  if (isLoading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <motion.div
-          className={styles.spinner}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ peito: 0.5 }}
-        />
-      </div>
-    );
-  }
+  // Use loggedInUser for authentication check
+  const loggedInUser = localStorage.getItem('userRole');
 
   return (
-    <div className={styles.appContainer}> 
-      <header className={styles.header}>
-        <motion.img
-          className={styles.logoImage}
-          src="https://storage.googleapis.com/hostinger-horizons-assets-prod/a8d82ed5-8e56-4ea8-8bed-143e8e595a3d/cff3f6c0c2a3fa166f7947d1d442b113.png"
-          alt="Renato Frutuoso - Consultoria Esportiva Online"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+    <Router>
+      <Routes>
+        <Route
+          path="/dashboard"
+          element={loggedInUser === 'master' ? <Dashboard /> : <Navigate to="/login" />}
         />
-      </header>
-      <main className={styles.mainContent}>
-        <AnimatePresence mode="wait">
-          <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <motion.div
-                      key="dashboard"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Dashboard />
-                    </motion.div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/new"
-                element={
-                  <ProtectedRoute>
-                    <motion.div
-                      key="user-new"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <UserForm />
-                    </motion.div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dashboard/user/:id"
-                element={
-                  <ProtectedRoute>
-                    <motion.div
-                      key="user-edit"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <UserForm />
-                    </motion.div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to={isAuthenticated() ? '/dashboard' : '/login'} />} />
-              <Route
-                path="*"
-                element={
-                  <motion.div
-                    key="not-found"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <h1 className={styles.notFound}>404 - Página não encontrada</h1>
-                  </motion.div>
-                }
-              />
-            </Routes>
-          </Router>
-        </AnimatePresence>
-      </main>
-       
-    </div>
+        <Route path="/dashboard/user/:id" element={<UserForm />} />
+        <Route path="/dashboard/user/new" element={<UserForm />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </Router>
   );
 };
 
