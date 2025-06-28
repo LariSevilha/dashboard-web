@@ -692,3 +692,66 @@ button:focus {
     transition-duration: 0.01ms !important;
   }
 }
+
+.photoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.userPhoto {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold-accent, #ceac5e);
+}
+
+.defaultAvatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--primary-bg, #2d2d2d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--gold-accent, #ceac5e);
+}
+
+.defaultAvatar svg {
+  width: 60px;
+  height: 60px;
+  fill: var(--gold-accent, #ceac5e);
+}
+
+.photoWrapper input[type="file"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .basicInfo {
+    grid-template-columns: 1fr;
+  }
+
+  .photoWrapper {
+    align-items: flex-start;
+  }
+}
+
+.userPhoto {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold-accent, #ceac5e);
+}
+
+.userAvatar svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--gold-accent, #ceac5e);
+}
