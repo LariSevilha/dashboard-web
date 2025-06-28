@@ -1,51 +1,16 @@
-/* Importing a modern, elegant font */
+/* UserForm.module.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* Variables for consistency, merging original and new styles */
-:root {
-  --primary-bg: #000000; /* Fundo preto */
-  --secondary-bg: #1a1a1a; /* Warmer dark background */
-  --gold-accent: #ceac5e; /* Cor dourada */
-  --gold-light: #e6c77a; /* Lighter gold */
-  --gold-muted: #cebac6; /* Muted gold */
-  --gold-op: #000000; /* Muted gold */
-  --text-primary: #ffffff; /* Texto principal */
-  --text-secondary: #94a3b8; /* Texto secundário */
-  --text-muted: #64748b; /* Even more muted */
-  --surface: rgba(255, 255, 255, 0.02); /* Subtle surface */
-  --surface-hover: rgba(255, 255, 255, 0.04); /* Subtle hover */
-  --surface-active: rgba(206, 172, 94, 0.08); /* Active state */
-  --border: rgba(255, 255, 255, 0.06); /* Subtle borders */
-  --border-accent: rgba(206, 172, 94, 0.15); /* Accent borders */
-  --shadow: 0 0 12px #ceac5e;
-  --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.15);
-  --shadow-glow: 0 0 20px rgba(206, 172, 94, 0.1);
-  --border-radius: 12px;
-  --border-radius-small: 12px;
-  --border-radius-large: 20px;
-  --transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-collapse: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-
 .formContainer {
   display: flex;
   min-height: 100vh;
-  color: var(--text-primary);
-  overflow-x: hidden
+  color: var(--text);
+  background: var(--background);
+  overflow-x: hidden;
 }
 
 .layout {
@@ -56,7 +21,7 @@ body {
 
 .sidebar {
   width: 300px;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.8));
+  background: var(--card-background);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -83,12 +48,12 @@ body {
 .brandLogo {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--gold-accent), var(--gold-light));
+  background: var(--gold-accent);
   border-radius: var(--border-radius-small);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: var(--text);
   font-weight: 800;
   font-size: 18px;
   box-shadow: var(--shadow-glow);
@@ -98,19 +63,16 @@ body {
 
 .brandLogo:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(206, 172, 94, 0.3);
+  box-shadow: 0 0 30px var(--border-accent);
 }
 
 .title {
-  color: var(--text-primary);
+  color: var(--text);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0;
   text-transform: uppercase;
-  background: linear-gradient(90deg, var(--gold-accent), var(--gold-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .sidebarButton {
@@ -168,13 +130,15 @@ body {
   margin-left: 300px;
   padding: 48px;
 }
-/* 
+
 .section {
   margin-bottom: 40px;
   padding: 24px;
   background: var(--surface);
   border-radius: var(--border-radius);
-} */
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-subtle);
+}
 
 .sectionHeader {
   display: flex;
@@ -188,15 +152,13 @@ body {
 .sectionHeader h3 {
   font-size: 20px;
   font-weight: 700;
-  background: linear-gradient(90deg, var(--gold-accent), var(--gold-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text);
 }
 
 .sectionGroup {
   margin-bottom: 24px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 fields per column for training and diet */
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
@@ -216,7 +178,7 @@ body {
 
 .inputGroup label {
   font-size: 16px;
-  color: var(--text-primary);
+  color: var(--text);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
@@ -231,7 +193,7 @@ body {
   border-radius: var(--border-radius-small);
   font-size: 16px;
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--text);
   transition: var(--transition-smooth);
   backdrop-filter: blur(12px);
   box-sizing: border-box;
@@ -244,7 +206,7 @@ body {
   border-radius: var(--border-radius-small);
   font-size: 16px;
   background: var(--surface);
-  color: var(--gold-accent); /* Distinct color for select */
+  color: var(--text);
   transition: var(--transition-smooth);
   backdrop-filter: blur(12px);
   box-sizing: border-box;
@@ -256,7 +218,8 @@ body {
 }
 
 .inputGroup select option {
-  color: var(--gold-op); /* Same color for dropdown options */
+  color: var(--text);
+  background: var(--card-background);
 }
 
 .inputGroup input:focus,
@@ -264,7 +227,7 @@ body {
   outline: none;
   border-color: var(--gold-accent);
   background: var(--surface-hover);
-  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.1);
+  box-shadow: 0 0 0 3px var(--border-accent);
   transform: translateY(-2px);
 }
 
@@ -281,7 +244,7 @@ body {
 }
 
 .inputIcon {
-  color: var(--gold-muted);
+  color: var(--text-secondary);
   font-size: 20px;
   opacity: 0.8;
   transition: var(--transition-fast);
@@ -317,12 +280,12 @@ body {
 
 .passwordToggleIcon:hover {
   color: var(--gold-accent);
-  background: rgba(206, 172, 94, 0.1);
+  background: var(--surface-hover);
 }
 
 .generatePasswordButton {
-  background: linear-gradient(135deg, var(--gold-accent), var(--gold-light));
-  color: var(--text-primary);
+  background: var(--button-background);
+  color: var(--text);
   border: none;
   padding: 10px 20px;
   border-radius: var(--border-radius-small);
@@ -338,6 +301,7 @@ body {
 }
 
 .generatePasswordButton:hover {
+  background: var(--button-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-medium);
 }
@@ -350,7 +314,7 @@ body {
 .fileInput {
   padding: 16px 20px;
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--text);
   border: 2px solid var(--border);
   border-radius: var(--border-radius-small);
   font-size: 16px;
@@ -366,7 +330,7 @@ body {
 .fileInput:focus {
   outline: none;
   border-color: var(--gold-accent);
-  box-shadow: 0 0 0 3px rgba(206, 172, 94, 0.1);
+  box-shadow: 0 0 0 3px var(--border-accent);
 }
 
 .fileName {
@@ -384,11 +348,11 @@ body {
 }
 
 .groupCard {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  background: var(--card-background);
   padding: 28px;
   border-radius: var(--border-radius-large);
   margin-bottom: 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-subtle);
   transition: var(--transition-collapse);
@@ -403,7 +367,7 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--gold-accent) 50%, transparent 100%);
+  background: var(--gold-accent);
   opacity: 0;
   transition: var(--transition-smooth);
 }
@@ -434,7 +398,7 @@ body {
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text);
   transition: var(--transition-fast);
   user-select: none;
 }
@@ -465,7 +429,7 @@ body {
   padding: 24px;
   background: var(--surface);
   border-radius: var(--border-radius);
-  border: 1px solid var(--border);
+  border: 1px solid var(--card-border);
 }
 
 .sectionSubheader {
@@ -477,7 +441,7 @@ body {
 
 .foodItem {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 fields per column for diet */
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   align-items: end;
   margin-bottom: 20px;
@@ -485,8 +449,8 @@ body {
 
 .addButton,
 .addFoodButton {
-  background: linear-gradient(135deg, var(--gold-accent), var(--gold-light));
-  color: var(--text-primary);
+  background: var(--button-background);
+  color: var(--text);
   border: none;
   padding: 14px 24px;
   border-radius: var(--border-radius-small);
@@ -502,13 +466,14 @@ body {
 
 .addButton:hover,
 .addFoodButton:hover {
+  background: var(--button-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-medium);
 }
 
 .removeButton {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: var(--text-primary);
+  background: var(--error-color);
+  color: var(--text);
   border: none;
   padding: 12px;
   border-radius: var(--border-radius-small);
@@ -547,7 +512,7 @@ body {
 
 .cancelButton {
   background: var(--surface);
-  color: var(--text-primary);
+  color: var(--text);
   border: 2px solid var(--border);
   padding: 16px 32px;
   border-radius: var(--border-radius-small);
@@ -568,8 +533,8 @@ body {
 }
 
 .submitButton {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: var(--text-primary);
+  background: var(--button-background);
+  color: var(--text);
   border: none;
   padding: 16px 32px;
   border-radius: var(--border-radius-small);
@@ -584,6 +549,7 @@ body {
 }
 
 .submitButton:hover {
+  background: var(--button-hover);
   transform: translateY(-1px);
   box-shadow: var(--shadow-medium);
 }
@@ -597,12 +563,12 @@ body {
 }
 
 .errorMessage {
-  color: #e74c3c;
+  color: var(--error-color);
   margin-top: 24px;
   text-align: center;
   padding: 16px;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
   border-radius: var(--border-radius-small);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-subtle);
@@ -617,7 +583,7 @@ body {
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(206, 172, 94, 0.5);
+    box-shadow: 0 0 0 0 var(--border-accent);
   }
   50% {
     box-shadow: 0 0 0 12px rgba(206, 172, 94, 0);
@@ -641,7 +607,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gold-muted);
+  background: var(--gold-accent);
 }
 
 @media (max-width: 1024px) {

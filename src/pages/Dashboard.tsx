@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentView, setCurrentView] = useState<'users' | 'metrics'>('users');
+  const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
 
   const usersPerPage = 5;
   const navigate = useNavigate();
@@ -70,6 +71,15 @@ const Dashboard: React.FC = () => {
       setIsMobileMenuOpen(false);
     }
   }, [isMobile, isMobileMenuOpen]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const sortedUsers = [...users].sort((a, b) => {
     const dateA = a.registration_date ? new Date(a.registration_date).getTime() : 0;
@@ -143,6 +153,26 @@ const Dashboard: React.FC = () => {
     } catch (err) {
       console.error('Delete error:', err);
       setError('Erro ao deletar usuário');
+    }
+  };
+
+  const handleToggleActive = async (id: number, currentStatus: boolean) => {
+    const action = currentStatus ? 'desativar' : 'ativar';
+    if (!window.confirm(`Tem certeza que deseja ${action} este usuário?`)) return;
+
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey) return;
+
+    try {
+      await axios.patch(`http://localhost:3000/api/v1/users/${id}/toggle_active`, {
+        active: !currentStatus
+      }, {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      });
+      fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' });
+    } catch (err) {
+      console.error('Toggle active error:', err);
+      setError(`Erro ao ${action} usuário`);
     }
   };
 
@@ -252,6 +282,9 @@ const Dashboard: React.FC = () => {
                 <div className={styles.detailItem}>
                   <strong>Plano:</strong> {getPlanLabel(u.plan_duration)}
                 </div>
+                <div className={styles.detailItem}>
+                  <strong>Status:</strong> {u.active ? 'Ativo' : 'Inativo'}
+                </div>
                 <div className={styles.userActions}>
                   <Link
                     to={`/dashboard/user/${u.id}`}
@@ -268,6 +301,13 @@ const Dashboard: React.FC = () => {
                     aria-label={`Excluir usuário ${u.name}`}
                   >
                     <i className="fas fa-trash" />
+                  </button>
+                  <button
+                    className={styles.toggleActiveIcon}
+                    onClick={() => handleToggleActive(u.id, u.active)}
+                    aria-label={`${u.active ? 'Desativar' : 'Ativar'} usuário ${u.name}`}
+                  >
+                    <i className={u.active ? 'fas fa-toggle-off' : 'fas fa-toggle-on'} />
                   </button>
                 </div>
               </div>
@@ -345,7 +385,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-            
             <div className={styles.menuItem}>
               <button
                 className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
@@ -357,7 +396,6 @@ const Dashboard: React.FC = () => {
                 <i className="fas fa-users" /> Usuários
               </button>
             </div>
-
             <div className={styles.menuItem}>
               <button
                 className={styles.buttonAdd}
@@ -397,8 +435,16 @@ const Dashboard: React.FC = () => {
                 <i className="fas fa-chart-bar" /> Métricas
               </button>
             </div>
+            <div className={styles.menuItem}>
+              <button
+                className={styles.menuButton}
+                onClick={toggleTheme}
+                aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+              >
+                <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+              </button>
+            </div>
           </div>
-      
           <button className={styles.buttonLogout} onClick={handleLogout}>
             <i className="fas fa-sign-out-alt" /> Sair
           </button>

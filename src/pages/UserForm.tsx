@@ -117,6 +117,7 @@ const UserForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'trainings' | 'meals' | 'pdfs'>('basic');
+  const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -214,6 +215,15 @@ const UserForm: React.FC = () => {
       setLoading(false);
     }
   }, [id, navigate, location.search, initialFormState]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -435,8 +445,6 @@ const UserForm: React.FC = () => {
     }
   };
 
-   
-
   if (loading) return <div>Loading...</div>;
   if (error) return <div className={styles.errorMessage}>{error}</div>;
 
@@ -482,6 +490,14 @@ const UserForm: React.FC = () => {
               <Icons.File /> PDFs Semanais
             </button>
           )}
+          <button
+            type="button"
+            className={styles.sidebarButton}
+            onClick={toggleTheme}
+            aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+          >
+            <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+          </button>
         </aside>
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
@@ -550,4 +566,4 @@ const UserForm: React.FC = () => {
   );
 };
 
-export default UserForm;
+export default UserForm; 
