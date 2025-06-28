@@ -332,8 +332,7 @@ body {
   width: 300px;
   font-size: 14px;
   font-weight: 500;
-  transition: var(--transition-smooth);
-  backdrop-filter: blur(12px);
+  transition: var(--transition-smooth); 
 }
 
 .searchBar:focus {

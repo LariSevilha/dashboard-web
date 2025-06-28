@@ -224,7 +224,9 @@ const Dashboard: React.FC = () => {
       <header className={styles.header}>
         <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
         <div className={styles.searchContainer}>
-          <span className={styles.searchIcon}>🔍</span>
+          <span className={styles.searchIcon}>
+            <i className="fas fa-search" aria-hidden="true"></i>
+          </span>
           <input
             className={styles.searchBar}
             type="text"
