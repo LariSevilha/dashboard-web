@@ -156,25 +156,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleToggleActive = async (id: number, currentStatus: boolean) => {
-    const action = currentStatus ? 'desativar' : 'ativar';
-    if (!window.confirm(`Tem certeza que deseja ${action} este usuário?`)) return;
-
-    const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey) return;
-
-    try {
-      await axios.patch(`http://localhost:3000/api/v1/users/${id}/toggle_active`, {
-        active: !currentStatus
-      }, {
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      });
-      fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' });
-    } catch (err) {
-      console.error('Toggle active error:', err);
-      setError(`Erro ao ${action} usuário`);
-    }
-  };
+   
 
   const handleLogout = () => {
     localStorage.removeItem('apiKey');
@@ -284,9 +266,7 @@ const Dashboard: React.FC = () => {
                 <div className={styles.detailItem}>
                   <strong>Plano:</strong> {getPlanLabel(u.plan_duration)}
                 </div>
-                <div className={styles.detailItem}>
-                  <strong>Status:</strong> {u.active ? 'Ativo' : 'Inativo'}
-                </div>
+                
                 <div className={styles.userActions}>
                   <Link
                     to={`/dashboard/user/${u.id}`}
@@ -303,14 +283,7 @@ const Dashboard: React.FC = () => {
                     aria-label={`Excluir usuário ${u.name}`}
                   >
                     <i className="fas fa-trash" />
-                  </button>
-                  <button
-                    className={styles.toggleActiveIcon}
-                    onClick={() => handleToggleActive(u.id, u.active)}
-                    aria-label={`${u.active ? 'Desativar' : 'Ativar'} usuário ${u.name}`}
-                  >
-                    <i className={u.active ? 'fas fa-toggle-off' : 'fas fa-toggle-on'} />
-                  </button>
+                  </button> 
                 </div>
               </div>
             ))}
