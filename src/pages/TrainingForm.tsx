@@ -6,7 +6,7 @@ import { WeekdayOptions } from './FormConstants';
 
 interface TrainingProps {
   trainings: any[];
-  handleTrainingChange: (index: number, field: string, value: string) => void;
+  handleTrainingChange: (index: number, field: string, value: any) => void;
   removeTraining: (index: number) => void;
   addTraining: () => void;
 }
@@ -21,6 +21,13 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
 
   const toggleTraining = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
+  };
+
+  const handlePhotoChange = (index: number, files: FileList | null) => {
+    if (files) {
+      const fileArray = Array.from(files);
+      handleTrainingChange(index, 'photos', fileArray);
+    }
   };
 
   return (
@@ -55,7 +62,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   label="Exercício"
                   type="text"
                   name={`training-${index}-exercise_name`}
-                  value={training.exercise_name}
+                  value={training.exercise_name || ''}
                   onChange={(e) => handleTrainingChange(index, 'exercise_name', e.target.value)}
                   placeholder="Nome do exercício"
                   icon={<Icons.Dumbbell />}
@@ -64,7 +71,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   label="Séries"
                   type="number"
                   name={`training-${index}-serie_amount`}
-                  value={training.serie_amount}
+                  value={training.serie_amount || ''}
                   onChange={(e) => handleTrainingChange(index, 'serie_amount', e.target.value)}
                   placeholder="3"
                 />
@@ -72,7 +79,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   label="Repetições"
                   type="number"
                   name={`training-${index}-repeat_amount`}
-                  value={training.repeat_amount}
+                  value={training.repeat_amount || ''}
                   onChange={(e) => handleTrainingChange(index, 'repeat_amount', e.target.value)}
                   placeholder="12"
                 />
@@ -80,11 +87,38 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   label="Vídeo (opcional)"
                   type="text"
                   name={`training-${index}-video`}
-                  value={training.video}
+                  value={training.video || ''}
                   onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
                   placeholder="URL do vídeo"
                   optional
                 />
+                <div className={styles.fileInputWrapper}>
+                  <label htmlFor={`training-${index}-photos`} className={styles.label}>
+                    Fotos (opcional)
+                  </label>
+                  <input
+                    type="file"
+                    id={`training-${index}-photos`}
+                    name={`training-${index}-photos`}
+                    onChange={(e) => handlePhotoChange(index, e.target.files)}
+                    multiple
+                    accept="image/*"
+                    className={styles.fileInput}
+                  />
+                  {training.photos && training.photos.length > 0 && (
+                    <div className={styles.selectedFiles}>
+                      <p>Fotos selecionadas:</p>
+                      <ul>
+                        {(training.photos instanceof Array
+                          ? training.photos.map((file: File) => file.name)
+                          : training.photos.split(',').map((url: string) => url.split('/').pop())
+                        ).map((name: string, i: number) => (
+                          <li key={i}>{name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className={styles.buttonRow}>
                 <button

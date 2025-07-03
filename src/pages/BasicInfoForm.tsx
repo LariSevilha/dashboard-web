@@ -1,4 +1,7 @@
 import React from 'react';
+import { InputField, SelectField } from '../components/UserFormComponents';
+import * as Icons from '../components/Icons';
+import styles from '../styles/UserForm.module.css';
 import { PlanDurationOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
 import * as Icons from '../components/Icons';
@@ -25,6 +28,8 @@ interface BasicInfoFormProps {
   showPassword: boolean;
   togglePasswordVisibility: () => void;
   generateRandomPassword: () => void;
+  isMaster: boolean;
+  expirationDate?: string;
 }
 
 const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
@@ -34,7 +39,32 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
   showPassword,
   togglePasswordVisibility,
   generateRandomPassword,
+  isMaster,
+  expirationDate,
 }) => {
+  // Helper function to format date for display
+  const formatDateForDisplay = (dateString?: string): string => {
+    if (!dateString) return '';
+    
+    // If it's already in the correct format, return as is
+    if (dateString.includes('-') && dateString.length === 10) {
+      return dateString;
+    }
+    
+    // Convert other formats if needed
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    } catch {
+      return dateString;
+    }
+  };
+
+  // No-op handler for read-only fields
+  const handleReadOnlyChange = () => {
+    // This function does nothing - it's just to satisfy the required onChange prop
+  };
+
   return (
     <div className={styles.section}>
       <h3>Informações Pessoais</h3>
@@ -49,7 +79,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
         <input
           type="text"
           name="name"
-          value={formData.name}
+          value={formData.name || ''}
           onChange={handleInputChange}
           required
           className={styles.input}
@@ -67,7 +97,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
         <input
           type="email"
           name="email"
-          value={formData.email}
+          value={formData.email || ''}
           onChange={handleInputChange}
           required
           className={styles.input}
@@ -153,29 +183,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             </button>
           </div>
         </div>
-      )}
-      <div className={styles.inputGroup}>
-        <label className={styles.label}>
-          <span className={styles.icon}>
-            <Icons.Calendar />
-          </span>
-          Duração do Plano
-          <span className={styles.required}>*</span>
-        </label>
-        <select
-          name="plan_duration"
+        <SelectField
+          label="Duração do Plano"
           value={formData.plan_duration}
           onChange={handleInputChange}
           required
-          className={styles.input}
-        >
-          <option value="">Selecione</option>
-          {PlanDurationOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        />
       </div>
     </div>
   );

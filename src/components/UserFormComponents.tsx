@@ -11,7 +11,12 @@ interface InputFieldProps {
   required?: boolean;
   icon?: React.ReactNode;
   optional?: boolean;
+  readOnly?: boolean;  
+  multiple?: boolean;  
+  accept?: string; 
+
 }
+ 
 
 export const InputField: React.FC<InputFieldProps> = ({
   label,
