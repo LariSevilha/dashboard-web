@@ -9,6 +9,7 @@ import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
 import * as Icons from '../components/Icons'; 
 
+// Interfaces
 interface Training {
   id: number | null;
   serie_amount: string;
@@ -58,8 +59,6 @@ interface FormDataInterface {
   weekly_pdfs_attributes: WeeklyPdf[];
   plan_type: string;
   plan_duration: string;
-  registration_date?: string;
-  expiration_date?: string;
 }
 
 const UserForm: React.FC = () => {
@@ -113,8 +112,6 @@ const UserForm: React.FC = () => {
       ],
       plan_type: '',
       plan_duration: '',
-      registration_date: '',
-      expiration_date: '',
     }),
     []
   );
@@ -126,7 +123,6 @@ const UserForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'trainings' | 'meals' | 'pdfs'>('basic');
-  const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -149,19 +145,6 @@ const UserForm: React.FC = () => {
       navigate('/login');
       return;
     }
-
-    // Fetch current user to determine if they are a master
-    axios
-      .get('http://localhost:3000/api/v1/current_user', {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      })
-      .then((response) => {
-        setIsMaster(response.data.role === 'master');
-      })
-      .catch((err) => {
-        console.error('Error fetching current user:', err);
-        navigate('/login');
-      });
 
     const queryParams = new URLSearchParams(location.search);
     const planTypeFromUrl = queryParams.get('type') as 'manual' | 'pdf' | null;
@@ -226,7 +209,10 @@ const UserForm: React.FC = () => {
             weekly_pdfs_attributes: loadedPdfs,
             plan_type: inferredPlanType,
             plan_duration: user.plan_duration || '',
-          });
+          };
+
+          setFormData(userData);
+          setOriginalFormData(userData);
           setActiveTab('basic');
           setLoading(false);
         })
@@ -354,12 +340,16 @@ const UserForm: React.FC = () => {
     }
 
     const data = new FormData();
-    if (formData.name) data.append('user[name]', formData.name);
-    if (formData.email) data.append('user[email]', formData.email);
-    if (formData.password) data.append('user[password]', formData.password);
-    if (formData.plan_type) data.append('user[plan_type]', formData.plan_type);
-    if (formData.plan_duration) data.append('user[plan_duration]', formData.plan_duration);
-    if (formData.phone_number) data.append('user[phone_number]', formData.phone_number);
+
+    if (formData.id && originalFormData) {
+      // Only send changed fields for updates
+      if (formData.name !== originalFormData.name && formData.name) data.append('user[name]', formData.name);
+      if (formData.email !== originalFormData.email && formData.email) data.append('user[email]', formData.email);
+      if (formData.password && formData.password !== originalFormData.password) data.append('user[password]', formData.password);
+      if (formData.phone_number !== originalFormData.phone_number && formData.phone_number) data.append('user[phone_number]', formData.phone_number);
+      if (formData.photo !== originalFormData.photo && formData.photo) data.append('user[photo]', formData.photo);
+      if (formData.plan_type !== originalFormData.plan_type && formData.plan_type) data.append('user[plan_type]', formData.plan_type);
+      if (formData.plan_duration !== originalFormData.plan_duration && formData.plan_duration) data.append('user[plan_duration]', formData.plan_duration);
 
       if (formData.plan_type === 'manual') {
         formData.trainings_attributes.forEach((training, index) => {
@@ -535,16 +525,12 @@ const UserForm: React.FC = () => {
         await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
       } else {
         await axios.post('http://localhost:3000/api/v1/users', data, { headers });
-        const phoneNumber = formData.phone_number ? formData.phone_number.replace(/\D/g, '') : '';
-        await axios.post(
-          'http://localhost:3000/api/v1/send-whatsapp',
-          {
-            phoneNumber,
-            email: formData.email,
-            password: formData.password,
-          },
-          { headers }
-        );
+        const phoneNumber = formData.phone_number.replace(/\D/g, '');
+        await axios.post('http://localhost:3000/api/v1/send-whatsapp', {
+          phoneNumber,
+          email: formData.email,
+          password: formData.password,
+        }, { headers });
       }
       navigate('/dashboard');
     } catch (err: any) {
@@ -610,9 +596,22 @@ const UserForm: React.FC = () => {
           <form onSubmit={handleSubmit}>
             {activeTab === 'basic' && (
               <>
+                <div className={styles.section}>
+                  <h3>Tipo de Plano</h3>
+                  <SelectField
+                    label="Tipo de Plano"
+                    name="plan_type"
+                    value={formData.plan_type}
+                    onChange={handleInputChange}
+                    options={planTypeOptions}
+                    icon={<Icons.File />}
+                    required
+                  />
+                </div>
                 <BasicInfoForm
                   formData={formData}
                   handleInputChange={handleInputChange}
+                  handlePhotoChange={handlePhotoChange}
                   showPassword={showPassword}
                   togglePasswordVisibility={togglePasswordVisibility}
                   generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
@@ -673,4 +672,32 @@ const UserForm: React.FC = () => {
   );
 };
 
-export default UserForm; 
+export default UserForm;
+
+interface SelectFieldProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  options: { value: string; label: string }[];
+  icon: React.ReactNode;
+  required?: boolean;
+}
+
+const SelectField: React.FC<SelectFieldProps> = ({ label, name, value, onChange, options, icon, required }) => (
+  <div className={styles.inputGroup}>
+    <label className={styles.label}>
+      <span className={styles.icon}>{icon}</span>
+      {label}
+      {required && <span className={styles.required}>*</span>}
+    </label>
+    <select name={name} value={value} onChange={onChange} required={required} className={styles.input}>
+      <option value="">Selecione</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
