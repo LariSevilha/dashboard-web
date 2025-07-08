@@ -4,23 +4,8 @@ import * as Icons from '../components/Icons';
 import styles from '../styles/UserForm.module.css';
 import { WeekdayOptions } from './FormConstants';
 
-interface Comida {
-  id: number | null;
-  name: string;
-  amount: string;
-  _destroy: boolean;
-}
-
-interface Meal {
-  id: number | null;
-  meal_type: string;
-  weekday: string;
-  _destroy: boolean;
-  comidas_attributes: Comida[];
-}
-
 interface MealProps {
-  meals: Meal[];
+  meals: any[];
   handleMealChange: (mealIndex: number, field: string, value: string) => void;
   removeMeal: (mealIndex: number) => void;
   addMeal: () => void;
@@ -65,7 +50,9 @@ const MealForm: React.FC<MealProps> = ({
           >
             <div className={styles.groupCardHeader} onClick={() => toggleMeal(mealIndex)}>
               <span>{meal.meal_type || `Refeição ${mealIndex + 1}`}</span>
-              <Icons.ChevronDown style={{ transform: openIndex === mealIndex ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }} />
+              <span style={{ transform: openIndex === mealIndex ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+                <Icons.ChevronDown />
+              </span>
             </div>
             <div className={styles.groupCardContent}>
               <div className={styles.sectionGroup}>
@@ -99,9 +86,9 @@ const MealForm: React.FC<MealProps> = ({
                     <Icons.Plus /> Adicionar Comida
                   </button>
                 </div>
-                {meal.comidas_attributes.map((comida: Comida, comidaIndex: number) =>
+                {meal.comidas_attributes.map((comida: any, comidaIndex: number) =>
                   !comida._destroy ? (
-                    <div className={styles.foodItem} key={comida.id || `comida-${comidaIndex}`}>
+                    <div className={styles.foodItem} key={comida.id || `comida-${mealIndex}-${comidaIndex}`}>
                       <InputField
                         label="Nome"
                         type="text"
@@ -118,6 +105,7 @@ const MealForm: React.FC<MealProps> = ({
                         value={comida.amount}
                         onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)}
                         placeholder="100g"
+                        icon={<Icons.Scale />}
                       />
                       <button
                         type="button"
@@ -125,7 +113,7 @@ const MealForm: React.FC<MealProps> = ({
                         onClick={() => removeComida(mealIndex, comidaIndex)}
                         aria-label="Remover comida"
                       >
-                        ✕
+                        <Icons.Minus />
                       </button>
                     </div>
                   ) : null

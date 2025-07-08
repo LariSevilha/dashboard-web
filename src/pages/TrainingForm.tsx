@@ -39,7 +39,9 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
           >
             <div className={styles.groupCardHeader} onClick={() => toggleTraining(index)}>
               <span>{training.exercise_name || `Treino ${index + 1}`}</span>
-              <Icons.ChevronDown style={{ transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }} />
+              <span style={{ transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
+                <Icons.ChevronDown />
+              </span>
             </div>
             <div className={styles.groupCardContent}>
               <div className={styles.sectionGroup}>
@@ -67,6 +69,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   value={training.serie_amount}
                   onChange={(e) => handleTrainingChange(index, 'serie_amount', e.target.value)}
                   placeholder="3"
+                  icon={<Icons.Repeat />}
                 />
                 <InputField
                   label="Repetições"
@@ -75,6 +78,7 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   value={training.repeat_amount}
                   onChange={(e) => handleTrainingChange(index, 'repeat_amount', e.target.value)}
                   placeholder="12"
+                  icon={<Icons.Repeat />}
                 />
                 <InputField
                   label="Vídeo (opcional)"
@@ -83,6 +87,17 @@ const TrainingForm: React.FC<TrainingProps> = ({ trainings, handleTrainingChange
                   value={training.video}
                   onChange={(e) => handleTrainingChange(index, 'video', e.target.value)}
                   placeholder="URL do vídeo"
+                  icon={<Icons.Video />}
+                  optional
+                />
+                <InputField
+                  label="Descrição (opcional)"
+                  type="text"
+                  name={`training-${index}-description`}
+                  value={training.description}
+                  onChange={(e) => handleTrainingChange(index, 'description', e.target.value)}
+                  placeholder="Descrição do treino"
+                  icon={<Icons.Info />}
                   optional
                 />
               </div>

@@ -37,7 +37,9 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
 }) => {
   return (
     <div className={styles.section}>
-      <h3>Informações Pessoais</h3>
+      <div className={styles.sectionHeader}>
+        <h3>Informações Pessoais</h3>
+      </div>
       <div className={styles.basicInfo}>
         <div className={styles.inputGroup}>
           <label className={styles.label}>
@@ -48,14 +50,31 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
           </label>
           <div className={styles.photoWrapper}>
             {formData.photo ? (
-              <img src={URL.createObjectURL(formData.photo)} alt="Prévia da foto" className={styles.userPhoto} />
+              <img
+                src={URL.createObjectURL(formData.photo)}
+                alt="Prévia da foto"
+                className={styles.userPhoto}
+              />
             ) : formData.photo_url ? (
-              <img src={formData.photo_url} alt="Foto do usuário" className={styles.userPhoto} />
-            ) : (
-              <div className={styles.defaultAvatar}>
-                <Icons.User />
-              </div>
-            )}
+              <img
+                src={formData.photo_url}
+                alt="Foto do usuário"
+                className={styles.userPhoto}
+                onError={(e) => {
+                  e.currentTarget.src = ''; // Fallback to empty on error
+                  e.currentTarget.style.display = 'none'; // Hide broken image
+                  if (e.currentTarget.nextElementSibling) {
+                    (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'; // Show default avatar
+                  }
+                }}
+              />
+            ) : null}
+            <div
+              className={styles.defaultAvatar}
+              style={{ display: formData.photo || formData.photo_url ? 'none' : 'flex' }}
+            >
+              <Icons.User />
+            </div>
             <input
               type="file"
               name="photo"
@@ -117,44 +136,42 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             placeholder="+5511999999999"
           />
         </div>
-        {!formData.id && (
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>
-              <span className={styles.icon}>
-                <Icons.Password />
-              </span>
-              Senha
-              <span className={styles.required}>*</span>
-            </label>
-            <div className={styles.passwordWrapper}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required={!formData.id}
-                className={styles.input}
-                placeholder="Digite a senha"
-              />
-              <button
-                type="button"
-                onClick={togglePasswordVisibility}
-                className={styles.togglePassword}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              >
-                {showPassword ? <Icons.EyeOpen /> : <Icons.EyeClose />}
-              </button>
-              <button
-                type="button"
-                onClick={generateRandomPassword}
-                className={styles.generatePassword}
-                aria-label="Gerar senha aleatória"
-              >
-                <Icons.Refresh />
-              </button>
-            </div>
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>
+            <span className={styles.icon}>
+              <Icons.Password />
+            </span>
+            Senha
+            <span className={styles.required}>*</span>
+          </label>
+          <div className={styles.passwordWrapper}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              required
+              className={styles.input}
+              placeholder="Digite a senha"
+            />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className={styles.togglePassword}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {showPassword ? <Icons.EyeOpen /> : <Icons.EyeClose />}
+            </button>
+            <button
+              type="button"
+              onClick={generateRandomPassword}
+              className={styles.generatePassword}
+              aria-label="Gerar senha aleatória"
+            >
+              <Icons.Refresh />
+            </button>
           </div>
-        )}
+        </div>
         <div className={styles.inputGroup}>
           <label className={styles.label}>
             <span className={styles.icon}>
