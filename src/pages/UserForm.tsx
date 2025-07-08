@@ -7,17 +7,16 @@ import MealForm from './MealForm';
 import PdfForm from './PdfForm';
 import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
-import * as Icons from '../components/Icons'; 
+import * as Icons from '../components/Icons';
 
-// Interfaces
 interface Training {
   id: number | null;
   serie_amount: string;
   repeat_amount: string;
   exercise_name: string;
   video: string;
-  description: string;
   weekday: string;
+  description: string;
   _destroy: boolean;
 }
 
@@ -52,13 +51,15 @@ interface FormDataInterface {
   email: string;
   password: string;
   phone_number: string;
-  photo: File | null;
-  photo_url?: string;
   trainings_attributes: Training[];
   meals_attributes: Meal[];
   weekly_pdfs_attributes: WeeklyPdf[];
   plan_type: string;
   plan_duration: string;
+  registration_date?: string;
+  expiration_date?: string;
+  photo_url?: string; // Added photo_url property
+  photo?: File | null; // Added photo property
 }
 
 const UserForm: React.FC = () => {
@@ -69,8 +70,6 @@ const UserForm: React.FC = () => {
       email: '',
       password: '',
       phone_number: '',
-      photo: null,
-      photo_url: undefined,
       trainings_attributes: [
         {
           id: null,
@@ -78,8 +77,8 @@ const UserForm: React.FC = () => {
           repeat_amount: '',
           exercise_name: '',
           video: '',
-          description: '',
           weekday: '',
+          description: '',
           _destroy: false,
         },
       ],
@@ -112,20 +111,28 @@ const UserForm: React.FC = () => {
       ],
       plan_type: '',
       plan_duration: '',
+      registration_date: '',
+      expiration_date: '',
     }),
     []
   );
 
   const [formData, setFormData] = useState<FormDataInterface>(initialFormState);
-  const [originalFormData, setOriginalFormData] = useState<FormDataInterface | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formSubmitting, setFormSubmitting] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'trainings' | 'meals' | 'pdfs'>('basic');
+  const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
+  const [isMaster, setIsMaster] = useState<boolean>(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const deviceId = localStorage.getItem('deviceId') || Math.random().toString(36).substring(2);
+
+  if (!localStorage.getItem('deviceId')) {
+    localStorage.setItem('deviceId', deviceId);
+  }
 
   const extractFilenameFromUrl = (url: string): string | undefined => (url ? url.split('/').pop() : undefined);
 
@@ -146,13 +153,30 @@ const UserForm: React.FC = () => {
       return;
     }
 
+    axios
+      .get('http://localhost:3000/api/v1/current_user', {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
+      })
+      .then((response) => {
+        setIsMaster(response.data.role === 'master');
+      })
+      .catch((err) => {
+        console.error('Error fetching current user:', err);
+        setError('Falha ao verificar usuário. Faça login novamente.');
+        localStorage.removeItem('apiKey');
+        localStorage.removeItem('deviceId');
+        navigate('/login');
+      });
+
     const queryParams = new URLSearchParams(location.search);
     const planTypeFromUrl = queryParams.get('type') as 'manual' | 'pdf' | null;
 
     if (id) {
       setLoading(true);
       axios
-        .get(`http://localhost:3000/api/v1/users/${id}`, { headers: { Authorization: `Bearer ${apiKey}` } })
+        .get(`http://localhost:3000/api/v1/users/${id}`, {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
+        })
         .then((response) => {
           const user = response.data;
           const loadedPdfs = user.weekly_pdfs?.length
@@ -162,7 +186,7 @@ const UserForm: React.FC = () => {
                 pdf_file: null,
                 pdf_url: p.pdf_url,
                 pdf_filename: p.pdf_filename || extractFilenameFromUrl(p.pdf_url),
-                notes: '',
+                notes: p.notes || '',
                 _destroy: false,
               }))
             : [initialFormState.weekly_pdfs_attributes[0]];
@@ -170,14 +194,12 @@ const UserForm: React.FC = () => {
           const hasActivePdfs = loadedPdfs.some((p: WeeklyPdf) => !p._destroy && (p.pdf_url || p.pdf_file));
           const inferredPlanType = hasActivePdfs ? 'pdf' : user.plan_type || 'manual';
 
-          const userData = {
+          setFormData({
             id: user.id || null,
             name: user.name || '',
             email: user.email || '',
             password: '',
             phone_number: user.phone_number || '',
-            photo: null,
-            photo_url: user.photo_url,
             trainings_attributes: inferredPlanType === 'manual' && user.trainings?.length
               ? user.trainings.map((t: any) => ({
                   id: t.id || null,
@@ -209,10 +231,13 @@ const UserForm: React.FC = () => {
             weekly_pdfs_attributes: loadedPdfs,
             plan_type: inferredPlanType,
             plan_duration: user.plan_duration || '',
-          };
-
-          setFormData(userData);
-          setOriginalFormData(userData);
+            registration_date: user.registration_date
+              ? new Date(user.registration_date).toISOString().split('T')[0]
+              : '',
+            expiration_date: user.expiration_date
+              ? new Date(user.expiration_date).toISOString().split('T')[0]
+              : '',
+          });
           setActiveTab('basic');
           setLoading(false);
         })
@@ -222,29 +247,22 @@ const UserForm: React.FC = () => {
         });
     } else {
       setFormData({ ...initialFormState, plan_type: planTypeFromUrl || 'manual' });
-      setOriginalFormData(null);
       setActiveTab('basic');
       setLoading(false);
     }
   }, [id, navigate, location.search, initialFormState]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files ? e.target.files[0] : null;
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError('A foto deve ter no máximo 5MB.');
-        return;
-      }
-      if (!['image/png', 'image/jpeg'].includes(file.type)) {
-        setError('Apenas arquivos PNG ou JPEG são permitidos.');
-        return;
-      }
-    }
-    setFormData({ ...formData, photo: file });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
@@ -340,197 +358,125 @@ const UserForm: React.FC = () => {
     }
 
     const data = new FormData();
+    if (formData.name) data.append('user[name]', formData.name);
+    if (formData.email) data.append('user[email]', formData.email);
+    if (formData.password) data.append('user[password]', formData.password);
+    if (formData.plan_type) data.append('user[plan_type]', formData.plan_type);
+    if (formData.plan_duration) data.append('user[plan_duration]', formData.plan_duration);
+    if (formData.phone_number) data.append('user[phone_number]', formData.phone_number);
+    if (formData.registration_date) data.append('user[registration_date]', formData.registration_date);
 
-    if (formData.id && originalFormData) {
-      // Only send changed fields for updates
-      if (formData.name !== originalFormData.name && formData.name) data.append('user[name]', formData.name);
-      if (formData.email !== originalFormData.email && formData.email) data.append('user[email]', formData.email);
-      if (formData.password && formData.password !== originalFormData.password) data.append('user[password]', formData.password);
-      if (formData.phone_number !== originalFormData.phone_number && formData.phone_number) data.append('user[phone_number]', formData.phone_number);
-      if (formData.photo !== originalFormData.photo && formData.photo) data.append('user[photo]', formData.photo);
-      if (formData.plan_type !== originalFormData.plan_type && formData.plan_type) data.append('user[plan_type]', formData.plan_type);
-      if (formData.plan_duration !== originalFormData.plan_duration && formData.plan_duration) data.append('user[plan_duration]', formData.plan_duration);
-
-      if (formData.plan_type === 'manual') {
-        formData.trainings_attributes.forEach((training, index) => {
-          const originalTraining = originalFormData.trainings_attributes[index] || {};
-          if (training._destroy) {
-            if (training.id) {
-              data.append(`user[trainings_attributes][${index}][id]`, training.id.toString());
-              data.append(`user[trainings_attributes][${index}][_destroy]`, 'true');
-            }
-          } else if (
-            training.id ||
-            training.serie_amount !== originalTraining.serie_amount ||
-            training.repeat_amount !== originalTraining.repeat_amount ||
-            training.exercise_name !== originalTraining.exercise_name ||
-            training.video !== originalTraining.video ||
-            training.description !== originalTraining.description ||
-            training.weekday !== originalTraining.weekday
-          ) {
-            if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id?.toString() || '');
-            if (training.serie_amount) data.append(`user[trainings_attributes][${index}][serie_amount]`, training.serie_amount);
-            if (training.repeat_amount) data.append(`user[trainings_attributes][${index}][repeat_amount]`, training.repeat_amount);
-            if (training.exercise_name) data.append(`user[trainings_attributes][${index}][exercise_name]`, training.exercise_name);
-            if (training.video) data.append(`user[trainings_attributes][${index}][video]`, training.video);
-            if (training.description) data.append(`user[trainings_attributes][${index}][description]`, training.description);
-            if (training.weekday) data.append(`user[trainings_attributes][${index}][weekday]`, training.weekday);
-          }
-        });
-
-        formData.meals_attributes.forEach((meal, mealIndex) => {
-          const originalMeal = originalFormData.meals_attributes[mealIndex] || {};
-          if (meal._destroy) {
-            if (meal.id) {
-              data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id.toString());
-              data.append(`user[meals_attributes][${mealIndex}][_destroy]`, 'true');
-            }
-          } else if (
-            meal.id ||
-            meal.meal_type !== originalMeal.meal_type ||
-            meal.weekday !== originalMeal.weekday
-          ) {
-            if (meal.id) data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id?.toString() || '');
-            if (meal.meal_type) data.append(`user[meals_attributes][${mealIndex}][meal_type]`, meal.meal_type);
-            if (meal.weekday) data.append(`user[meals_attributes][${mealIndex}][weekday]`, meal.weekday);
-
-            meal.comidas_attributes.forEach((comida, comidaIndex) => {
-              const originalComida = originalMeal.comidas_attributes?.[comidaIndex] || {};
-              if (comida._destroy) {
-                if (comida.id) {
-                  data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`, comida.id.toString());
-                  data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][_destroy]`, 'true');
-                }
-              } else if (
-                comida.id ||
-                comida.name !== originalComida.name ||
-                comida.amount !== originalComida.amount
-              ) {
-                if (comida.id) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`, comida.id?.toString() || '');
-                if (comida.name) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][name]`, comida.name);
-                if (comida.amount) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][amount]`, comida.amount);
-              }
-            });
-          }
-        });
-
-        // Clear weekly_pdfs for manual plan
-        formData.weekly_pdfs_attributes.forEach((pdf, index) => {
-          if (pdf.id && !pdf._destroy) {
-            data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdf.id.toString());
-            data.append(`user[weekly_pdfs_attributes][${index}][_destroy]`, 'true');
-          }
-        });
-      } else if (formData.plan_type === 'pdf') {
-        // Clear trainings and meals for pdf plan
-        formData.trainings_attributes.forEach((training, index) => {
-          if (training.id && !training._destroy) {
+    if (formData.plan_type === 'manual') {
+      formData.trainings_attributes.forEach((training, index) => {
+        if (training._destroy) {
+          if (training.id) {
             data.append(`user[trainings_attributes][${index}][id]`, training.id.toString());
             data.append(`user[trainings_attributes][${index}][_destroy]`, 'true');
           }
-        });
-        formData.meals_attributes.forEach((meal, mealIndex) => {
-          if (meal.id && !meal._destroy) {
+        } else {
+          if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id?.toString() || '');
+          data.append(`user[trainings_attributes][${index}][serie_amount]`, training.serie_amount);
+          data.append(`user[trainings_attributes][${index}][repeat_amount]`, training.repeat_amount);
+          data.append(`user[trainings_attributes][${index}][exercise_name]`, training.exercise_name);
+          data.append(`user[trainings_attributes][${index}][video]`, training.video);
+          data.append(`user[trainings_attributes][${index}][weekday]`, training.weekday);
+          data.append(`user[trainings_attributes][${index}][description]`, training.description || '');
+        }
+      });
+
+      formData.meals_attributes.forEach((meal, mealIndex) => {
+        if (meal._destroy) {
+          if (meal.id) {
             data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id.toString());
             data.append(`user[meals_attributes][${mealIndex}][_destroy]`, 'true');
-            meal.comidas_attributes.forEach((comida, comidaIndex) => {
-              if (comida.id && !comida._destroy) {
-                data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`, comida.id.toString());
-                data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][_destroy]`, 'true');
-              }
-            });
           }
-        });
+        } else {
+          if (meal.id) data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id?.toString() || '');
+          data.append(`user[meals_attributes][${mealIndex}][meal_type]`, meal.meal_type);
+          data.append(`user[meals_attributes][${mealIndex}][weekday]`, meal.weekday);
 
-        formData.weekly_pdfs_attributes.forEach((pdfItem, index) => {
-          const originalPdf = originalFormData?.weekly_pdfs_attributes[index] || {};
-          if (pdfItem._destroy) {
-            if (pdfItem.id) {
-              data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdfItem.id.toString());
-              data.append(`user[weekly_pdfs_attributes][${index}][_destroy]`, 'true');
+          meal.comidas_attributes.forEach((comida, comidaIndex) => {
+            if (comida._destroy) {
+              if (comida.id) {
+                data.append(
+                  `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`,
+                  comida.id.toString()
+                );
+                data.append(
+                  `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][_destroy]`,
+                  'true'
+                );
+              }
+            } else {
+              if (comida.id)
+                data.append(
+                  `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`,
+                  comida.id?.toString() || ''
+                );
+              data.append(
+                `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][name]`,
+                comida.name
+              );
+              data.append(
+                `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][amount]`,
+                comida.amount
+              );
             }
-          } else if (
-            pdfItem.id ||
-            pdfItem.weekday !== originalPdf.weekday ||
-            pdfItem.pdf_file !== originalPdf.pdf_file ||
-            pdfItem.notes !== originalPdf.notes
-          ) {
-            if (pdfItem.id) data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdfItem.id.toString());
-            if (pdfItem.weekday) data.append(`user[weekly_pdfs_attributes][${index}][weekday]`, pdfItem.weekday);
-            if (pdfItem.pdf_file) data.append(`user[weekly_pdfs_attributes][${index}][pdf]`, pdfItem.pdf_file);
-            if (pdfItem.notes) data.append(`user[weekly_pdfs_attributes][${index}][notes]`, pdfItem.notes);
-          }
-        });
-      }
-    } else {
-      // For create, send all non-empty fields
-      if (formData.name) data.append('user[name]', formData.name);
-      if (formData.email) data.append('user[email]', formData.email);
-      if (formData.password) data.append('user[password]', formData.password);
-      if (formData.phone_number) data.append('user[phone_number]', formData.phone_number);
-      if (formData.photo) data.append('user[photo]', formData.photo);
-      if (formData.plan_type) data.append('user[plan_type]', formData.plan_type);
-      if (formData.plan_duration) data.append('user[plan_duration]', formData.plan_duration);
+          });
+        }
+      });
+    } else if (formData.plan_type === 'pdf') {
+      formData.trainings_attributes.forEach((training, index) => {
+        if (training.id && !training._destroy) {
+          data.append(`user[trainings_attributes][${index}][id]`, training.id.toString());
+          data.append(`user[trainings_attributes][${index}][_destroy]`, 'true');
+        }
+      });
+      formData.meals_attributes.forEach((meal, mealIndex) => {
+        if (meal.id && !meal._destroy) {
+          data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id.toString());
+          data.append(`user[meals_attributes][${mealIndex}][_destroy]`, 'true');
+          meal.comidas_attributes.forEach((comida, comidaIndex) => {
+            if (comida.id && !comida._destroy) {
+              data.append(
+                `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`,
+                comida.id.toString()
+              );
+              data.append(
+                `user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][_destroy]`,
+                'true'
+              );
+            }
+          });
+        }
+      });
 
-      if (formData.plan_type === 'manual') {
-        formData.trainings_attributes.forEach((training, index) => {
-          if (!training._destroy) {
-            if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id?.toString() || '');
-            if (training.serie_amount) data.append(`user[trainings_attributes][${index}][serie_amount]`, training.serie_amount);
-            if (training.repeat_amount) data.append(`user[trainings_attributes][${index}][repeat_amount]`, training.repeat_amount);
-            if (training.exercise_name) data.append(`user[trainings_attributes][${index}][exercise_name]`, training.exercise_name);
-            if (training.video) data.append(`user[trainings_attributes][${index}][video]`, training.video);
-            if (training.description) data.append(`user[trainings_attributes][${index}][description]`, training.description);
-            if (training.weekday) data.append(`user[trainings_attributes][${index}][weekday]`, training.weekday);
-          }
-        });
-
-        formData.meals_attributes.forEach((meal, mealIndex) => {
-          if (!meal._destroy) {
-            if (meal.id) data.append(`user[meals_attributes][${mealIndex}][id]`, meal.id?.toString() || '');
-            if (meal.meal_type) data.append(`user[meals_attributes][${mealIndex}][meal_type]`, meal.meal_type);
-            if (meal.weekday) data.append(`user[meals_attributes][${mealIndex}][weekday]`, meal.weekday);
-
-            meal.comidas_attributes.forEach((comida, comidaIndex) => {
-              if (!comida._destroy) {
-                if (comida.id) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][id]`, comida.id?.toString() || '');
-                if (comida.name) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][name]`, comida.name);
-                if (comida.amount) data.append(`user[meals_attributes][${mealIndex}][comidas_attributes][${comidaIndex}][amount]`, comida.amount);
-              }
-            });
-          }
-        });
-      } else if (formData.plan_type === 'pdf') {
-        formData.weekly_pdfs_attributes.forEach((pdfItem, index) => {
-          if (!pdfItem._destroy) {
-            if (pdfItem.id) data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdfItem.id.toString());
-            if (pdfItem.weekday) data.append(`user[weekly_pdfs_attributes][${index}][weekday]`, pdfItem.weekday);
-            if (pdfItem.pdf_file) data.append(`user[weekly_pdfs_attributes][${index}][pdf]`, pdfItem.pdf_file);
-            if (pdfItem.notes) data.append(`user[weekly_pdfs_attributes][${index}][notes]`, pdfItem.notes);
-          }
-        });
-      }
+      formData.weekly_pdfs_attributes.forEach((pdfItem, index) => {
+        if (pdfItem.id) data.append(`user[weekly_pdfs_attributes][${index}][id]`, pdfItem.id.toString());
+        if (pdfItem.weekday) data.append(`user[weekly_pdfs_attributes][${index}][weekday]`, pdfItem.weekday);
+        if (pdfItem.pdf_file) data.append(`user[weekly_pdfs_attributes][${index}][pdf]`, pdfItem.pdf_file);
+        if (pdfItem.notes) data.append(`user[weekly_pdfs_attributes][${index}][notes]`, pdfItem.notes);
+        data.append(`user[weekly_pdfs_attributes][${index}][_destroy]`, pdfItem._destroy.toString());
+      });
     }
-
-    // Log FormData for debugging
-    // Log FormData for debugging (compatible with ES5/ES3)
-    data.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
-    });
 
     try {
       setError(null);
-      const headers = { Authorization: `Bearer ${apiKey}` };
+      const headers = { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId };
       if (formData.id) {
         await axios.put(`http://localhost:3000/api/v1/users/${formData.id}`, data, { headers });
       } else {
         await axios.post('http://localhost:3000/api/v1/users', data, { headers });
         const phoneNumber = formData.phone_number.replace(/\D/g, '');
-        await axios.post('http://localhost:3000/api/v1/send-whatsapp', {
-          phoneNumber,
-          email: formData.email,
-          password: formData.password,
-        }, { headers });
+        await axios.post(
+          'http://localhost:3000/api/v1/send-whatsapp',
+          {
+            phoneNumber,
+            email: formData.email,
+            password: formData.password,
+          },
+          { headers }
+        );
       }
       navigate('/dashboard');
     } catch (err: any) {
@@ -540,11 +486,6 @@ const UserForm: React.FC = () => {
       setFormSubmitting(false);
     }
   };
-
-  const planTypeOptions = [
-    { value: 'manual', label: 'Manual' },
-    { value: 'pdf', label: 'PDF' },
-  ];
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className={styles.errorMessage}>{error}</div>;
@@ -591,32 +532,33 @@ const UserForm: React.FC = () => {
               <Icons.File /> PDFs Semanais
             </button>
           )}
+          <button
+            type="button"
+            className={styles.sidebarButton}
+            onClick={toggleTheme}
+            aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+          >
+            <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} />{' '}
+            {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+          </button>
         </aside>
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
             {activeTab === 'basic' && (
-              <>
-                <div className={styles.section}>
-                  <h3>Tipo de Plano</h3>
-                  <SelectField
-                    label="Tipo de Plano"
-                    name="plan_type"
-                    value={formData.plan_type}
-                    onChange={handleInputChange}
-                    options={planTypeOptions}
-                    icon={<Icons.File />}
-                    required
-                  />
-                </div>
-                <BasicInfoForm
-                  formData={formData}
-                  handleInputChange={handleInputChange}
-                  handlePhotoChange={handlePhotoChange}
-                  showPassword={showPassword}
-                  togglePasswordVisibility={togglePasswordVisibility}
-                  generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
-                />
-              </>
+              <BasicInfoForm
+                formData={{
+                  ...formData,
+                  photo: null, // Ensure photo is included as File | null
+                }}
+                handleInputChange={handleInputChange}
+                handlePhotoChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const file = e.target.files ? e.target.files[0] : null;
+                  setFormData({ ...formData, photo: file });
+                }}
+                showPassword={showPassword}
+                togglePasswordVisibility={togglePasswordVisibility}
+                generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
+              />
             )}
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (
               <TrainingForm
@@ -673,31 +615,3 @@ const UserForm: React.FC = () => {
 };
 
 export default UserForm;
-
-interface SelectFieldProps {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { value: string; label: string }[];
-  icon: React.ReactNode;
-  required?: boolean;
-}
-
-const SelectField: React.FC<SelectFieldProps> = ({ label, name, value, onChange, options, icon, required }) => (
-  <div className={styles.inputGroup}>
-    <label className={styles.label}>
-      <span className={styles.icon}>{icon}</span>
-      {label}
-      {required && <span className={styles.required}>*</span>}
-    </label>
-    <select name={name} value={value} onChange={onChange} required={required} className={styles.input}>
-      <option value="">Selecione</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-  </div>
-);

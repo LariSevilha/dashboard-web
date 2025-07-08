@@ -101,7 +101,8 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey || userRole !== 'master') {
+    const deviceId = localStorage.getItem('deviceId');
+    if (!apiKey || !deviceId || userRole !== 'master') {
       navigate('/login');
       return;
     }
@@ -109,6 +110,7 @@ const Dashboard: React.FC = () => {
     const headers = {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
+      'Device-ID': deviceId,
     };
 
     axios
@@ -122,6 +124,7 @@ const Dashboard: React.FC = () => {
         console.error('Dashboard load error:', err);
         setError('Erro ao carregar o dashboard');
         localStorage.removeItem('apiKey');
+        localStorage.removeItem('deviceId');
         navigate('/login');
       });
   }, [navigate, userRole]);
@@ -143,20 +146,19 @@ const Dashboard: React.FC = () => {
     if (!window.confirm('Tem certeza que deseja excluir este usuário?')) return;
 
     const apiKey = localStorage.getItem('apiKey');
-    if (!apiKey) return;
+    const deviceId = localStorage.getItem('deviceId');
+    if (!apiKey || !deviceId) return;
 
     try {
       await axios.delete(`http://localhost:3000/api/v1/users/${id}`, {
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Device-ID': deviceId },
       });
-      fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' });
+      fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Device-ID': deviceId });
     } catch (err) {
       console.error('Delete error:', err);
       setError('Erro ao deletar usuário');
     }
   };
-
-   
 
   const handleLogout = () => {
     localStorage.removeItem('apiKey');
@@ -266,7 +268,6 @@ const Dashboard: React.FC = () => {
                 <div className={styles.detailItem}>
                   <strong>Plano:</strong> {getPlanLabel(u.plan_duration)}
                 </div>
-                
                 <div className={styles.userActions}>
                   <Link
                     to={`/dashboard/user/${u.id}`}
@@ -283,7 +284,7 @@ const Dashboard: React.FC = () => {
                     aria-label={`Excluir usuário ${u.name}`}
                   >
                     <i className="fas fa-trash" />
-                  </button> 
+                  </button>
                 </div>
               </div>
             ))}
