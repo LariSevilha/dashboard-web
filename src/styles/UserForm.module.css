@@ -176,8 +176,7 @@ body {
 
 .content {
     flex: 1;
-    margin-left: 300px;
-    padding: var(--spacing-2xl);
+    margin-left: 300px; 
     background: var(--background);
     min-height: 100vh;
     transition: var(--transition-smooth);
@@ -266,6 +265,7 @@ body {
 .inputGroup input,
 .inputGroup select {
     width: 100%;
+    height: 60px;;
     padding: var(--spacing-md) var(--spacing-lg);
     border: 1px solid var(--border);
     border-radius: var(--border-radius);
@@ -489,16 +489,43 @@ body {
     box-shadow: var(--shadow-medium);
     transform: translateY(-1px);
 }
-
 .removeButton {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    border: none;
+    white-space: nowrap;
     background: var(--error-color);
     color: var(--text);
+    height: 40px;
+    min-width: 100px;
+    justify-content: center; /* Centraliza o texto */
+    text-align: center; /* Garante que o texto fique centralizado */
 }
 
 .removeButton:hover {
     background: #c53030;
     box-shadow: var(--shadow-medium);
     transform: translateY(-1px);
+}
+
+.foodItem {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-md);
+    align-items: end;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--surface);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border);
+    overflow: visible; /* Garante que o botão não seja cortado */
 }
 
 .buttonRow {

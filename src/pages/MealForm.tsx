@@ -107,14 +107,16 @@ const MealForm: React.FC<MealProps> = ({
                         placeholder="100g"
                         icon={<Icons.Scale />}
                       />
-                      <button
-                        type="button"
-                        className={styles.removeButton}
-                        onClick={() => removeComida(mealIndex, comidaIndex)}
-                        aria-label="Remover comida"
-                      >
-                        <Icons.Minus />
-                      </button>
+                      <div className={styles.btn_rm}  >
+                        <button
+                          type="button"
+                          className={styles.removeButton}
+                          onClick={() => removeComida(mealIndex, comidaIndex)}
+                          aria-label="Remover comida"
+                        >
+                          <Icons.Minus /> Remover comida  
+                        </button>
+                      </div>
                     </div>
                   ) : null
                 )}
