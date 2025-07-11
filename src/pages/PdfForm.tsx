@@ -26,10 +26,10 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <h3>PDFs Semanais</h3>
-        <button type="button" className={styles.addButton} onClick={handleAddPdf} aria-label="Adicionar novo PDF">
+        <h3>PDF Semanal</h3>
+        {/* <button type="button" className={styles.addButton} onClick={handleAddPdf} aria-label="Adicionar novo PDF">
           <Icons.Plus /> Adicionar PDF
-        </button>
+        </button> */}
       </div>
       {weeklyPdfs.map((pdfItem, index) =>
         !pdfItem._destroy ? (
@@ -45,14 +45,7 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
             </div>
             <div className={styles.groupCardContent}>
               <div className={styles.sectionGroup}>
-                <SelectField
-                  label="Dia da Semana"
-                  value={pdfItem.weekday}
-                  onChange={(e) => handlePdfChange(index, 'weekday', e.target.value)}
-                  options={WeekdayOptions}
-                  icon={<Icons.Calendar />}
-                  name={`pdf-${index}-weekday`}
-                />
+                 
                 <FileInputField
                   label="Upload PDF"
                   name={`pdf-${index}-file`}
@@ -64,7 +57,7 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
                   }
                   hasExistingFile={!!pdfItem.pdf_url}
                 />
-                <InputField
+                {/* <InputField
                   label="Notas (opcional)"
                   type="text"
                   name={`pdf-${index}-notes`}
@@ -73,7 +66,7 @@ const PdfForm: React.FC<PdfProps> = ({ weeklyPdfs, handlePdfChange, removePdf, a
                   placeholder="Notas sobre o PDF"
                   icon={<Icons.Info />}
                   optional
-                />
+                /> */}
               </div>
               <div className={styles.buttonRow}>
                 <button
