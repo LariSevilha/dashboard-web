@@ -5,11 +5,11 @@ import * as Icons from '../components/Icons';
 import styles from '../styles/login.module.css';
 import '../index.css';
 
-const Login: React.FC = () => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [deviceId, setDeviceId] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
     }
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e : any) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -60,7 +60,7 @@ const Login: React.FC = () => {
       }
 
       navigate('/dashboard');
-    } catch (err: any) {
+    } catch (err : any) {
       console.error('Login error:', err);
       setError(err.response?.data?.error || 'Erro ao fazer login');
     } finally {
@@ -74,7 +74,7 @@ const Login: React.FC = () => {
 
   return (
     <div className={styles.loginContainer}>
-      <h1 className={styles.title}>Login</h1>
+      <img src="favicon.ico" alt="Logo" className={styles.logo} />
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.inputGroup}>
           <label htmlFor="email">Email</label>
@@ -107,14 +107,14 @@ const Login: React.FC = () => {
             aria-required="true"
             className={styles.input}
           />
-            <button
+          <button
             type="button"
             className={styles.togglePassword}
             onClick={togglePasswordVisibility}
             aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-            >
+          >
             {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
-            </button>
+          </button>
         </div>
         <div className={styles.rememberMeContainer}>
           <input

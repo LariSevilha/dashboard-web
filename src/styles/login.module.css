@@ -11,20 +11,28 @@
   --transition: all 0.3s ease; /* Transição suave */
 }
 
+/* Adicionado para garantir altura total da tela */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
 .loginContainer {
-  width: 100%;
-  max-width: 420px;
-  padding: 2.5rem;
-  background: var(--input-bg); /* cor de fundo do container */
+  width: 100%; 
+  padding: 2rem; 
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
+  display: flex; 
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   box-sizing: border-box;
-  margin: 0 auto;
   animation: fadeIn 0.5s ease-out;
+  position: relative;
 }
 
 /* Animação de entrada */
@@ -33,24 +41,21 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.title {
-  color: var(--gold-accent);
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  margin: 0;
-  text-align: center;
-  background: linear-gradient(90deg, var(--gold-accent), var(--gold-accent-light));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Estilo para a logo */
+.logo {
+  width: 100%;
+  max-width: 150px; /* Tamanho máximo da logo */
+  height: auto;
+  display: block;
+  margin: 0 auto 1rem; /* Centrado com margem inferior */
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3)); /* Sombra dourada suave */
 }
 
 .form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .inputGroup {
@@ -63,7 +68,7 @@
 
 .inputGroup label {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 0.5rem;
   transition: var(--transition);
@@ -75,8 +80,8 @@
 
 .inputIcon {
   position: absolute;
-  top: 2.75rem;
-  left: 1rem;
+  top: 2.5rem;
+  left: 0.75rem;
   color: var(--text-secondary);
   transition: var(--transition);
 }
@@ -87,12 +92,12 @@
 
 .input {
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 2.5rem; /* Espaço para o ícone e o botão de toggle */
+  padding: 0.75rem 2.5rem;
   background-color: var(--input-bg);
   border: 2px solid transparent;
   border-radius: var(--border-radius);
   color: var(--text-primary);
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: var(--transition);
   box-sizing: border-box;
 }
@@ -111,12 +116,11 @@
 
 .togglePassword {
   position: absolute;
-  top: 70%;
+  top: 2.5rem;
   right: 0.75rem;
-  transform: translateY(-50%);
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   transition: var(--transition);
   background: none;
   border: none;
@@ -132,14 +136,14 @@
   align-items: center;
   gap: 0.5rem;
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .rememberMeContainer input {
   margin: 0;
   accent-color: var(--gold-accent);
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .rememberMeContainer label {
@@ -157,7 +161,7 @@
   color: #ef4444;
   font-size: 0.85rem;
   background: rgba(239, 68, 68, 0.1);
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-radius: var(--border-radius);
   text-align: center;
   box-shadow: var(--shadow);
@@ -172,12 +176,12 @@
 
 .submitButton {
   width: 100%;
-  padding: 1rem;
+  padding: 0.9rem;
   background: linear-gradient(90deg, var(--gold-accent), var(--gold-accent-light));
   color: #1a1a1a;
   border: none;
   border-radius: var(--border-radius);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
@@ -190,7 +194,7 @@
 
 .submitButton:hover {
   background: linear-gradient(90deg, var(--gold-accent-light), var(--gold-accent));
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
 }
 
@@ -204,47 +208,52 @@
 .loginContainer::after {
   content: '';
   position: absolute;
-  bottom: 6rem;
+  bottom: -1rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 100px;
-  height: 3px;
+  width: 80px;
+  height: 2px;
   background: linear-gradient(90deg, transparent, var(--gold-accent), transparent);
   border-radius: var(--border-radius);
 }
 
 @media (max-width: 768px) {
   .loginContainer {
-    padding: 2rem;
-    max-width: 90%;
-    margin: 0 auto;
+    padding: 1.5rem;
+    max-width: 95%;
   }
 
-  .title {
-    font-size: 1.75rem;
+  .logo {
+    max-width: 120px; /* Logo menor em telas menores */
   }
 
   .input,
   .submitButton {
-    font-size: 0.95rem;
-    padding: 0.65rem 2.5rem 0.65rem 2.5rem;
+    font-size: 0.9rem;
+    padding: 0.65rem 2rem;
   }
 
   .submitButton {
-    padding: 0.85rem;
+    padding: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .loginContainer {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 
-  .title {
-    font-size: 1.5rem;
+  .logo {
+    max-width: 100px; /* Logo ainda menor em telas pequenas */
   }
 
   .inputGroup label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .input,
+  .submitButton {
+    font-size: 0.85rem;
+    padding: 0.6rem 1.75rem;
   }
 }
