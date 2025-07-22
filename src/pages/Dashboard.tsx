@@ -47,32 +47,44 @@ const Dashboard: React.FC = () => {
     if (!apiKey || !deviceId) {
       console.error('Missing authentication credentials');
       setError('Credenciais de autenticação ausentes');
-      return `${url}?t=${new Date().getTime()}`;
+      return null;
     }
+    
     try {
-      const response = await axios.get(url, {
+      // Check if URL is already a full URL or just a path
+      const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
+      
+      const response = await axios.get(fullUrl, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Device-ID': deviceId,
         },
         responseType: 'blob',
       });
+      
       return URL.createObjectURL(response.data);
     } catch (err) {
       console.error('Error fetching image:', err);
       setError('Erro ao carregar imagem');
-      return `${url}?t=${new Date().getTime()}`;
+      // Return the original URL as fallback
+      return url.startsWith('http') ? url : `http://localhost:3000${url}`;
     }
   };
 
   useEffect(() => {
     if (settings?.logo_url) {
-      loadImageWithAuth(`http://localhost:3000${settings.logo_url}`).then(setLogoPreview);
+      loadImageWithAuth(settings.logo_url).then((imageUrl) => {
+        if (imageUrl) {
+          setLogoPreview(imageUrl);
+        }
+      });
     } else {
       setLogoPreview(null);
     }
   }, [settings?.logo_url]);
-
+  
+  // Update the fetchDashboardSettings function to handle the response better
+  // Removed duplicate fetchDashboardSettings function
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth <= 1024);

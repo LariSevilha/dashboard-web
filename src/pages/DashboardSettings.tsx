@@ -31,22 +31,50 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
   const loadImageWithAuth = async (url: string) => {
     if (!apiKey || !deviceId) {
       console.error('Missing authentication credentials');
-      setError('Credenciais de autenticação ausentes');
-      return `${url}?t=${new Date().getTime()}`;
+      return null;
     }
+    
+    // Skip if URL is null or empty
+    if (!url || url.trim() === '') {
+      console.log('No URL provided for image loading');
+      return null;
+    }
+
     try {
-      const response = await axios.get(url, {
+      // Check if URL is already a full URL or just a path
+      const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
+      console.log('Loading image from URL:', fullUrl);
+      
+      const response = await axios.get(fullUrl, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Device-ID': deviceId,
         },
         responseType: 'blob',
+        timeout: 10000, // 10 second timeout
       });
-      return URL.createObjectURL(response.data);
-    } catch (err) {
+      
+      const blob = response.data;
+      if (blob.size === 0) {
+        console.error('Received empty blob');
+        return null;
+      }
+      
+      return URL.createObjectURL(blob);
+    } catch (err: any) {
       console.error('Error fetching image:', err);
-      setError('Erro ao carregar imagem');
-      return `${url}?t=${new Date().getTime()}`;
+      console.error('URL was:', url);
+      
+      // Don't set error for image loading failures, just log them
+      if (err.code === 'ECONNABORTED') {
+        console.error('Image loading timed out');
+      } else if (err.response?.status === 404) {
+        console.error('Image not found (404)');
+      } else if (err.response?.status === 401) {
+        console.error('Authentication failed for image');
+      }
+      
+      return null;
     }
   };
 
@@ -74,6 +102,8 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       const response = await axios.get('http://localhost:3000/api/v1/dashboard_settings', { headers });
       const settingsData = Array.isArray(response.data) ? response.data[0] : response.data;
 
+      console.log('Loaded settings:', settingsData);
+
       if (settingsData) {
         setCurrentSettings(settingsData);
         updateFormData(settingsData);
@@ -85,7 +115,7 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
     }
   };
 
-  const updateFormData = (settingsData: IDashboardSettings) => {
+  const updateFormData = async (settingsData: IDashboardSettings) => {
     setFormData({
       id: settingsData.id,
       primary_color: settingsData.primary_color || '#000000',
@@ -93,8 +123,17 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       tertiary_color: settingsData.tertiary_color || '#666666',
       app_name: settingsData.app_name || '',
     });
+    
+    console.log('Settings logo_url:', settingsData.logo_url);
+    
     if (settingsData.logo_url) {
-      loadImageWithAuth(`http://localhost:3000${settingsData.logo_url}`).then(setLogoPreview);
+      try {
+        const imageUrl = await loadImageWithAuth(settingsData.logo_url);
+        setLogoPreview(imageUrl);
+      } catch (err) {
+        console.error('Failed to load logo preview:', err);
+        setLogoPreview(null);
+      }
     } else {
       setLogoPreview(null);
     }
@@ -107,7 +146,27 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     if (file) {
+      // Validação do arquivo
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        setError('Arquivo deve ser PNG, JPEG ou JPG');
+        return;
+      }
+      
+      // Validação do tamanho (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Arquivo deve ter menos de 5MB');
+        return;
+      }
+      
+      setError(null);
       setLogoFile(file);
+      
+      // Clean up previous preview URL
+      if (logoPreview && logoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview);
+      }
+      
       const previewUrl = URL.createObjectURL(file);
       setLogoPreview(previewUrl);
     }
@@ -124,39 +183,79 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       return;
     }
 
-    const data = new FormData();
-    data.append('dashboard_setting[primary_color]', formData.primary_color);
-    data.append('dashboard_setting[secondary_color]', formData.secondary_color);
-    data.append('dashboard_setting[tertiary_color]', formData.tertiary_color);
-    data.append('dashboard_setting[app_name]', formData.app_name);
-    if (logoFile) {
-      data.append('dashboard_setting[logo]', logoFile);
-    }
-
     try {
       const headers = {
         Authorization: `Bearer ${apiKey}`,
         'Device-ID': deviceId,
       };
+
+      const data = new FormData();
+      
+      // Usar a estrutura que o Rails está esperando (dashboard_setting[campo])
+      data.append('dashboard_setting[primary_color]', formData.primary_color);
+      data.append('dashboard_setting[secondary_color]', formData.secondary_color);
+      data.append('dashboard_setting[tertiary_color]', formData.tertiary_color);
+      data.append('dashboard_setting[app_name]', formData.app_name);
+      
+      if (logoFile) {
+        data.append('dashboard_setting[logo]', logoFile);
+      }
+
+      console.log('Enviando dados:', {
+        'dashboard_setting[primary_color]': formData.primary_color,
+        'dashboard_setting[secondary_color]': formData.secondary_color,
+        'dashboard_setting[tertiary_color]': formData.tertiary_color,
+        'dashboard_setting[app_name]': formData.app_name,
+        'dashboard_setting[logo]': logoFile?.name
+      });
+
       let response;
       if (currentSettings && currentSettings.id && currentSettings.id > 0) {
-        response = await axios.put(`http://localhost:3000/api/v1/dashboard_settings/${currentSettings.id}`, data, { headers });
+        // PUT para atualizar
+        response = await axios.put(
+          `http://localhost:3000/api/v1/dashboard_settings/${currentSettings.id}`,
+          data,
+          { headers }
+        );
       } else {
-        response = await axios.post('http://localhost:3000/api/v1/dashboard_settings', data, { headers });
+        // POST para criar
+        response = await axios.post(
+          'http://localhost:3000/api/v1/dashboard_settings',
+          data,
+          { headers }
+        );
       }
+
+      console.log('Resposta do servidor:', response.data);
 
       const updatedSettings = response.data;
       setCurrentSettings(updatedSettings);
       setFormData((prev) => ({ ...prev, id: updatedSettings.id }));
       updateSettings(updatedSettings);
+      
+      // Limpar o arquivo selecionado após salvar
+      setLogoFile(null);
+      
       alert('Configurações do dashboard atualizadas com sucesso!');
-      if (updatedSettings.logo_url) {
-        loadImageWithAuth(`http://localhost:3000${updatedSettings.logo_url}`).then(setLogoPreview);
-      } else {
-        setLogoPreview(null);
-      }
+      
+      // Recarregar a imagem após um pequeno delay para garantir que o arquivo foi processado
+      setTimeout(async () => {
+        if (updatedSettings.logo_url) {
+          try {
+            const imageUrl = await loadImageWithAuth(updatedSettings.logo_url);
+            setLogoPreview(imageUrl);
+          } catch (err) {
+            console.error('Failed to load updated logo preview:', err);
+          }
+        } else {
+          setLogoPreview(null);
+        }
+      }, 1000);
+      
     } catch (err: any) {
       console.error('Error updating dashboard settings:', err);
+      console.error('Response data:', err.response?.data);
+      
       const errorMessage =
         err.response?.data?.errors?.join(', ') ||
         err.response?.data?.error ||
@@ -168,6 +267,7 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
     }
   };
 
+  // Cleanup blob URLs
   useEffect(() => {
     return () => {
       if (logoPreview && logoPreview.startsWith('blob:')) {
@@ -220,9 +320,16 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
         </div>
         <div className={styles.formGroup}>
           <label>Logo</label>
-          <input type="file" accept="image/*" onChange={handleLogoChange} />
+          <input 
+            type="file" 
+            accept="image/png,image/jpeg,image/jpg" 
+            onChange={handleLogoChange} 
+          />
+          <small>Formatos aceitos: PNG, JPEG, JPG. Tamanho máximo: 5MB</small>
           {logoPreview && (
-            <img src={logoPreview} alt="Logo preview" className={styles.logoPreview} />
+            <div className={styles.logoPreviewContainer}>
+              <img src={logoPreview} alt="Logo preview" className={styles.logoPreview} />
+            </div>
           )}
         </div>
         <button type="submit" disabled={loading} className={styles.submitButton}>
