@@ -29,31 +29,22 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
   const deviceId = localStorage.getItem('deviceId');
 
   const loadImageWithAuth = async (url: string) => {
-    if (!apiKey || !deviceId) {
-      console.error('Missing authentication credentials');
-      return null;
-    }
-    
-    // Skip if URL is null or empty
-    if (!url || url.trim() === '') {
-      console.log('No URL provided for image loading');
+    if (!apiKey || !deviceId || !url || url.trim() === '') {
+      console.error('Missing authentication credentials or invalid URL');
       return null;
     }
 
     try {
-      // Check if URL is already a full URL or just a path
       const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
-      console.log('Loading image from URL:', fullUrl);
-      
       const response = await axios.get(fullUrl, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Device-ID': deviceId,
         },
         responseType: 'blob',
-        timeout: 10000, // 10 second timeout
+        timeout: 10000,
       });
-      
+
       const blob = response.data;
       if (blob.size === 0) {
         console.error('Received empty blob');
@@ -63,17 +54,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       return URL.createObjectURL(blob);
     } catch (err: any) {
       console.error('Error fetching image:', err);
-      console.error('URL was:', url);
-      
-      // Don't set error for image loading failures, just log them
-      if (err.code === 'ECONNABORTED') {
-        console.error('Image loading timed out');
-      } else if (err.response?.status === 404) {
-        console.error('Image not found (404)');
-      } else if (err.response?.status === 401) {
-        console.error('Authentication failed for image');
-      }
-      
       return null;
     }
   };
@@ -102,8 +82,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       const response = await axios.get('http://localhost:3000/api/v1/dashboard_settings', { headers });
       const settingsData = Array.isArray(response.data) ? response.data[0] : response.data;
 
-      console.log('Loaded settings:', settingsData);
-
       if (settingsData) {
         setCurrentSettings(settingsData);
         updateFormData(settingsData);
@@ -123,8 +101,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       tertiary_color: settingsData.tertiary_color || '#666666',
       app_name: settingsData.app_name || '',
     });
-    
-    console.log('Settings logo_url:', settingsData.logo_url);
     
     if (settingsData.logo_url) {
       try {
@@ -146,14 +122,12 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     if (file) {
-      // Validação do arquivo
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
       if (!allowedTypes.includes(file.type)) {
         setError('Arquivo deve ser PNG, JPEG ou JPG');
         return;
       }
       
-      // Validação do tamanho (5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Arquivo deve ter menos de 5MB');
         return;
@@ -162,7 +136,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       setError(null);
       setLogoFile(file);
       
-      // Clean up previous preview URL
       if (logoPreview && logoPreview.startsWith('blob:')) {
         URL.revokeObjectURL(logoPreview);
       }
@@ -190,8 +163,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       };
 
       const data = new FormData();
-      
-      // Usar a estrutura que o Rails está esperando (dashboard_setting[campo])
       data.append('dashboard_setting[primary_color]', formData.primary_color);
       data.append('dashboard_setting[secondary_color]', formData.secondary_color);
       data.append('dashboard_setting[tertiary_color]', formData.tertiary_color);
@@ -201,24 +172,14 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
         data.append('dashboard_setting[logo]', logoFile);
       }
 
-      console.log('Enviando dados:', {
-        'dashboard_setting[primary_color]': formData.primary_color,
-        'dashboard_setting[secondary_color]': formData.secondary_color,
-        'dashboard_setting[tertiary_color]': formData.tertiary_color,
-        'dashboard_setting[app_name]': formData.app_name,
-        'dashboard_setting[logo]': logoFile?.name
-      });
-
       let response;
       if (currentSettings && currentSettings.id && currentSettings.id > 0) {
-        // PUT para atualizar
         response = await axios.put(
           `http://localhost:3000/api/v1/dashboard_settings/${currentSettings.id}`,
           data,
           { headers }
         );
       } else {
-        // POST para criar
         response = await axios.post(
           'http://localhost:3000/api/v1/dashboard_settings',
           data,
@@ -226,19 +187,15 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
         );
       }
 
-      console.log('Resposta do servidor:', response.data);
-
       const updatedSettings = response.data;
       setCurrentSettings(updatedSettings);
       setFormData((prev) => ({ ...prev, id: updatedSettings.id }));
       updateSettings(updatedSettings);
       
-      // Limpar o arquivo selecionado após salvar
       setLogoFile(null);
       
       alert('Configurações do dashboard atualizadas com sucesso!');
       
-      // Recarregar a imagem após um pequeno delay para garantir que o arquivo foi processado
       setTimeout(async () => {
         if (updatedSettings.logo_url) {
           try {
@@ -254,8 +211,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       
     } catch (err: any) {
       console.error('Error updating dashboard settings:', err);
-      console.error('Response data:', err.response?.data);
-      
       const errorMessage =
         err.response?.data?.errors?.join(', ') ||
         err.response?.data?.error ||
@@ -267,7 +222,6 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
     }
   };
 
-  // Cleanup blob URLs
   useEffect(() => {
     return () => {
       if (logoPreview && logoPreview.startsWith('blob:')) {
@@ -281,32 +235,34 @@ const DashboardSettings: React.FC<{ settings: IDashboardSettings | null }> = ({ 
       <h2 className={styles.title}>Configurações do Dashboard</h2>
       {error && <div className={styles.errorMessage}>{error}</div>}
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formGroup}>
-          <label>Cor Primária</label>
-          <input
-            type="color"
-            name="primary_color"
-            value={formData.primary_color}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Cor Secundária</label>
-          <input
-            type="color"
-            name="secondary_color"
-            value={formData.secondary_color}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className={styles.formGroup}>
-          <label>Cor Terciária</label>
-          <input
-            type="color"
-            name="tertiary_color"
-            value={formData.tertiary_color}
-            onChange={handleInputChange}
-          />
+        <div className={styles.formGrid}>
+          <div className={styles.formGroup}>
+            <label>Cor Primária</label>
+            <input
+              type="color"
+              name="primary_color"
+              value={formData.primary_color}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Cor Secundária</label>
+            <input
+              type="color"
+              name="secondary_color"
+              value={formData.secondary_color}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Cor Terciária</label>
+            <input
+              type="color"
+              name="tertiary_color"
+              value={formData.tertiary_color}
+              onChange={handleInputChange}
+            />
+          </div>
         </div>
         <div className={styles.formGroup}>
           <label>Nome do App</label>

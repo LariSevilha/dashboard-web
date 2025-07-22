@@ -152,7 +152,6 @@ function useTheme(): { settings: any } {
         primary_color: "var(--primary-color)",
         secondary_color: "var(--secondary-color)",
         tertiary_color: "var(--tertiary-color)",
-        logo_url: "/assets/logo.png",
         app_name: "Dashboard App",
     };
 

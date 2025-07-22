@@ -1,6 +1,5 @@
 .breadcrumbs {
-    padding: 1rem;
-    background: var(--tertiary-color-light);
+    padding: 1rem; 
     border-radius: 4px;
     display: flex;
     gap: 8px;
@@ -8,7 +7,7 @@
   }
   
   .breadcrumbItem {
-    color: var(--tertiary-color);
+    color: var(--secondary-color);
     text-decoration: none;
     font-size: 14px;
   }

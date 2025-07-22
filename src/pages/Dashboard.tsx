@@ -51,9 +51,7 @@ const Dashboard: React.FC = () => {
     }
     
     try {
-      // Check if URL is already a full URL or just a path
       const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
-      
       const response = await axios.get(fullUrl, {
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -61,12 +59,10 @@ const Dashboard: React.FC = () => {
         },
         responseType: 'blob',
       });
-      
       return URL.createObjectURL(response.data);
     } catch (err) {
       console.error('Error fetching image:', err);
       setError('Erro ao carregar imagem');
-      // Return the original URL as fallback
       return url.startsWith('http') ? url : `http://localhost:3000${url}`;
     }
   };
@@ -82,9 +78,7 @@ const Dashboard: React.FC = () => {
       setLogoPreview(null);
     }
   }, [settings?.logo_url]);
-  
-  // Update the fetchDashboardSettings function to handle the response better
-  // Removed duplicate fetchDashboardSettings function
+
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth <= 1024);
@@ -137,7 +131,7 @@ const Dashboard: React.FC = () => {
   const sortedUsers = [...users].sort((a, b) => {
     const dateA = a.registration_date ? new Date(a.registration_date).getTime() : 0;
     const dateB = b.registration_date ? new Date(b.registration_date).getTime() : 0;
-    return dateB - dateA;
+    return dateB - dateB;
   });
 
   const filteredUsers = sortedUsers.filter(
@@ -196,7 +190,6 @@ const Dashboard: React.FC = () => {
   const fetchMasterUser = async (headers: any) => {
     try {
       const response = await axios.get('http://localhost:3000/api/v1/master_user', { headers });
-      console.log('Fetched master user:', response.data);
       setMasterUser(response.data);
     } catch (err) {
       console.error('Master user fetch error:', err);
@@ -329,12 +322,9 @@ const Dashboard: React.FC = () => {
                 <div className={styles.detailItem}>
                   <strong>Data de Expiração:</strong>
                   {u.registration_date
-                    ? (() => {
-                        const expirationDate = calculateExpirationDate(u.registration_date, u.plan_duration);
-                        return expirationDate
-                          ? format(new Date(expirationDate), 'dd/MM/yyyy')
-                          : 'Data não disponível';
-                      })()
+                    ? calculateExpirationDate(u.registration_date, u.plan_duration)
+                      ? format(new Date(calculateExpirationDate(u.registration_date, u.plan_duration)!), 'dd/MM/yyyy')
+                      : 'Data não disponível'
                     : 'Data não disponível'}
                 </div>
                 <div className={styles.detailItem}>
@@ -345,10 +335,9 @@ const Dashboard: React.FC = () => {
                     to={`/dashboard/user/${u.id}`}
                     aria-label={`Editar usuário ${u.name}`}
                     onClick={handleLinkClick}
+                    className={styles.editIcon}
                   >
-                    <span className={styles.editIcon}>
-                      <i className="fas fa-edit" />
-                    </span>
+                    <i className="fas fa-edit" />
                   </Link>
                   <button
                     className={styles.deleteIcon}
@@ -368,7 +357,7 @@ const Dashboard: React.FC = () => {
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Anterior
+                <i className="fas fa-chevron-left" /> Anterior
               </button>
               <span className={styles.paginationInfo}>
                 Página {currentPage} de {totalPages}
@@ -378,7 +367,7 @@ const Dashboard: React.FC = () => {
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Próximo
+                Próximo <i className="fas fa-chevron-right" />
               </button>
             </div>
           )}
