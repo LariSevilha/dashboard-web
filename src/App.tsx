@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import UserForm from './pages/UserForm';
-import styles from './App.module.css';
+import styles from './App.module.css'; 
+import { ThemeProvider } from './pages/ThemeProvider'; 
 import '@fortawesome/fontawesome-free/css/all.min.css';
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
@@ -16,6 +17,7 @@ const App: React.FC = () => {
   const loggedInUser = localStorage.getItem('userRole');
 
   return (
+    <ThemeProvider>
     <Router>
       <Routes>
         <Route
@@ -28,6 +30,7 @@ const App: React.FC = () => {
         <Route path="/" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
+  </ThemeProvider>
   );
 };
 

@@ -69,3 +69,44 @@ code {
   --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+
+
+:root {
+  /* Cores principais do tema */
+  --primary-color: #2563eb;
+  --secondary-color: #1e40af;
+  --tertiary-color: #3b82f6;
+  
+  /* Variações automáticas das cores */
+  --primary-color-light: #60a5fa;
+  --primary-color-dark: #1d4ed8;
+  --secondary-color-light: #3b82f6;
+  --secondary-color-dark: #1e3a8a;
+  --tertiary-color-light: #93c5fd;
+  --tertiary-color-dark: #2563eb;
+  
+  /* Aplicação das cores nos componentes */
+  --sidebar-bg: var(--primary-color);
+  --sidebar-text: white;
+  --sidebar-hover: var(--primary-color-light);
+  --sidebar-active: var(--secondary-color);
+  
+  --button-primary-bg: var(--primary-color);
+  --button-primary-text: white;
+  --button-primary-hover: var(--primary-color-dark);
+  
+  --button-secondary-bg: var(--secondary-color);
+  --button-secondary-text: white;
+  --button-secondary-hover: var(--secondary-color-dark);
+  
+  --accent-color: var(--tertiary-color);
+  --accent-hover: var(--tertiary-color-dark);
+  
+  --header-bg: var(--secondary-color);
+  --header-text: white;
+  
+  --active-tab-bg: var(--primary-color);
+  --active-tab-text: white;
+  --tab-hover: var(--primary-color-light);
+} 

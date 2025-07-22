@@ -10,13 +10,21 @@ import { PlanDurationOptions } from './FormConstants';
 import MetricsView from './MetricsView';
 import { Metrics, User } from './MetricsTypes';
 import { calculateExpirationDate } from './MetricsUtils';
+import MasterUserConfig from './MasterUserConfig';
+import DashboardSettings from './DashboardSettings';
+import { useTheme } from './ThemeProvider';
+import Footer from './Footer';
+import Breadcrumbs from './Breadcrumbs';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
 
 const Dashboard: React.FC = () => {
+  const { settings } = useTheme();
   const [showOptions, setShowOptions] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [masterUser, setMasterUser] = useState<any>(null);
+  const [dashboardSettings, setDashboardSettings] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -25,12 +33,45 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [currentView, setCurrentView] = useState<'users' | 'metrics'>('users');
+  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings'>('users');
   const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const usersPerPage = 5;
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
+  const apiKey = localStorage.getItem('apiKey');
+  const deviceId = localStorage.getItem('deviceId');
+
+  const loadImageWithAuth = async (url: string) => {
+    if (!apiKey || !deviceId) {
+      console.error('Missing authentication credentials');
+      setError('Credenciais de autenticação ausentes');
+      return `${url}?t=${new Date().getTime()}`;
+    }
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Device-ID': deviceId,
+        },
+        responseType: 'blob',
+      });
+      return URL.createObjectURL(response.data);
+    } catch (err) {
+      console.error('Error fetching image:', err);
+      setError('Erro ao carregar imagem');
+      return `${url}?t=${new Date().getTime()}`;
+    }
+  };
+
+  useEffect(() => {
+    if (settings?.logo_url) {
+      loadImageWithAuth(`http://localhost:3000${settings.logo_url}`).then(setLogoPreview);
+    } else {
+      setLogoPreview(null);
+    }
+  }, [settings?.logo_url]);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -99,9 +140,17 @@ const Dashboard: React.FC = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
+  const fetchUsers = async (headers: any) => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/users', { headers });
+      setUsers(response.data);
+    } catch (err) {
+      console.error('Users fetch error:', err);
+      setError('Erro ao carregar usuários');
+    }
+  };
+
   useEffect(() => {
-    const apiKey = localStorage.getItem('apiKey');
-    const deviceId = localStorage.getItem('deviceId');
     if (!apiKey || !deviceId || userRole !== 'master') {
       navigate('/login');
       return;
@@ -119,6 +168,8 @@ const Dashboard: React.FC = () => {
         setUser(response.data.user);
         setMetrics(response.data.metrics);
         fetchUsers(headers);
+        fetchMasterUser(headers);
+        fetchDashboardSettings(headers);
       })
       .catch((err) => {
         console.error('Dashboard load error:', err);
@@ -126,27 +177,34 @@ const Dashboard: React.FC = () => {
         localStorage.removeItem('apiKey');
         localStorage.removeItem('deviceId');
         navigate('/login');
-      });
+      })
+      .finally(() => setLoading(false));
   }, [navigate, userRole]);
 
-  const fetchUsers = async (headers: any) => {
+  const fetchMasterUser = async (headers: any) => {
     try {
-      setLoading(true);
-      const response = await axios.get('http://localhost:3000/api/v1/users', { headers });
-      setUsers(response.data);
+      const response = await axios.get('http://localhost:3000/api/v1/master_user', { headers });
+      console.log('Fetched master user:', response.data);
+      setMasterUser(response.data);
     } catch (err) {
-      console.error('Users fetch error:', err);
-      setError('Erro ao carregar usuários');
-    } finally {
-      setLoading(false);
+      console.error('Master user fetch error:', err);
+      setError('Erro ao carregar dados do usuário master');
+    }
+  };
+
+  const fetchDashboardSettings = async (headers: any) => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/v1/dashboard_settings', { headers });
+      setDashboardSettings(response.data);
+    } catch (err) {
+      console.error('Dashboard settings fetch error:', err);
+      setError('Erro ao carregar configurações do dashboard');
     }
   };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Tem certeza que deseja excluir este usuário?')) return;
 
-    const apiKey = localStorage.getItem('apiKey');
-    const deviceId = localStorage.getItem('deviceId');
     if (!apiKey || !deviceId) return;
 
     try {
@@ -168,8 +226,10 @@ const Dashboard: React.FC = () => {
   };
 
   const debouncedSearch = useCallback(
-    debounce((value: string) => setSearchTerm(value), 300),
-    []
+    (value: string) => {
+      debounce((val) => setSearchTerm(val), 300)(value);
+    },
+    [setSearchTerm]
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,7 +266,7 @@ const Dashboard: React.FC = () => {
   const renderUsersView = () => (
     <div className={styles.usersView}>
       <header className={styles.header}>
-        <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
+        <h3 className={styles.subtitle}>{settings?.app_name || 'Dashboard'} - Usuários Cadastrados</h3>
         <div className={styles.searchContainer}>
           <span className={styles.searchIcon}>
             <i className="fas fa-search" aria-hidden="true"></i>
@@ -346,8 +406,25 @@ const Dashboard: React.FC = () => {
                 <i className="fas fa-times" />
               </button>
             )}
-            <div className={styles.brandLogo}>RF</div>
-            <h2 className={styles.title}>Dashboard</h2>
+            <div className={styles.brandLogo}>
+              {logoPreview ? (
+                <img
+                  src={logoPreview}
+                  alt="Logo"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }}
+                />
+              ) : (
+                settings?.app_name
+                  ? settings.app_name
+                      .split(' ')
+                      .map((word) => word[0])
+                      .join('')
+                      .substring(0, 2)
+                      .toUpperCase()
+                  : 'RF'
+              )}
+            </div>
+            <h2 className={styles.title}>{settings?.app_name || 'Dashboard'}</h2>
           </div>
           <div className={styles.sidebarContent}>
             {user && (
@@ -357,7 +434,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className={styles.userInfo}>
                   <div className={styles.userName}>{user.name || user.email}</div>
-                  <div className={styles.userRole}>{user.role}</div>
+                  <div className={styles.userRole}>{userRole}</div>
                 </div>
               </div>
             )}
@@ -413,6 +490,28 @@ const Dashboard: React.FC = () => {
             </div>
             <div className={styles.menuItem}>
               <button
+                className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
+                onClick={() => {
+                  setCurrentView('masterConfig');
+                  handleLinkClick();
+                }}
+              >
+                <i className="fas fa-user-shield" /> Configurar Usuário Master
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'dashboardSettings' ? styles.active : ''}`}
+                onClick={() => {
+                  setCurrentView('dashboardSettings');
+                  handleLinkClick();
+                }}
+              >
+                <i className="fas fa-cogs" /> Configurações do Dashboard
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
                 className={styles.menuButton}
                 onClick={toggleTheme}
                 aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
@@ -426,7 +525,12 @@ const Dashboard: React.FC = () => {
           </button>
         </aside>
         <main className={styles.mainContent}>
-          {currentView === 'users' ? renderUsersView() : <MetricsView metrics={metrics} users={users} />}
+          <Breadcrumbs />
+          {currentView === 'users' && renderUsersView()}
+          {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
+          {currentView === 'masterConfig' && <MasterUserConfig masterUser={masterUser} />}
+          {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
+          <Footer />
         </main>
       </div>
     </div>

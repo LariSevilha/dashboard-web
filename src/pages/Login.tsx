@@ -9,7 +9,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [deviceId, setDeviceId] = useState('');
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Especificado tipo para error
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -36,7 +36,7 @@ const Login = () => {
     }
   }, []);
 
-  const handleSubmit = async (e : any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -46,8 +46,11 @@ const Login = () => {
         user: { email, password },
         device_id: deviceId,
       });
-      localStorage.setItem('apiKey', response.data.api_key);
-      localStorage.setItem('userRole', response.data.role);
+      console.log('Resposta da API:', response.data); // Depuração
+      const { api_key, user_type } = response.data;
+      localStorage.setItem('apiKey', api_key);
+      localStorage.setItem('userRole', user_type);  
+      localStorage.setItem('deviceId', deviceId);
 
       if (rememberMe) {
         localStorage.setItem('savedEmail', email);
@@ -60,7 +63,7 @@ const Login = () => {
       }
 
       navigate('/dashboard');
-    } catch (err : any) {
+    } catch (err: any) {
       console.error('Login error:', err);
       setError(err.response?.data?.error || 'Erro ao fazer login');
     } finally {
