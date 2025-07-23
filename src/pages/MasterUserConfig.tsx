@@ -2,18 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from '../styles/masterUserConfig.module.css';
 import { useTheme } from './ThemeProvider';
-
-interface MasterUser {
-  id: number;
-  name: string;
-  email: string;
-  phone_number: string;
-  cpf: string;
-  cref: string;
-  photo_url?: string;
-  password?: string;
-  photo?: File;
-}
+import { MasterUser } from '../pages/types'; // Import from shared types
 
 const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterUser }) => {
   const { settings } = useTheme();
@@ -51,7 +40,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
       return URL.createObjectURL(response.data);
     } catch (err) {
       console.error('Error fetching image:', err);
-      setError('Erro ao carregar imagem');
+      setError('Erro au carregar imagem');
       return `${url}?t=${new Date().getTime()}`;
     }
   };
@@ -171,7 +160,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
           <input
             type="text"
             name="name"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={handleInputChange}
             placeholder="Digite o nome"
           />
@@ -184,6 +173,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
             value={formData.email}
             onChange={handleInputChange}
             placeholder="Digite o email"
+            required
           />
         </div>
         <div className={styles.formGroup}>
@@ -194,6 +184,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
             value={formData.phone_number}
             onChange={handleInputChange}
             placeholder="Digite o telefone"
+            required
           />
         </div>
         <div className={styles.formGroup}>
@@ -204,6 +195,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
             value={formData.cpf}
             onChange={handleInputChange}
             placeholder="Digite o CPF"
+            required
           />
         </div>
         <div className={styles.formGroup}>
@@ -214,6 +206,7 @@ const MasterUserConfig: React.FC<{ masterUser: MasterUser | null }> = ({ masterU
             value={formData.cref}
             onChange={handleInputChange}
             placeholder="Digite o CREF"
+            required
           />
         </div>
         <div className={styles.formGroup}>

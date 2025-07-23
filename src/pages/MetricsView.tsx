@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Bar, Pie, Line } from 'react-chartjs-2';
-import { Metrics, User } from './MetricsTypes';
+import { Metrics, User } from '../pages/MetricsTypes';
 import { getFilteredMetrics } from './MetricsUtils';
 import styles from '../styles/metrics.module.css';
 import { PlanDurationOptions } from './FormConstants';
+import { useTheme } from './ThemeProvider';
 
-interface MetricsViewProps {
-  metrics: Metrics | null;
-  users: User[];
-}
-
-const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
-  const [dateFilter, setDateFilter] = useState<string>('all');
-  const [planFilter, setPlanFilter] = useState<string>('all');
+const MetricsView: React.FC<{ metrics: Metrics | null; users: User[] }> = ({ metrics, users }) => {
+  const { settings } = useTheme();
+  const [dateFilter, setDateFilter] = useState('all');
+  const [planFilter, setPlanFilter] = useState('all');
   const [chartType, setChartType] = useState<'bar' | 'pie' | 'line'>('bar');
 
   const filteredMetrics = getFilteredMetrics(users, dateFilter, planFilter);
@@ -75,7 +72,7 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
 
   const downloadMetrics = () => {
     if (!filteredMetrics) return;
-    
+
     const data = {
       data_geracao: new Date().toLocaleString('pt-BR'),
       filtros_aplicados: {
@@ -87,14 +84,14 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
         usuarios_ativos: filteredMetrics.active_users,
         usuarios_expirados: filteredMetrics.expired_users,
         distribuicao_planos: filteredMetrics.plan_distribution,
-      }
+      },
     };
-    
+
     const dataStr = JSON.stringify(data, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
     const exportFileDefaultName = `metricas_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.json`;
-    
+
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -103,7 +100,7 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
 
   const downloadCSV = () => {
     if (!filteredMetrics) return;
-    
+
     const csvData = [
       ['Métrica', 'Valor'],
       ['Total de Usuários', filteredMetrics.total_users],
@@ -116,12 +113,12 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
       ['Anual', filteredMetrics.plan_distribution?.annual || 0],
       ['Desconhecido', filteredMetrics.plan_distribution?.unknown || 0],
     ];
-    
+
     const csvContent = csvData.map(row => row.join(',')).join('\n');
     const dataUri = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csvContent);
-    
+
     const exportFileDefaultName = `metricas_${format(new Date(), 'dd-MM-yyyy_HH-mm')}.csv`;
-    
+
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -145,41 +142,39 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
   };
 
   return (
-    <div className={styles.metricsView}>
+    <div className={styles.metricsContainer}>
       <header className={styles.header}>
-        <h3 className={styles.subtitle}>Métricas e Relatórios</h3>
-        <div className={styles.metricsActions}>
-          <button className={styles.downloadButton} onClick={downloadMetrics}>
-            <i className="fas fa-download" /> JSON
+        <h2 className={styles.title}>{settings?.app_name || 'Dashboard'} - Métricas e Relatórios</h2>
+        <div className={styles.downloadButtons}>
+          <button onClick={downloadMetrics} className={styles.downloadButton}>
+            Exportar JSON
           </button>
-          <button className={styles.downloadButton} onClick={downloadCSV}>
-            <i className="fas fa-file-csv" /> CSV
+          <button onClick={downloadCSV} className={styles.downloadButton}>
+            Exportar CSV
           </button>
         </div>
       </header>
 
-      <div className={styles.filtersContainer}>
+      <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label htmlFor="dateFilter">Período:</label>
-          <select 
-            id="dateFilter"
-            value={dateFilter} 
+          <label>Período:</label>
+          <select
+            value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
             className={styles.filterSelect}
           >
             <option value="all">Todos os períodos</option>
-            <option value="last_30_days">Últimos 30 dias</option>
-            <option value="last_3_months">Últimos 3 meses</option>
-            <option value="last_6_months">Últimos 6 meses</option>
-            <option value="last_year">Último ano</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="3m">Últimos 3 meses</option>
+            <option value="6m">Últimos 6 meses</option>
+            <option value="1y">Último ano</option>
           </select>
         </div>
 
         <div className={styles.filterGroup}>
-          <label htmlFor="planFilter">Plano:</label>
-          <select 
-            id="planFilter"
-            value={planFilter} 
+          <label>Plano:</label>
+          <select
+            value={planFilter}
             onChange={(e) => setPlanFilter(e.target.value)}
             className={styles.filterSelect}
           >
@@ -193,10 +188,9 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
         </div>
 
         <div className={styles.filterGroup}>
-          <label htmlFor="chartType">Tipo de Gráfico:</label>
-          <select 
-            id="chartType"
-            value={chartType} 
+          <label>Tipo de Gráfico:</label>
+          <select
+            value={chartType}
             onChange={(e) => setChartType(e.target.value as 'bar' | 'pie' | 'line')}
             className={styles.filterSelect}
           >
@@ -209,17 +203,17 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
 
       {filteredMetrics && (
         <>
-          <div className={styles.kpiContainer}>
-            <div className={styles.kpiCard}>
-              <h4>Total de Usuários</h4>
+          <div className={styles.metricsSummary}>
+            <div className={styles.metricCard}>
+              <h3>Total de Usuários</h3>
               <p>{filteredMetrics.total_users}</p>
             </div>
-            <div className={styles.kpiCard}>
-              <h4>Usuários Ativos</h4>
+            <div className={styles.metricCard}>
+              <h3>Usuários Ativos</h3>
               <p>{filteredMetrics.active_users}</p>
             </div>
-            <div className={styles.kpiCard}>
-              <h4>Planos Expirados</h4>
+            <div className={styles.metricCard}>
+              <h3>Planos Expirados</h3>
               <p>{filteredMetrics.expired_users}</p>
             </div>
           </div>
@@ -228,16 +222,15 @@ const MetricsView: React.FC<MetricsViewProps> = ({ metrics, users }) => {
             {renderChart()}
           </div>
 
-          <div className={styles.metricsDetails}>
-            <h4>Detalhes da Distribuição de Planos</h4>
-            <div className={styles.planDetails}>
+          <div className={styles.planDistribution}>
+            <h3>Detalhes da Distribuição de Planos</h3>
+            <ul>
               {Object.entries(filteredMetrics.plan_distribution).map(([plan, count]) => (
-                <div key={plan} className={styles.planDetail}>
-                  <span className={styles.planName}>{getPlanLabel(plan)}:</span>
-                  <span className={styles.planCount}>{count} usuários</span>
-                </div>
+                <li key={plan}>
+                  {getPlanLabel(plan)}: {count} usuários
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </>
       )}
