@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+// src/components/Dashboard.tsx
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { debounce } from 'lodash';
+import { Chart as ChartJS, registerables } from 'chart.js';
 import '../index.css';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import styles from '../styles/dashboard.module.css';
 import { PlanDurationOptions } from './FormConstants';
 import MetricsView from './MetricsView';
@@ -12,12 +13,33 @@ import MasterUserConfig from './MasterUserConfig';
 import DashboardSettings from './DashboardSettings';
 import { useTheme } from './ThemeProvider';
 import Footer from './Footer';
-import Breadcrumbs from './Breadcrumbs';
+import Breadcrumbs from './Breadcrumbs'; 
+import PersonalTrainerForm from './PersonalTrainerForm';
+import UserForm from './UserForm'; 
 
 import { User, Metrics } from '../pages/MetricsTypes';
-import {  MasterUser, DashboardSettings as DashboardSettingsType } from '../pages/types';
+import { MasterUser, DashboardSettings as DashboardSettingsType } from '../pages/types';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(...registerables);
+
+interface PersonalTrainerData {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  cpf: string;
+  cref: string;
+  phone_number: string;
+}
+
+interface UserFormData {
+  name: string;
+  email: string;
+  phone_number: string;
+  plan_duration: string;
+  password: string;
+  password_confirmation: string;
+}
 
 const Dashboard: React.FC = () => {
   const { settings, updateSettings } = useTheme();
@@ -33,10 +55,15 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings'>('users');
+  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings' | 'personalTrainerConfig'>('users');
   const [userRole, setUserRole] = useState<'super' | 'master' | null>(null);
   const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
+  const [showPersonalTrainerForm, setShowPersonalTrainerForm] = useState<boolean>(false);
+  const [showUserForm, setShowUserForm] = useState<boolean>(false);
+  const [formLoading, setFormLoading] = useState<boolean>(false);
+  const chartRef = useRef<ChartJS | null>(null);
   const [showOptions, setShowOptions] = useState<boolean>(false);
+
 
   const usersPerPage = 5;
   const navigate = useNavigate();
@@ -53,10 +80,7 @@ const Dashboard: React.FC = () => {
     try {
       const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
       const response = await axios.get(fullUrl, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Device-ID': deviceId,
-        },
+        headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
         responseType: 'blob',
       });
       return URL.createObjectURL(response.data);
@@ -67,7 +91,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Effect for mobile detection
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth <= 1024);
     checkIsMobile();
@@ -75,7 +98,6 @@ const Dashboard: React.FC = () => {
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
-  // Effect for click outside to close mobile menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.querySelector(`.${styles.sidebar}`);
@@ -84,36 +106,25 @@ const Dashboard: React.FC = () => {
         setIsMobileMenuOpen(false);
       }
     };
-    if (isMobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    if (isMobileMenuOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobileMenuOpen]);
 
-  // Effect for body overflow on mobile menu
   useEffect(() => {
-    if (isMobileMenuOpen && isMobile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    if (isMobileMenuOpen && isMobile) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isMobileMenuOpen, isMobile]);
 
-  // Effect for closing mobile menu on desktop
   useEffect(() => {
     if (!isMobile && isMobileMenuOpen) setIsMobileMenuOpen(false);
   }, [isMobile, isMobileMenuOpen]);
 
-  // Effect for theme application
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Effect for initial data load
   useEffect(() => {
     const role = localStorage.getItem('userRole') as 'super' | 'master' | null;
     setUserRole(role);
@@ -122,14 +133,9 @@ const Dashboard: React.FC = () => {
       return;
     }
 
-    const headers = {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Device-ID': deviceId,
-    };
+    const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Device-ID': deviceId };
 
-    axios
-      .get('http://localhost:3000/api/v1/dashboard', { headers })
+    axios.get('http://localhost:3000/api/v1/dashboard', { headers })
       .then((response) => {
         setUser(response.data.user);
         setMetrics(response.data.metrics);
@@ -174,7 +180,7 @@ const Dashboard: React.FC = () => {
         id: u.id,
         name: u.name || null,
         email: u.email || undefined,
-        registration_date: u.registration_date || undefined,
+        registration_date: u.created_at || undefined,
         plan_duration: u.plan_duration || undefined,
         role: u.role || undefined,
         active: u.active || undefined,
@@ -207,18 +213,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Tem certeza que deseja excluir este usuário?')) return;
+  const handleDelete = async (id: number, type: 'user' | 'master' | 'super') => {
+    if (!window.confirm(`Tem certeza que deseja excluir este ${type === 'super' ? 'superusuário' : type === 'master' ? 'personal trainer' : 'usuário'}?`)) return;
     if (!apiKey || !deviceId) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/v1/${userRole === 'super' ? 'master_users' : 'users'}/${id}`, {
+      const endpoint = type === 'super' ? 'super_users' : type === 'master' ? 'master_users' : 'users';
+      await axios.delete(`http://localhost:3000/api/v1/${endpoint}/${id}`, {
         headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
       });
-      userRole === 'super' ? fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId }) : fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+      if (type === 'master') fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+      else fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
     } catch (err) {
       console.error('Delete error:', err);
-      setError('Erro ao deletar usuário');
+      setError(`Erro ao deletar ${type === 'super' ? 'superusuário' : type === 'master' ? 'personal trainer' : 'usuário'}`);
     }
   };
 
@@ -229,10 +237,7 @@ const Dashboard: React.FC = () => {
     navigate('/login');
   };
 
-  const debouncedSearch = useCallback(
-    debounce((value: string) => setSearchTerm(value), 300),
-    []
-  );
+  const debouncedSearch = useCallback(debounce((value: string) => setSearchTerm(value), 300), []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedSearch(e.target.value);
@@ -253,37 +258,99 @@ const Dashboard: React.FC = () => {
   const handleLinkClick = () => isMobile && closeMobileMenu();
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
-  const renderUsersView = () => (
-    <div className={styles.usersView}>
-      <header className={styles.header}>
-        <h3 className={styles.subtitle}>{settings?.app_name || 'Dashboard'} - {userRole === 'super' ? 'Usuários Master' : 'Usuários Cadastrados'}</h3>
-        <div className={styles.searchContainer}>
-          <input
-            className={styles.searchBar}
-            type="text"
-            placeholder="Buscar por nome ou email..."
-            onChange={handleSearchChange}
-          />
-        </div>
-      </header>
-      <div className={styles.tabContainer}>
-        <button
-          className={`${styles.tabButton} ${activeTab === 'all' ? styles.activeTab : ''}`}
-          onClick={() => handleTabChange('all')}
-        >
-          Todos
-        </button>
-        {PlanDurationOptions.map((option) => (
-          <button
-            key={option.value}
-            className={`${styles.tabButton} ${activeTab === option.value ? styles.activeTab : ''}`}
-            onClick={() => handleTabChange(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+  // Personal Trainer Form handlers
+  const handlePersonalTrainerSuccess = () => {
+    setShowPersonalTrainerForm(false);
+    fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+  };
 
+  const handlePersonalTrainerCancel = () => {
+    setShowPersonalTrainerForm(false);
+  };
+
+  // User Form handlers
+  const handleUserSuccess = () => {
+    setShowUserForm(false);
+    fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+  };
+
+  const handleUserCancel = () => {
+    setShowUserForm(false);
+  };
+
+  const renderMasterUserConfig = () => (
+    <div className={styles.configContainer}>
+      <div className={styles.configHeader}>
+        <h2 className={styles.title}>Gerenciar Master Admins</h2>
+        {userRole === 'super' && (
+          <button onClick={() => setShowPersonalTrainerForm(true)} className={styles.addButton}>
+            <i className="fas fa-user-plus" /> Novo Master Admin
+          </button>
+        )}
+      </div>
+      {showPersonalTrainerForm && userRole === 'super' && (
+        <PersonalTrainerForm
+          onSuccess={handlePersonalTrainerSuccess}
+          onCancel={handlePersonalTrainerCancel}
+        />
+      )}
+      <h3 className={styles.subtitle}>Master Admins Cadastrados</h3>
+      {loading ? (
+        <div className={styles.loading}>Carregando...</div>
+      ) : error ? (
+        <p className={styles.errorMessage}>{error}</p>
+      ) : users.length === 0 ? (
+        <p className={styles.empty}>Nenhum master admin encontrado.</p>
+      ) : (
+        <div className={styles.userList}>
+          {users.map((u) => (
+            <div key={u.id} className={styles.userItem}>
+              <div className={styles.userInfo}>
+                <strong>{u.name || 'Nome não disponível'}</strong>
+                <span>({u.email || 'Email não disponível'})</span>
+              </div>
+              <div className={styles.userActions}>
+                <Link
+                  to={`/dashboard/master/${u.id}`}
+                  aria-label={`Editar master admin ${u.name}`}
+                  onClick={handleLinkClick}
+                  className={styles.editIcon}
+                >
+                  <i className="fas fa-edit" />
+                </Link>
+                <button
+                  className={styles.deleteIcon}
+                  onClick={() => handleDelete(u.id, 'master')}
+                  aria-label={`Excluir master admin ${u.name}`}
+                >
+                  <i className="fas fa-trash" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const renderUserConfig = () => (
+    <div className={styles.configContainer}>
+      <div className={styles.configHeader}>
+        <h2 className={styles.title}>Gerenciar Usuários</h2>
+        {userRole === 'master' && (
+          <button onClick={() => setShowUserForm(true)} className={styles.addButton}>
+            <i className="fas fa-user-plus" /> Novo Usuário
+          </button>
+        )}
+      </div>
+      
+      {showUserForm && userRole === 'master' && (
+        <UserForm
+          onSuccess={handleUserSuccess}
+          onCancel={handleUserCancel}
+        />
+      )}
+      <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
       {loading ? (
         <div className={styles.loading}>Carregando...</div>
       ) : error ? (
@@ -291,82 +358,71 @@ const Dashboard: React.FC = () => {
       ) : users.length === 0 ? (
         <p className={styles.empty}>Nenhum usuário encontrado.</p>
       ) : (
-        <>
-          <div className={styles.userList}>
-            {users.map((u) => (
-              <div key={u.id} className={styles.userItem}>
-                <div className={styles.userInfo}>
-                  <strong>{u.name || 'Nome não disponível'}</strong>
-                  <span>({u.email || 'Email não disponível'})</span>
-                </div>
-                <div className={styles.userActions}>
-                  <Link
-                    to={`/dashboard/user/${u.id}`}
-                    aria-label={`Editar usuário ${u.name}`}
-                    onClick={handleLinkClick}
-                    className={styles.editIcon}
-                  >
-                    <i className="fas fa-edit" />
-                  </Link>
-                  <button
-                    className={styles.deleteIcon}
-                    onClick={() => handleDelete(u.id)}
-                    aria-label={`Excluir usuário ${u.name}`}
-                  >
-                    <i className="fas fa-trash" />
-                  </button>
-                </div>
+        <div className={styles.userList}>
+          {users.map((u) => (
+            <div key={u.id} className={styles.userItem}>
+              <div className={styles.userInfo}>
+                <strong>{u.name || 'Nome não disponível'}</strong>
+                <span>({u.email || 'Email não disponível'})</span>
               </div>
-            ))}
-          </div>
-        </>
+              <div className={styles.userActions}>
+                <Link
+                  to={`/dashboard/user/${u.id}`}
+                  aria-label={`Editar usuário ${u.name}`}
+                  onClick={handleLinkClick}
+                  className={styles.editIcon}
+                >
+                  <i className="fas fa-edit" />
+                </Link>
+                <button
+                  className={styles.deleteIcon}
+                  onClick={() => handleDelete(u.id, 'user')}
+                  aria-label={`Excluir usuário ${u.name}`}
+                >
+                  <i className="fas fa-trash" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
 
   return (
     <div className={styles.dashboardContainer}>
-      {isMobile && (
-        <button className={styles.mobileMenuToggle} onClick={toggleMobileMenu}>
-          <i className={isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'} />
-        </button>
-      )}
-      {isMobile && <div className={`${styles.sidebarOverlay} ${isMobileMenuOpen ? styles.active : ''}`} onClick={closeMobileMenu} />}
-      <div className={styles.contentWrapper}>
-        <aside className={`${styles.sidebar} ${isMobile && isMobileMenuOpen ? styles.open : ''}`}>
-          <div className={styles.sidebarHeader}>
-            {isMobile && <button className={styles.sidebarCloseButton} onClick={closeMobileMenu}><i className="fas fa-times" /></button>}
-            <div className={styles.brandLogo}>{settings?.app_name?.[0] || 'D'}</div>
-            <h2 className={styles.title}>{settings?.app_name || 'Dashboard'}</h2>
-          </div>
-          <div className={styles.sidebarContent}>
-            {user && (
-              <div className={styles.info}>
-                <div className={styles.userAvatar}>{user.name?.[0] || user.email?.[0]}</div>
-                <div className={styles.userInfo}>
-                  <div className={styles.userName}>{user.name || user.email}</div>
-                  <div className={styles.userRole}>{userRole === 'super' ? 'Superusuário' : 'Master'}</div>
-                </div>
+      <aside className={`${styles.sidebar} ${isMobile && isMobileMenuOpen ? styles.open : ''}`}>
+        <div className={styles.sidebarHeader}>
+          {isMobile && <button className={styles.sidebarCloseButton} onClick={closeMobileMenu}><i className="fas fa-times" /></button>}
+          <div className={styles.brandLogo}>{settings?.app_name?.[0] || 'D'}</div>
+          <h2 className={styles.title}>{settings?.app_name || 'Dashboard'}</h2>
+        </div>
+        <div className={styles.sidebarContent}>
+          {user && (
+            <div className={styles.info}>
+              <div className={styles.userAvatar}>{user.name?.[0] || user.email?.[0]}</div>
+              <div className={styles.userInfo}>
+                <div className={styles.userName}>{user.name || user.email}</div>
+                <div className={styles.userRole}>{userRole === 'super' ? 'Superusuário' : 'Master'}</div>
               </div>
-            )}
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
-                onClick={() => { setCurrentView('users'); handleLinkClick(); }}
-              >
-                <i className="fas fa-users" /> {userRole === 'super' ? 'Gerenciar Masters' : 'Gerenciar Usuários'}
-              </button>
             </div>
-            <div className={styles.menuItem}>
-              <button
-                className={styles.buttonAdd}
-                onClick={() => setShowOptions(!showOptions)}
-                aria-expanded={showOptions}
-                aria-controls="add-user-options"
-              >
-                <i className="fas fa-user-plus" /> Adicionar Usuário
-              </button>
-              {showOptions && (
+          )}
+          <div className={styles.menuItem}>
+            <button
+              className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
+              onClick={() => { setCurrentView('masterConfig'); handleLinkClick(); }}
+            >
+              <i className="fas fa-users" /> Gerenciar Master Admins
+            </button>
+          </div>
+          <div className={styles.menuItem}>
+            <button
+              className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
+              onClick={() => { setCurrentView('users'); handleLinkClick(); }}
+            >
+              <i className="fas fa-users" /> Gerenciar Usuários
+            </button>
+            {showOptions && (
                 <div id="add-user-options" className={styles.subMenu}>
                   <Link
                     to="/dashboard/user/new?type=pdf"
@@ -384,67 +440,45 @@ const Dashboard: React.FC = () => {
                   </Link>
                 </div>
               )}
-            </div>
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
-                onClick={() => { setCurrentView('metrics'); handleLinkClick(); }}
-              >
-                <i className="fas fa-chart-bar" /> Métricas
-              </button>
-            </div>
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
-                onClick={() => {
-                  setCurrentView('masterConfig');
-                  handleLinkClick();
-                }}
-              >
-                <i className="fas fa-user-shield" /> Configurar Usuário Master
-              </button>
-            </div>
-            {userRole === 'super' && (
-              <div className={styles.menuItem}>
-                <button
-                  className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
-                  onClick={() => { setCurrentView('masterConfig'); handleLinkClick(); }}
-                >
-                  <i className="fas fa-user-shield" /> Configurar Master
-                </button>
-              </div>
-            )}
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'dashboardSettings' ? styles.active : ''}`}
-                onClick={() => { setCurrentView('dashboardSettings'); handleLinkClick(); }}
-              >
-                <i className="fas fa-cogs" /> Configurações
-              </button>
-            </div>
-            <div className={styles.menuItem}>
-              <button
-                className={styles.menuButton}
-                onClick={toggleTheme}
-                aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
-              >
-                <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              </button>
-            </div>
-            <button className={styles.buttonLogout} onClick={handleLogout}>
-              <i className="fas fa-sign-out-alt" /> Sair
+          </div>
+          <div className={styles.menuItem}>
+            <button
+              className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
+              onClick={() => { setCurrentView('metrics'); handleLinkClick(); }}
+            >
+              <i className="fas fa-chart-bar" /> Métricas
             </button>
           </div>
-        </aside>
-        <main className={styles.mainContent}>
-          <Breadcrumbs />
-          {currentView === 'users' && renderUsersView()}
-          {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
-          {currentView === 'masterConfig' && <MasterUserConfig masterUser={masterUser} />}
-          {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
-          <Footer />
-        </main>
-      </div>
+          <div className={styles.menuItem}>
+            <button
+              className={`${styles.menuButton} ${currentView === 'dashboardSettings' ? styles.active : ''}`}
+              onClick={() => { setCurrentView('dashboardSettings'); handleLinkClick(); }}
+            >
+              <i className="fas fa-cogs" /> Configurações
+            </button>
+          </div>
+          <div className={styles.menuItem}>
+            <button
+              className={styles.menuButton}
+              onClick={toggleTheme}
+              aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+            >
+              <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+            </button>
+          </div>
+          <button className={styles.buttonLogout} onClick={handleLogout}>
+            <i className="fas fa-sign-out-alt" /> Sair
+          </button>
+        </div>
+      </aside>
+      <main className={styles.mainContent}>
+        <Breadcrumbs />
+        {currentView === 'masterConfig' && renderMasterUserConfig()}
+        {currentView === 'users' && renderUserConfig()}
+        {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
+        {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
+        <Footer />
+      </main>
     </div>
   );
 };

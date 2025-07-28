@@ -1,143 +1,200 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// src/pages/Login.tsx
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as Icons from '../components/Icons';
+import axios from 'axios';
 import styles from '../styles/login.module.css';
-import '../index.css';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [deviceId, setDeviceId] = useState('');
-  const [error, setError] = useState<string | null>(null); // Especificado tipo para error
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+const Login: React.FC = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState<LoginData>({
+    email: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const storedDeviceId = localStorage.getItem('deviceId');
-    const savedEmail = localStorage.getItem('savedEmail');
-    const savedPassword = localStorage.getItem('savedPassword');
-    const remembered = localStorage.getItem('rememberMe') === 'true';
+  const handleInputChange = (field: keyof LoginData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-    if (storedDeviceId) {
-      setDeviceId(storedDeviceId);
-    } else {
-      const newDeviceId = Math.random().toString(36).substring(2);
-      localStorage.setItem('deviceId', newDeviceId);
-      setDeviceId(newDeviceId);
-    }
-
-    if (remembered && savedEmail && savedPassword) {
-      setEmail(savedEmail);
-      setPassword(savedPassword);
-      setRememberMe(true);
-    }
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
+    
     setError(null);
+    setLoading(true);
+
+    // Validação básica
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Email e senha são obrigatórios');
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await axios.post('http://localhost:3000/api/v1/login', {
-        user: { email, password },
-        device_id: deviceId,
-      });
-      console.log('Resposta da API:', response.data); // Depuração
-      const { api_key, user_type } = response.data;
-      localStorage.setItem('apiKey', api_key);
-      localStorage.setItem('userRole', user_type);  
-      localStorage.setItem('deviceId', deviceId);
-
-      if (rememberMe) {
-        localStorage.setItem('savedEmail', email);
-        localStorage.setItem('savedPassword', password);
-        localStorage.setItem('rememberMe', 'true');
-      } else {
-        localStorage.removeItem('savedEmail');
-        localStorage.removeItem('savedPassword');
-        localStorage.removeItem('rememberMe');
+      // Gerar um device ID único se não existir
+      let deviceId = localStorage.getItem('deviceId');
+      if (!deviceId) {
+        deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('deviceId', deviceId);
       }
 
-      navigate('/dashboard');
+      console.log('Tentando fazer login...', { email: formData.email });
+
+      const response = await axios.post('http://localhost:3000/api/v1/sessions', {
+        session: {
+          email: formData.email,
+          password: formData.password,
+          device_id: deviceId
+        }
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Device-ID': deviceId
+        }
+      });
+
+      console.log('Resposta do login:', response.data);
+
+      // Verificar se a resposta contém os dados necessários
+      if (response.data && response.data.api_key) {
+        // Salvar dados no localStorage
+        localStorage.setItem('apiKey', response.data.api_key);
+        localStorage.setItem('deviceId', deviceId);
+        
+        // Determinar o role do usuário
+        let userRole = 'user'; // padrão
+        if (response.data.user && response.data.user.role) {
+          userRole = response.data.user.role;
+        }
+        
+        localStorage.setItem('userRole', userRole);
+
+        console.log('Login bem-sucedido, dados salvos:', {
+          apiKey: response.data.api_key,
+          userRole: userRole,
+          deviceId: deviceId
+        });
+
+        // Pequeno delay para garantir que o localStorage foi salvo
+        setTimeout(() => {
+          console.log('Redirecionando para dashboard...');
+          navigate('/dashboard', { replace: true });
+        }, 100);
+        
+      } else {
+        console.error('Resposta inválida do servidor:', response.data);
+        setError('Resposta inválida do servidor - dados ausentes');
+      }
+
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.response?.data?.error || 'Erro ao fazer login');
+      console.error('Erro no login:', err);
+      
+      if (err.response?.status === 401) {
+        setError('Email ou senha inválidos');
+      } else if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.response?.data?.errors) {
+        setError(Array.isArray(err.response.data.errors) 
+          ? err.response.data.errors.join(', ') 
+          : err.response.data.errors);
+      } else if (err.code === 'ECONNREFUSED') {
+        setError('Erro de conexão: Servidor indisponível');
+      } else if (err.message) {
+        setError(`Erro de conexão: ${err.message}`);
+      } else {
+        setError('Erro ao fazer login. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
     <div className={styles.loginContainer}>
-      <img src="favicon.ico" alt="Logo" className={styles.logo} />
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.inputGroup}>
-          <label htmlFor="email">Email</label>
-          <span className={styles.inputIcon}>
-            <Icons.Email />
-          </span>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="email@exemplo.com"
-            required
-            aria-required="true"
-            className={styles.input}
-          />
+      <div className={styles.loginCard}>
+        <div className={styles.loginHeader}>
+          <h1 className={styles.title}>Login</h1>
+          <p className={styles.subtitle}>Entre com suas credenciais</p>
         </div>
-        <div className={styles.inputGroup}>
-          <label htmlFor="password">Senha</label>
-          <span className={styles.inputIcon}>
-            <Icons.Password />
-          </span>
-          <input
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Senha"
-            required
-            aria-required="true"
-            className={styles.input}
-          />
+        
+        <form onSubmit={handleSubmit} className={styles.loginForm}>
+          <div className={styles.formGroup}>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className={styles.input}
+              placeholder="seu@email.com"
+              required
+              disabled={loading}
+            />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Senha</label>
+            <input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              className={styles.input}
+              placeholder="Sua senha"
+              required
+              disabled={loading}
+            />
+          </div>
+
+          {error && (
+            <div className={styles.errorMessage}>
+              <i className="fas fa-exclamation-triangle" />
+              {error}
+            </div>
+          )}
+
           <button
-            type="button"
-            className={styles.togglePassword}
-            onClick={togglePasswordVisibility}
-            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            type="submit"
+            className={styles.loginButton}
+            disabled={loading}
           >
-            {showPassword ? <Icons.EyeClose /> : <Icons.EyeOpen />}
+            {loading ? (
+              <>
+                <i className="fas fa-spinner fa-spin" />
+                Entrando...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-sign-in-alt" />
+                Entrar
+              </>
+            )}
           </button>
-        </div>
-        <div className={styles.rememberMeContainer}>
-          <input
-            type="checkbox"
-            id="rememberMe"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-            aria-label="Salvar login"
-          />
-          <label htmlFor="rememberMe">Salvar login</label>
-        </div>
-        {error && (
-          <div className={styles.errorMessage} role="alert">
-            {error}
+        </form>
+        
+        {/* Debug info - remover em produção */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+            <details>
+              <summary>Debug Info</summary>
+              <pre>{JSON.stringify({
+                formData,
+                apiKey: localStorage.getItem('apiKey'),
+                deviceId: localStorage.getItem('deviceId'),
+                userRole: localStorage.getItem('userRole')
+              }, null, 2)}</pre>
+            </details>
           </div>
         )}
-        <button type="submit" className={styles.submitButton} disabled={loading}>
-          {loading ? <Icons.Loading /> : 'Entrar'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 };

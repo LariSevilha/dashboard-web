@@ -1,40 +1,43 @@
-// src/components/UserForm.tsx
+// src/components/PersonalTrainerForm.tsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
-import { PlanDurationOptions } from './FormConstants';
 
-// Make the props optional for standalone usage
-interface UserFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
+interface PersonalTrainerFormProps {
+  onSuccess: () => void;
+  onCancel: () => void;
 }
 
-interface UserFormData {
+interface PersonalTrainerData {
   name: string;
   email: string;
-  phone_number: string;
-  plan_duration: string;
   password: string;
   password_confirmation: string;
+  cpf: string;
+  cref: string;
+  phone_number: string;
 }
 
-const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState<UserFormData>({
+const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, onCancel }) => {
+  const [formData, setFormData] = useState<PersonalTrainerData>({
     name: '',
     email: '',
-    phone_number: '',
-    plan_duration: '',
     password: '',
-    password_confirmation: ''
+    password_confirmation: '',
+    cpf: '',
+    cref: '',
+    phone_number: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const apiKey = localStorage.getItem('apiKey');
   const deviceId = localStorage.getItem('deviceId');
+
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
 
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -44,16 +47,53 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
+  const validateCPF = (cpf: string) => {
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length !== 11) return false;
+    
+    // Verifica se todos os dígitos são iguais
+    if (/^(\d)\1{10}$/.test(numbers)) return false;
+    
+    // Validação do CPF
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(numbers.charAt(i)) * (10 - i);
+    }
+    let remainder = 11 - (sum % 11);
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(numbers.charAt(9))) return false;
+    
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(numbers.charAt(i)) * (11 - i);
+    }
+    remainder = 11 - (sum % 11);
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(numbers.charAt(10))) return false;
+    
+    return true;
+  };
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleInputChange = (field: keyof UserFormData, value: string) => {
+  const validateCREF = (cref: string) => {
+    // CREF format: XXXXXX-G/XX (6 digits, G, /, 2 letters for state)
+    const crefRegex = /^\d{6}-G\/[A-Z]{2}$/;
+    return crefRegex.test(cref.toUpperCase());
+  };
+
+  const handleInputChange = (field: keyof PersonalTrainerData, value: string) => {
     let formattedValue = value;
     
-    if (field === 'phone_number') {
+    if (field === 'cpf') {
+      formattedValue = formatCPF(value);
+    } else if (field === 'phone_number') {
       formattedValue = formatPhone(value);
+    } else if (field === 'cref') {
+      formattedValue = value.toUpperCase();
     }
     
     setFormData(prev => ({
@@ -73,11 +113,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       return false;
     }
     
-    if (!formData.plan_duration) {
-      setError('Duração do plano é obrigatória');
-      return false;
-    }
-    
     if (formData.password.length < 6) {
       setError('Senha deve ter pelo menos 6 caracteres');
       return false;
@@ -88,6 +123,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       return false;
     }
     
+    if (!validateCPF(formData.cpf)) {
+      setError('CPF inválido');
+      return false;
+    }
+    
+    if (!validateCREF(formData.cref)) {
+      setError('CREF inválido. Formato esperado: 123456-G/SP');
+      return false;
+    }
+    
     const phoneNumbers = formData.phone_number.replace(/\D/g, '');
     if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
       setError('Telefone inválido');
@@ -95,26 +140,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     }
     
     return true;
-  };
-
-  const handleSuccess = () => {
-    if (onSuccess) {
-      // If used as a component with callback
-      onSuccess();
-    } else {
-      // If used as a standalone page, navigate back to dashboard
-      navigate('/dashboard');
-    }
-  };
-
-  const handleCancel = () => {
-    if (onCancel) {
-      // If used as a component with callback
-      onCancel();
-    } else {
-      // If used as a standalone page, navigate back to dashboard
-      navigate('/dashboard');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -131,15 +156,16 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
     setLoading(true);
     
     try {
-      // Remove formatting from phone for backend
+      // Remove formatting from CPF and phone for backend
       const cleanData = {
         ...formData,
+        cpf: formData.cpf.replace(/\D/g, ''),
         phone_number: formData.phone_number.replace(/\D/g, '')
       };
       
       await axios.post(
-        'http://localhost:3000/api/v1/users',
-        { user: cleanData },
+        'http://localhost:3000/api/v1/master_users',
+        { master_user: cleanData },
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
@@ -149,10 +175,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         }
       );
       
-      // Call the success handler
-      handleSuccess();
+      onSuccess();
     } catch (err: any) {
-      console.error('Error creating user:', err);
+      console.error('Error creating personal trainer:', err);
       if (err.response?.data?.errors) {
         setError(Array.isArray(err.response.data.errors) 
           ? err.response.data.errors.join(', ') 
@@ -160,7 +185,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
       } else if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else {
-        setError('Erro ao cadastrar usuário');
+        setError('Erro ao cadastrar personal trainer');
       }
     } finally {
       setLoading(false);
@@ -170,10 +195,10 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   return (
     <div className={styles.configContainer}>
       <div className={styles.formHeader}>
-        <h2 className={styles.title}>Cadastrar Usuário</h2>
+        <h2 className={styles.title}>Cadastrar Personal Trainer</h2>
         <button 
           type="button" 
-          onClick={handleCancel}
+          onClick={onCancel}
           className={styles.closeButton}
           aria-label="Fechar formulário"
         >
@@ -212,6 +237,39 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
 
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
+            <label htmlFor="cpf">CPF *</label>
+            <input
+              id="cpf"
+              type="text"
+              value={formData.cpf}
+              onChange={(e) => handleInputChange('cpf', e.target.value)}
+              className={styles.input}
+              placeholder="000.000.000-00"
+              maxLength={14}
+              required
+            />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="cref">CREF *</label>
+            <input
+              id="cref"
+              type="text"
+              value={formData.cref}
+              onChange={(e) => handleInputChange('cref', e.target.value)}
+              className={styles.input}
+              placeholder="123456-G/SP"
+              maxLength={11}
+              required
+            />
+            <small className={styles.helpText}>
+              Formato: 123456-G/SP (6 dígitos + G + barra + estado)
+            </small>
+          </div>
+        </div>
+
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
             <label htmlFor="phone">Telefone *</label>
             <input
               id="phone"
@@ -223,24 +281,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
               maxLength={15}
               required
             />
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label htmlFor="plan_duration">Duração do Plano *</label>
-            <select
-              id="plan_duration"
-              value={formData.plan_duration}
-              onChange={(e) => handleInputChange('plan_duration', e.target.value)}
-              className={styles.input}
-              required
-            >
-              <option value="">Selecione a duração</option>
-              {PlanDurationOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -284,7 +324,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
         <div className={styles.formActions}>
           <button
             type="button"
-            onClick={handleCancel}
+            onClick={onCancel}
             className={styles.cancelButton}
             disabled={loading}
           >
@@ -303,7 +343,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
             ) : (
               <>
                 <i className="fas fa-user-plus" />
-                Cadastrar Usuário
+                Cadastrar Personal
               </>
             )}
           </button>
@@ -313,4 +353,4 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel }) => {
   );
 };
 
-export default UserForm;
+export default PersonalTrainerForm;
