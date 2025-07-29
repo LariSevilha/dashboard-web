@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -19,7 +18,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (field: keyof LoginData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value
     }));
@@ -31,7 +30,6 @@ const Login: React.FC = () => {
     setError(null);
     setLoading(true);
 
-    // Validação básica
     if (!formData.email.trim() || !formData.password.trim()) {
       setError('Email e senha são obrigatórios');
       setLoading(false);
@@ -39,7 +37,6 @@ const Login: React.FC = () => {
     }
 
     try {
-      // Gerar um device ID único se não existir
       let deviceId = localStorage.getItem('deviceId');
       if (!deviceId) {
         deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -63,14 +60,11 @@ const Login: React.FC = () => {
 
       console.log('Resposta do login:', response.data);
 
-      // Verificar se a resposta contém os dados necessários
       if (response.data && response.data.api_key) {
-        // Salvar dados no localStorage
         localStorage.setItem('apiKey', response.data.api_key);
         localStorage.setItem('deviceId', deviceId);
         
-        // Determinar o role do usuário
-        let userRole = 'user'; // padrão
+        let userRole = 'user';
         if (response.data.user && response.data.user.role) {
           userRole = response.data.user.role;
         }
@@ -83,28 +77,22 @@ const Login: React.FC = () => {
           deviceId: deviceId
         });
 
-        // Pequeno delay para garantir que o localStorage foi salvo
         setTimeout(() => {
           console.log('Redirecionando para dashboard...');
           navigate('/dashboard', { replace: true });
         }, 100);
-        
       } else {
         console.error('Resposta inválida do servidor:', response.data);
         setError('Resposta inválida do servidor - dados ausentes');
       }
-
     } catch (err: any) {
       console.error('Erro no login:', err);
-      
       if (err.response?.status === 401) {
         setError('Email ou senha inválidos');
       } else if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else if (err.response?.data?.errors) {
-        setError(Array.isArray(err.response.data.errors) 
-          ? err.response.data.errors.join(', ') 
-          : err.response.data.errors);
+        setError(Array.isArray(err.response.data.errors) ? err.response.data.errors.join(', ') : err.response.data.errors);
       } else if (err.code === 'ECONNREFUSED') {
         setError('Erro de conexão: Servidor indisponível');
       } else if (err.message) {
@@ -180,7 +168,6 @@ const Login: React.FC = () => {
           </button>
         </form>
         
-        {/* Debug info - remover em produção */}
         {process.env.NODE_ENV === 'development' && (
           <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
             <details>

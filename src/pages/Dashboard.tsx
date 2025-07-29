@@ -1,7 +1,6 @@
-// src/components/Dashboard.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { format } from 'date-fns';
 import { debounce } from 'lodash';
 import { Chart as ChartJS, registerables } from 'chart.js';
@@ -13,9 +12,9 @@ import MasterUserConfig from './MasterUserConfig';
 import DashboardSettings from './DashboardSettings';
 import { useTheme } from './ThemeProvider';
 import Footer from './Footer';
-import Breadcrumbs from './Breadcrumbs'; 
+import Breadcrumbs from './Breadcrumbs';
 import PersonalTrainerForm from './PersonalTrainerForm';
-import UserForm from './UserForm'; 
+import UserForm from './UserForm';
 
 import { User, Metrics } from '../pages/MetricsTypes';
 import { MasterUser, DashboardSettings as DashboardSettingsType } from '../pages/types';
@@ -39,6 +38,7 @@ interface UserFormData {
   plan_duration: string;
   password: string;
   password_confirmation: string;
+  pdfContent?: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -55,20 +55,26 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings' | 'personalTrainerConfig'>('users');
+  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings'>('users');
   const [userRole, setUserRole] = useState<'super' | 'master' | null>(null);
   const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
   const [showPersonalTrainerForm, setShowPersonalTrainerForm] = useState<boolean>(false);
-  const [showUserForm, setShowUserForm] = useState<boolean>(false);
   const [formLoading, setFormLoading] = useState<boolean>(false);
   const chartRef = useRef<ChartJS | null>(null);
   const [showOptions, setShowOptions] = useState<boolean>(false);
-
-
-  const usersPerPage = 5;
+  
+  const { id } = useParams<{ id?: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const apiKey = localStorage.getItem('apiKey');
   const deviceId = localStorage.getItem('deviceId');
+
+  // Determine what to show based on current route
+  const isUserForm = location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new';
+  const isMasterForm = location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new';
+  const userType = new URLSearchParams(location.search).get('type') as 'pdf' | 'manual' | null;
+
+  const usersPerPage = 5;
 
   const loadImageWithAuth = async (url: string) => {
     if (!apiKey || !deviceId) {
@@ -76,7 +82,6 @@ const Dashboard: React.FC = () => {
       setError('Credenciais de autenticação ausentes');
       return null;
     }
-
     try {
       const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`;
       const response = await axios.get(fullUrl, {
@@ -91,6 +96,21 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Set current view based on URL
+  useEffect(() => {
+    if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
+      setCurrentView('users');
+    } else if (location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new') {
+      setCurrentView('masterConfig');
+    } else if (location.pathname.includes('/metrics')) {
+      setCurrentView('metrics');
+    } else if (location.pathname.includes('/settings')) {
+      setCurrentView('dashboardSettings');
+    } else {
+      setCurrentView('users'); // Default view
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth <= 1024);
     checkIsMobile();
@@ -104,6 +124,7 @@ const Dashboard: React.FC = () => {
       const toggle = document.querySelector(`.${styles.mobileMenuToggle}`);
       if (isMobileMenuOpen && sidebar && toggle && !sidebar.contains(event.target as Node) && !toggle.contains(event.target as Node)) {
         setIsMobileMenuOpen(false);
+        setShowOptions(false);
       }
     };
     if (isMobileMenuOpen) document.addEventListener('mousedown', handleClickOutside);
@@ -255,27 +276,65 @@ const Dashboard: React.FC = () => {
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
-  const handleLinkClick = () => isMobile && closeMobileMenu();
+  const handleLinkClick = () => {
+    if (isMobile) closeMobileMenu();
+    setShowOptions(false);
+  };
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
-  // Personal Trainer Form handlers
+  const toggleOptions = () => setShowOptions((prev) => !prev);
+
+  // Navigation handlers
+  const navigateToView = (view: string) => {
+    handleLinkClick();
+    switch (view) {
+      case 'users':
+        navigate('/dashboard');
+        break;
+      case 'masterConfig':
+        navigate('/dashboard');
+        break;
+      case 'metrics':
+        navigate('/dashboard/metrics');
+        break;
+      case 'dashboardSettings':
+        navigate('/dashboard/settings');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+  };
+
+  // Form handlers
   const handlePersonalTrainerSuccess = () => {
     setShowPersonalTrainerForm(false);
     fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+    navigate('/dashboard');
   };
 
   const handlePersonalTrainerCancel = () => {
     setShowPersonalTrainerForm(false);
+    navigate('/dashboard');
   };
 
-  // User Form handlers
   const handleUserSuccess = () => {
-    setShowUserForm(false);
     fetchUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
+    navigate('/dashboard');
   };
 
   const handleUserCancel = () => {
-    setShowUserForm(false);
+    navigate('/dashboard');
+  };
+
+  // User form navigation
+  const handleAddUserPdf = () => {
+    navigate('/dashboard/user/new?type=pdf');
+    setShowOptions(false);
+  };
+
+  const handleAddUserManual = () => {
+    navigate('/dashboard/user/new?type=manual');
+    setShowOptions(false);
   };
 
   const renderMasterUserConfig = () => (
@@ -283,17 +342,19 @@ const Dashboard: React.FC = () => {
       <div className={styles.configHeader}>
         <h2 className={styles.title}>Gerenciar Master Admins</h2>
         {userRole === 'super' && (
-          <button onClick={() => setShowPersonalTrainerForm(true)} className={styles.addButton}>
+          <button onClick={() => navigate('/dashboard/master/new')} className={styles.addButton}>
             <i className="fas fa-user-plus" /> Novo Master Admin
           </button>
         )}
       </div>
-      {showPersonalTrainerForm && userRole === 'super' && (
+      
+      {isMasterForm && userRole === 'super' && (
         <PersonalTrainerForm
           onSuccess={handlePersonalTrainerSuccess}
           onCancel={handlePersonalTrainerCancel}
         />
       )}
+      
       <h3 className={styles.subtitle}>Master Admins Cadastrados</h3>
       {loading ? (
         <div className={styles.loading}>Carregando...</div>
@@ -338,147 +399,176 @@ const Dashboard: React.FC = () => {
       <div className={styles.configHeader}>
         <h2 className={styles.title}>Gerenciar Usuários</h2>
         {userRole === 'master' && (
-          <button onClick={() => setShowUserForm(true)} className={styles.addButton}>
-            <i className="fas fa-user-plus" /> Novo Usuário
-          </button>
+          <div className={styles.addButtonWrapper}>
+            <button onClick={toggleOptions} className={styles.addButton}>
+              <i className="fas fa-user-plus" /> Novo Usuário
+            </button>
+            {showOptions && (
+              <div className={styles.subMenu}>
+                <button
+                  onClick={handleAddUserPdf}
+                  className={styles.subMenuItem}
+                >
+                  <i className="fas fa-file-pdf" /> Adicionar PDF
+                </button>
+                <button
+                  onClick={handleAddUserManual}
+                  className={styles.subMenuItem}
+                >
+                  <i className="fas fa-edit" /> Cadastrar Manual
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
       
-      {showUserForm && userRole === 'master' && (
+      {isUserForm && (
         <UserForm
           onSuccess={handleUserSuccess}
           onCancel={handleUserCancel}
+          userType={userType}
         />
       )}
-      <h3 className={styles.subtitle}>Usuários Cadastrados</h3>
-      {loading ? (
-        <div className={styles.loading}>Carregando...</div>
-      ) : error ? (
-        <p className={styles.errorMessage}>{error}</p>
-      ) : users.length === 0 ? (
-        <p className={styles.empty}>Nenhum usuário encontrado.</p>
-      ) : (
-        <div className={styles.userList}>
-          {users.map((u) => (
-            <div key={u.id} className={styles.userItem}>
-              <div className={styles.userInfo}>
-                <strong>{u.name || 'Nome não disponível'}</strong>
-                <span>({u.email || 'Email não disponível'})</span>
-              </div>
-              <div className={styles.userActions}>
-                <Link
-                  to={`/dashboard/user/${u.id}`}
-                  aria-label={`Editar usuário ${u.name}`}
-                  onClick={handleLinkClick}
-                  className={styles.editIcon}
-                >
-                  <i className="fas fa-edit" />
-                </Link>
-                <button
-                  className={styles.deleteIcon}
-                  onClick={() => handleDelete(u.id, 'user')}
-                  aria-label={`Excluir usuário ${u.name}`}
-                >
-                  <i className="fas fa-trash" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      
+      
     </div>
   );
 
   return (
     <div className={styles.dashboardContainer}>
-      <aside className={`${styles.sidebar} ${isMobile && isMobileMenuOpen ? styles.open : ''}`}>
-        <div className={styles.sidebarHeader}>
-          {isMobile && <button className={styles.sidebarCloseButton} onClick={closeMobileMenu}><i className="fas fa-times" /></button>}
-          <div className={styles.brandLogo}>{settings?.app_name?.[0] || 'D'}</div>
-          <h2 className={styles.title}>{settings?.app_name || 'Dashboard'}</h2>
-        </div>
-        <div className={styles.sidebarContent}>
-          {user && (
-            <div className={styles.info}>
-              <div className={styles.userAvatar}>{user.name?.[0] || user.email?.[0]}</div>
-              <div className={styles.userInfo}>
-                <div className={styles.userName}>{user.name || user.email}</div>
-                <div className={styles.userRole}>{userRole === 'super' ? 'Superusuário' : 'Master'}</div>
-              </div>
+      {isMobile && (
+        <button
+          className={styles.mobileMenuToggle}
+          onClick={toggleMobileMenu}
+          aria-label={isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={isMobileMenuOpen}
+        >
+          <i className={isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'} />
+        </button>
+      )}
+      {isMobile && (
+        <div
+          className={`${styles.sidebarOverlay} ${isMobileMenuOpen ? styles.active : ''}`}
+          onClick={closeMobileMenu}
+          aria-hidden={!isMobileMenuOpen}
+        />
+      )}
+      <div className={styles.contentWrapper}>
+        <aside className={`${styles.sidebar} ${isMobile && isMobileMenuOpen ? styles.open : ''}`}>
+          <div className={styles.sidebarHeader}>
+            {isMobile && (
+              <button
+                className={styles.sidebarCloseButton}
+                onClick={closeMobileMenu}
+                aria-label="Fechar menu"
+              >
+                <i className="fas fa-times" />
+              </button>
+            )}
+            <div className={styles.brandLogo}>
+              {settings?.logo_url ? (
+                <img
+                  src={settings.logo_url}
+                  alt="Logo"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '4px' }}
+                />
+              ) : settings?.app_name ? (
+                settings.app_name
+                  .split(' ')
+                  .map((word) => word[0])
+                  .join('')
+                  .substring(0, 2)
+                  .toUpperCase()
+              ) : (
+                'RF'
+              )}
             </div>
-          )}
-          <div className={styles.menuItem}>
-            <button
-              className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
-              onClick={() => { setCurrentView('masterConfig'); handleLinkClick(); }}
-            >
-              <i className="fas fa-users" /> Gerenciar Master Admins
-            </button>
+            <h2 className={styles.title}>{settings?.app_name || 'Dashboard'}</h2>
           </div>
-          <div className={styles.menuItem}>
-            <button
-              className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
-              onClick={() => { setCurrentView('users'); handleLinkClick(); }}
-            >
-              <i className="fas fa-users" /> Gerenciar Usuários
-            </button>
-            {showOptions && (
-                <div id="add-user-options" className={styles.subMenu}>
-                  <Link
-                    to="/dashboard/user/new?type=pdf"
+          <div className={styles.sidebarContent}>
+            {user && (
+              <div className={styles.info}>
+                <div className={styles.userAvatar}>
+                  {user.name ? user.name[0] : user.email?.[0]}
+                </div>
+                <div className={styles.userInfo}>
+                  <div className={styles.userName}>{user.name || user.email}</div>
+                  <div className={styles.userRole}>{userRole === 'super' ? 'Superusuário' : 'Master'}</div>
+                </div>
+              </div>
+            )}
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
+                onClick={() => navigateToView('masterConfig')}
+              >
+                <i className="fas fa-user-shield" /> Gerenciar Master Admins
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
+                onClick={() => navigateToView('users')}
+              >
+                <i className="fas fa-users" /> Gerenciar Usuários
+              </button>
+              {userRole === 'master' && (
+                <div className={styles.subMenu}>
+                  <button
+                    onClick={() => navigate('/dashboard/user/new?type=pdf')}
                     className={styles.subMenuItem}
-                    onClick={handleLinkClick}
                   >
                     <i className="fas fa-file-pdf" /> Adicionar PDF
-                  </Link>
-                  <Link
-                    to="/dashboard/user/new?type=manual"
+                  </button>
+                  <button
+                    onClick={() => navigate('/dashboard/user/new?type=manual')}
                     className={styles.subMenuItem}
-                    onClick={handleLinkClick}
                   >
                     <i className="fas fa-edit" /> Cadastrar Manual
-                  </Link>
+                  </button>
                 </div>
               )}
-          </div>
-          <div className={styles.menuItem}>
-            <button
-              className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
-              onClick={() => { setCurrentView('metrics'); handleLinkClick(); }}
-            >
-              <i className="fas fa-chart-bar" /> Métricas
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
+                onClick={() => navigateToView('metrics')}
+              >
+                <i className="fas fa-chart-bar" /> Métricas
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'dashboardSettings' ? styles.active : ''}`}
+                onClick={() => navigateToView('dashboardSettings')}
+              >
+                <i className="fas fa-cogs" /> Configurações
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={styles.menuButton}
+                onClick={toggleTheme}
+                aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
+              >
+                <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+              </button>
+            </div>
+            <button className={styles.buttonLogout} onClick={handleLogout}>
+              <i className="fas fa-sign-out-alt" /> Sair
             </button>
           </div>
-          <div className={styles.menuItem}>
-            <button
-              className={`${styles.menuButton} ${currentView === 'dashboardSettings' ? styles.active : ''}`}
-              onClick={() => { setCurrentView('dashboardSettings'); handleLinkClick(); }}
-            >
-              <i className="fas fa-cogs" /> Configurações
-            </button>
-          </div>
-          <div className={styles.menuItem}>
-            <button
-              className={styles.menuButton}
-              onClick={toggleTheme}
-              aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
-            >
-              <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-            </button>
-          </div>
-          <button className={styles.buttonLogout} onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt" /> Sair
-          </button>
-        </div>
-      </aside>
-      <main className={styles.mainContent}>
-        <Breadcrumbs />
-        {currentView === 'masterConfig' && renderMasterUserConfig()}
-        {currentView === 'users' && renderUserConfig()}
-        {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
-        {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
-        <Footer />
-      </main>
+        </aside>
+        <main className={styles.mainContent}>
+          <Breadcrumbs />
+          {currentView === 'masterConfig' && renderMasterUserConfig()}
+          {currentView === 'users' && renderUserConfig()}
+          {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
+          {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
+          <Footer />
+        </main>
+      </div>
     </div>
   );
 };

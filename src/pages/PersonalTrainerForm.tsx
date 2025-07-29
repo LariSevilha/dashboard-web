@@ -1,4 +1,3 @@
-// src/components/PersonalTrainerForm.tsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import styles from '../styles/dashboard.module.css';
@@ -50,27 +49,17 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
   const validateCPF = (cpf: string) => {
     const numbers = cpf.replace(/\D/g, '');
     if (numbers.length !== 11) return false;
-    
-    // Verifica se todos os dígitos são iguais
     if (/^(\d)\1{10}$/.test(numbers)) return false;
-    
-    // Validação do CPF
     let sum = 0;
-    for (let i = 0; i < 9; i++) {
-      sum += parseInt(numbers.charAt(i)) * (10 - i);
-    }
+    for (let i = 0; i < 9; i++) sum += parseInt(numbers.charAt(i)) * (10 - i);
     let remainder = 11 - (sum % 11);
     if (remainder === 10 || remainder === 11) remainder = 0;
     if (remainder !== parseInt(numbers.charAt(9))) return false;
-    
     sum = 0;
-    for (let i = 0; i < 10; i++) {
-      sum += parseInt(numbers.charAt(i)) * (11 - i);
-    }
+    for (let i = 0; i < 10; i++) sum += parseInt(numbers.charAt(i)) * (11 - i);
     remainder = 11 - (sum % 11);
     if (remainder === 10 || remainder === 11) remainder = 0;
     if (remainder !== parseInt(numbers.charAt(10))) return false;
-    
     return true;
   };
 
@@ -80,14 +69,12 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
   };
 
   const validateCREF = (cref: string) => {
-    // CREF format: XXXXXX-G/XX (6 digits, G, /, 2 letters for state)
     const crefRegex = /^\d{6}-G\/[A-Z]{2}$/;
     return crefRegex.test(cref.toUpperCase());
   };
 
   const handleInputChange = (field: keyof PersonalTrainerData, value: string) => {
     let formattedValue = value;
-    
     if (field === 'cpf') {
       formattedValue = formatCPF(value);
     } else if (field === 'phone_number') {
@@ -95,10 +82,9 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
     } else if (field === 'cref') {
       formattedValue = value.toUpperCase();
     }
-    
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: formattedValue
+      [field]: formattedValue,
     }));
   };
 
@@ -107,62 +93,54 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
       setError('Nome é obrigatório');
       return false;
     }
-    
     if (!validateEmail(formData.email)) {
       setError('Email inválido');
       return false;
     }
-    
     if (formData.password.length < 6) {
       setError('Senha deve ter pelo menos 6 caracteres');
       return false;
     }
-    
     if (formData.password !== formData.password_confirmation) {
       setError('Senhas não coincidem');
       return false;
     }
-    
     if (!validateCPF(formData.cpf)) {
       setError('CPF inválido');
       return false;
     }
-    
     if (!validateCREF(formData.cref)) {
       setError('CREF inválido. Formato esperado: 123456-G/SP');
       return false;
     }
-    
     const phoneNumbers = formData.phone_number.replace(/\D/g, '');
     if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
       setError('Telefone inválido');
       return false;
     }
-    
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!validateForm()) return;
-    
+
     if (!apiKey || !deviceId) {
       setError('Credenciais de autenticação ausentes');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      // Remove formatting from CPF and phone for backend
       const cleanData = {
         ...formData,
         cpf: formData.cpf.replace(/\D/g, ''),
-        phone_number: formData.phone_number.replace(/\D/g, '')
+        phone_number: formData.phone_number.replace(/\D/g, ''),
       };
-      
+
       await axios.post(
         'http://localhost:3000/api/v1/master_users',
         { master_user: cleanData },
@@ -170,18 +148,20 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
           headers: {
             Authorization: `Bearer ${apiKey}`,
             'Device-ID': deviceId,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       onSuccess();
     } catch (err: any) {
       console.error('Error creating personal trainer:', err);
       if (err.response?.data?.errors) {
-        setError(Array.isArray(err.response.data.errors) 
-          ? err.response.data.errors.join(', ') 
-          : err.response.data.errors);
+        setError(
+          Array.isArray(err.response.data.errors)
+            ? err.response.data.errors.join(', ')
+            : err.response.data.errors
+        );
       } else if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else {
@@ -196,8 +176,8 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
     <div className={styles.configContainer}>
       <div className={styles.formHeader}>
         <h2 className={styles.title}>Cadastrar Personal Trainer</h2>
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={onCancel}
           className={styles.closeButton}
           aria-label="Fechar formulário"
@@ -205,7 +185,7 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
           <i className="fas fa-times" />
         </button>
       </div>
-      
+
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
@@ -220,7 +200,6 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
               required
             />
           </div>
-          
           <div className={styles.formGroup}>
             <label htmlFor="email">Email *</label>
             <input
@@ -249,7 +228,6 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
               required
             />
           </div>
-          
           <div className={styles.formGroup}>
             <label htmlFor="cref">CREF *</label>
             <input
@@ -262,9 +240,7 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
               maxLength={11}
               required
             />
-            <small className={styles.helpText}>
-              Formato: 123456-G/SP (6 dígitos + G + barra + estado)
-            </small>
+            <small className={styles.helpText}>Formato: 123456-G/SP (6 dígitos + G + barra + estado)</small>
           </div>
         </div>
 
@@ -298,7 +274,6 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
               required
             />
           </div>
-          
           <div className={styles.formGroup}>
             <label htmlFor="password_confirmation">Confirmar Senha *</label>
             <input

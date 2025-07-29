@@ -1,64 +1,32 @@
-// src/App.tsx
+// App.tsx ou Routes.tsx - Configure as rotas assim:
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import UserForm from './pages/UserForm';
-import { ThemeProvider } from './pages/ThemeProvider';
+import Login from './pages/Login'; // Assumindo que você tem um componente de Login
 
-// Componente para verificar autenticação
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const apiKey = localStorage.getItem('apiKey');
-  const deviceId = localStorage.getItem('deviceId');
-  const userRole = localStorage.getItem('userRole');
-  
-  // Verificar se o usuário está logado
-  const isAuthenticated = !!(apiKey && deviceId && userRole);
-  
-  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, {
-    apiKey: !!apiKey,
-    deviceId: !!deviceId, 
-    userRole
-  });
-  
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-};
-
-const App: React.FC = () => {
+function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <Routes>
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/user/:id"
-            element={
-              <ProtectedRoute>
-                <UserForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/user/new"
-            element={
-              <ProtectedRoute>
-                <UserForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <Routes>
+        {/* Login Route */}
+        <Route path="/login" element={<Login />} />
+        
+        {/* Dashboard Routes */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/user/new" element={<Dashboard />} />
+        <Route path="/dashboard/user/:id" element={<Dashboard />} />
+        <Route path="/dashboard/master/new" element={<Dashboard />} />
+        <Route path="/dashboard/master/:id" element={<Dashboard />} />
+        <Route path="/dashboard/metrics" element={<Dashboard />} />
+        <Route path="/dashboard/settings" element={<Dashboard />} />
+        
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Router>
   );
-};
+}
 
 export default App;
