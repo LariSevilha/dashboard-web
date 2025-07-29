@@ -11,17 +11,7 @@
   --transition: all 0.3s ease; /* Transição suave */
 }
 
-/* Adicionado para garantir altura total da tela */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0; 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-}
-
+ 
 .loginContainer {
   width: 100%; 
   padding: 2rem; 
