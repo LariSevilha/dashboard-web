@@ -58,19 +58,31 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const fetchUserProfile = async () => {
     if (!apiKey || !deviceId) {
       setError('Credenciais de autenticação não encontradas');
-      navigate('/login');
+      setLoading(false);
       return;
     }
 
     try {
+      console.log('Fetching user profile...'); // Debug log
+      
       const response = await axios.get('http://localhost:3000/api/v1/dashboard/current_user_profile', {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Device-ID': deviceId,
+          'Content-Type': 'application/json',
         },
+        timeout: 10000, // 10 second timeout
       });
 
+      console.log('User profile response:', response.data); // Debug log
+
       const user = response.data;
+      
+      // Validate response data
+      if (!user || !user.id) {
+        throw new Error('Dados do usuário inválidos recebidos do servidor');
+      }
+
       setUserData(user);
       setFormData({
         name: user.name || '',
@@ -80,10 +92,53 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
         cref: user.cref || '',
         photo: null,
       });
-      setPhotoPreview(user.photo_url || null);
+
+      // Handle photo URL with proper error handling
+      if (user.photo_url) {
+        try {
+          setPhotoPreview(user.photo_url);
+        } catch (photoError) {
+          console.warn('Error setting photo preview:', photoError);
+          setPhotoPreview(null);
+        }
+      }
+
+      setError(null); // Clear any previous errors
     } catch (err: any) {
       console.error('Error fetching user profile:', err);
-      setError('Erro ao carregar perfil do usuário');
+      
+      let errorMessage = 'Erro ao carregar perfil do usuário';
+      
+      if (err.response) {
+        // Server responded with error status
+        const status = err.response.status;
+        const data = err.response.data;
+        
+        if (status === 401) {
+          errorMessage = 'Sessão expirada. Faça login novamente.';
+          // Clear auth data and redirect to login
+          localStorage.removeItem('apiKey');
+          localStorage.removeItem('deviceId');
+          localStorage.removeItem('userRole');
+          setTimeout(() => navigate('/login'), 2000);
+        } else if (status === 404) {
+          errorMessage = 'Perfil de usuário não encontrado';
+        } else if (status === 500) {
+          errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
+        } else if (data?.error) {
+          errorMessage = data.error;
+        } else if (data?.errors && Array.isArray(data.errors)) {
+          errorMessage = data.errors.join(', ');
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+      } else if (err.code === 'ECONNABORTED') {
+        // Timeout error
+        errorMessage = 'Tempo limite excedido. Tente novamente.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -108,6 +163,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB');
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione apenas arquivos de imagem');
+        return;
+      }
+
       setFormData((prev) => ({
         ...prev,
         photo: file,
@@ -118,13 +185,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       reader.onload = (e) => {
         setPhotoPreview(e.target?.result as string);
       };
+      reader.onerror = () => {
+        setError('Erro ao processar a imagem');
+      };
       reader.readAsDataURL(file);
     }
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiKey || !deviceId) return;
+    if (!apiKey || !deviceId || !userData) return;
 
     setUpdating(true);
     setError(null);
@@ -132,16 +202,20 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('user[name]', formData.name);
-      formDataToSend.append('user[email]', formData.email);
+      formDataToSend.append('user[name]', formData.name.trim());
+      formDataToSend.append('user[email]', formData.email.trim());
 
-      if (formData.phone_number) {
-        formDataToSend.append('user[phone_number]', formData.phone_number);
+      if (formData.phone_number?.trim()) {
+        formDataToSend.append('user[phone_number]', formData.phone_number.trim());
       }
 
-      if (userData?.role === 'master') {
-        if (formData.cpf) formDataToSend.append('user[cpf]', formData.cpf);
-        if (formData.cref) formDataToSend.append('user[cref]', formData.cref);
+      if (userData.role === 'master') {
+        if (formData.cpf?.trim()) {
+          formDataToSend.append('user[cpf]', formData.cpf.trim());
+        }
+        if (formData.cpf?.trim()) {
+          formDataToSend.append('user[cref]', formData.cref.trim());
+        }
       }
 
       if (formData.photo) {
@@ -157,22 +231,38 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
             'Device-ID': deviceId,
             'Content-Type': 'multipart/form-data',
           },
+          timeout: 30000, // 30 seconds for file upload
         }
       );
 
-      setUserData(response.data.user);
+      // Update local state with new data
+      const updatedUser = response.data.user;
+      setUserData(updatedUser);
       setSuccess('Perfil atualizado com sucesso!');
 
       // Update photo preview if new photo was uploaded
-      if (response.data.user.photo_url) {
-        setPhotoPreview(response.data.user.photo_url);
+      if (updatedUser?.photo_url) {
+        setPhotoPreview(updatedUser.photo_url);
       }
+
+      // Clear the file input
+      setFormData(prev => ({ ...prev, photo: null }));
+
     } catch (err: any) {
       console.error('Error updating profile:', err);
-      const errorMessage =
-        err.response?.data?.errors?.join(', ') ||
-        err.response?.data?.error ||
-        'Erro ao atualizar perfil';
+      
+      let errorMessage = 'Erro ao atualizar perfil';
+      
+      if (err.response?.data?.errors) {
+        errorMessage = Array.isArray(err.response.data.errors) 
+          ? err.response.data.errors.join(', ')
+          : err.response.data.errors;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.code === 'ECONNABORTED') {
+        errorMessage = 'Tempo limite excedido. Tente novamente.';
+      }
+      
       setError(errorMessage);
     } finally {
       setUpdating(false);
@@ -182,6 +272,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiKey || !deviceId) return;
+
+    // Client-side validation
+    if (!passwordData.current_password.trim()) {
+      setError('Por favor, digite sua senha atual');
+      return;
+    }
 
     if (passwordData.new_password !== passwordData.new_password_confirmation) {
       setError('Nova senha e confirmação não coincidem');
@@ -200,13 +296,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     try {
       await axios.put(
         'http://localhost:3000/api/v1/dashboard/change_password',
-        passwordData,
+        {
+          current_password: passwordData.current_password,
+          new_password: passwordData.new_password,
+          new_password_confirmation: passwordData.new_password_confirmation,
+        },
         {
           headers: {
             Authorization: `Bearer ${apiKey}`,
             'Device-ID': deviceId,
             'Content-Type': 'application/json',
           },
+          timeout: 10000,
         }
       );
 
@@ -218,10 +319,17 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       });
     } catch (err: any) {
       console.error('Error changing password:', err);
-      const errorMessage =
-        err.response?.data?.errors?.join(', ') ||
-        err.response?.data?.error ||
-        'Erro ao alterar senha';
+      
+      let errorMessage = 'Erro ao alterar senha';
+      
+      if (err.response?.data?.errors) {
+        errorMessage = Array.isArray(err.response.data.errors)
+          ? err.response.data.errors.join(', ')
+          : err.response.data.errors;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
       setError(errorMessage);
     } finally {
       setChangingPassword(false);
@@ -229,8 +337,31 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Data inválida';
+    }
   };
+
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
+  };
+
+  // Auto-clear messages after 5 seconds
+  useEffect(() => {
+    if (error || success) {
+      const timer = setTimeout(clearMessages, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, success]);
 
   if (loading) {
     return (
@@ -241,10 +372,42 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
     );
   }
 
+  if (error && !userData) {
+    return (
+      <div className={styles.errorContainer}>
+        <Icons.Error />
+        <h3>Erro ao Carregar Perfil</h3>
+        <p>{error}</p>
+        <div className={styles.errorActions}>
+          <button onClick={fetchUserProfile} className={styles.retryButton}>
+            Tentar Novamente
+          </button>
+          {onClose && (
+            <button onClick={onClose} className={styles.closeButton}>
+              Fechar
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (!userData) {
     return (
       <div className={styles.errorContainer}>
-        <p>Erro ao carregar dados do usuário</p>
+        <Icons.Error />
+        <h3>Dados Não Encontrados</h3>
+        <p>Não foi possível carregar os dados do usuário</p>
+        <div className={styles.errorActions}>
+          <button onClick={fetchUserProfile} className={styles.retryButton}>
+            Tentar Novamente
+          </button>
+          {onClose && (
+            <button onClick={onClose} className={styles.closeButton}>
+              Fechar
+            </button>
+          )}
+        </div>
       </div>
     );
   }
@@ -254,7 +417,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       <div className={styles.profileHeader}>
         <h2>Meu Perfil</h2>
         {onClose && (
-          <button onClick={onClose} className={styles.closeButton}>
+          <button onClick={onClose} className={styles.closeButton} type="button">
             <Icons.Cancel />
           </button>
         )}
@@ -262,15 +425,23 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
       <div className={styles.profileTabs}>
         <button
+          type="button"
           className={`${styles.tabButton} ${activeTab === 'profile' ? styles.active : ''}`}
-          onClick={() => setActiveTab('profile')}
+          onClick={() => {
+            setActiveTab('profile');
+            clearMessages();
+          }}
         >
           <Icons.User />
           Informações Pessoais
         </button>
         <button
+          type="button"
           className={`${styles.tabButton} ${activeTab === 'password' ? styles.active : ''}`}
-          onClick={() => setActiveTab('password')}
+          onClick={() => {
+            setActiveTab('password');
+            clearMessages();
+          }}
         >
           <Icons.Lock />
           Alterar Senha
@@ -280,14 +451,20 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       {error && (
         <div className={styles.errorMessage}>
           <Icons.Error />
-          {error}
+          <span>{error}</span>
+          <button onClick={clearMessages} className={styles.closeMessageButton}>
+            <Icons.Cancel />
+          </button>
         </div>
       )}
 
       {success && (
         <div className={styles.successMessage}>
           <Icons.Success />
-          {success}
+          <span>{success}</span>
+          <button onClick={clearMessages} className={styles.closeMessageButton}>
+            <Icons.Cancel />
+          </button>
         </div>
       )}
 
@@ -320,7 +497,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
 
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
-              <label htmlFor="name">Nome Completo</label>
+              <label htmlFor="name">Nome Completo *</label>
               <input
                 type="text"
                 id="name"
@@ -328,11 +505,12 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                placeholder="Digite seu nome completo"
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">Email *</label>
               <input
                 type="email"
                 id="email"
@@ -340,6 +518,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
+                placeholder="Digite seu email"
               />
             </div>
 
@@ -356,10 +535,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
             </div>
 
             {userData.role === 'master' && (
-              <>
+            <>
                 <div className={styles.formGroup}>
-                  <label htmlFor="cpf">CPF</label>
-                  <input
+                <label htmlFor="cpf">CPF *</label>
+                <input
                     type="text"
                     id="cpf"
                     name="cpf"
@@ -367,12 +546,11 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                     onChange={handleInputChange}
                     placeholder="000.000.000-00"
                     required
-                  />
+                />
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label htmlFor="cref">CREF</label>
-                  <input
+                <label htmlFor="cref">CREF *</label>
+                <input
                     type="text"
                     id="cref"
                     name="cref"
@@ -380,9 +558,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                     onChange={handleInputChange}
                     placeholder="000000-G/SP"
                     required
-                  />
+                />
                 </div>
-              </>
+            </>
             )}
           </div>
 
@@ -390,7 +568,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
             <div className={styles.infoItem}>
               <strong>Tipo de Conta:</strong>
               <span className={styles.roleBadge}>
-                {userData.role === 'super' ? 'Super Usuário' : userData.role === 'master' ? 'Master Admin' : 'Usuário'}
+                {userData.role === 'super' ? 'Super Usuário' 
+                 : userData.role === 'master' ? 'Master Admin' 
+                 : 'Usuário'}
               </span>
             </div>
             <div className={styles.infoItem}>
@@ -415,7 +595,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
       {activeTab === 'password' && (
         <form onSubmit={handlePasswordSubmit} className={styles.passwordForm}>
           <div className={styles.formGroup}>
-            <label htmlFor="current_password">Senha Atual</label>
+            <label htmlFor="current_password">Senha Atual *</label>
             <div className={styles.passwordInput}>
               <input
                 type={showCurrentPassword ? 'text' : 'password'}
@@ -424,6 +604,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 value={passwordData.current_password}
                 onChange={handlePasswordChange}
                 required
+                placeholder="Digite sua senha atual"
               />
               <button
                 type="button"
@@ -436,7 +617,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="new_password">Nova Senha</label>
+            <label htmlFor="new_password">Nova Senha *</label>
             <div className={styles.passwordInput}>
               <input
                 type={showNewPassword ? 'text' : 'password'}
@@ -446,6 +627,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 onChange={handlePasswordChange}
                 minLength={6}
                 required
+                placeholder="Digite a nova senha"
               />
               <button
                 type="button"
@@ -458,7 +640,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="new_password_confirmation">Confirmar Nova Senha</label>
+            <label htmlFor="new_password_confirmation">Confirmar Nova Senha *</label>
             <div className={styles.passwordInput}>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -468,6 +650,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                 onChange={handlePasswordChange}
                 minLength={6}
                 required
+                placeholder="Confirme a nova senha"
               />
               <button
                 type="button"
@@ -482,7 +665,9 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
           <div className={styles.passwordRequirements}>
             <h4>Requisitos da senha:</h4>
             <ul>
-              <li>Mínimo de 6 caracteres</li>
+              <li className={passwordData.new_password.length >= 6 ? styles.valid : ''}>
+                Mínimo de 6 caracteres
+              </li>
               <li>Recomendamos usar letras, números e símbolos</li>
             </ul>
           </div>

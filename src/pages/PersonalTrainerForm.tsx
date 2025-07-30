@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// PersonalTrainerForm.tsx - Correções para usar o endpoint correto
+
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import styles from '../styles/dashboard.module.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import styles from '../styles/UserForm.module.css';
 
 interface PersonalTrainerFormProps {
-  onSuccess: () => void;
-  onCancel: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 interface PersonalTrainerData {
@@ -15,9 +18,13 @@ interface PersonalTrainerData {
   cpf: string;
   cref: string;
   phone_number: string;
+  photo?: File | null;
 }
 
 const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, onCancel }) => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<PersonalTrainerData>({
     name: '',
     email: '',
@@ -25,300 +32,421 @@ const PersonalTrainerForm: React.FC<PersonalTrainerFormProps> = ({ onSuccess, on
     password_confirmation: '',
     cpf: '',
     cref: '',
-    phone_number: ''
+    phone_number: '',
+    photo: null,
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const apiKey = localStorage.getItem('apiKey');
   const deviceId = localStorage.getItem('deviceId');
 
-  const formatCPF = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-  };
-
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+  // Carregar dados se for edição
+  useEffect(() => {
+    if (id && apiKey && deviceId) {
+      setLoading(true);
+      axios
+        .get(`http://localhost:3000/api/v1/master_users/${id}`, {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Device-ID': deviceId,
+          },
+        })
+        .then((response) => {
+          const masterUser = response.data;
+          setFormData({
+            name: masterUser.name || '',
+            email: masterUser.email || '',
+            password: '',
+            password_confirmation: '',
+            cpf: masterUser.cpf || '',
+            cref: masterUser.cref || '',
+            phone_number: masterUser.phone_number || '',
+            photo: null,
+          });
+          
+          if (masterUser.photo_url) {
+            setPhotoPreview(masterUser.photo_url);
+          }
+        })
+        .catch((err) => {
+          console.error('Error loading master user:', err);
+          setError('Erro ao carregar dados do master user');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-  };
+  }, [id, apiKey, deviceId]);
 
-  const validateCPF = (cpf: string) => {
-    const numbers = cpf.replace(/\D/g, '');
-    if (numbers.length !== 11) return false;
-    if (/^(\d)\1{10}$/.test(numbers)) return false;
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(numbers.charAt(i)) * (10 - i);
-    let remainder = 11 - (sum % 11);
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(numbers.charAt(9))) return false;
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(numbers.charAt(i)) * (11 - i);
-    remainder = 11 - (sum % 11);
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(numbers.charAt(10))) return false;
-    return true;
-  };
-
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validateCREF = (cref: string) => {
-    const crefRegex = /^\d{6}-G\/[A-Z]{2}$/;
-    return crefRegex.test(cref.toUpperCase());
-  };
-
-  const handleInputChange = (field: keyof PersonalTrainerData, value: string) => {
-    let formattedValue = value;
-    if (field === 'cpf') {
-      formattedValue = formatCPF(value);
-    } else if (field === 'phone_number') {
-      formattedValue = formatPhone(value);
-    } else if (field === 'cref') {
-      formattedValue = value.toUpperCase();
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [field]: formattedValue,
+      [name]: value,
     }));
   };
 
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Nome é obrigatório');
-      return false;
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamanho do arquivo (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 5MB');
+        return;
+      }
+
+      // Validar tipo do arquivo
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor, selecione apenas arquivos de imagem');
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        photo: file,
+      }));
+
+      // Criar preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-    if (!validateEmail(formData.email)) {
-      setError('Email inválido');
-      return false;
+  };
+
+  const generateRandomPassword = () => {
+    const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
     }
-    if (formData.password.length < 6) {
-      setError('Senha deve ter pelo menos 6 caracteres');
-      return false;
-    }
-    if (formData.password !== formData.password_confirmation) {
-      setError('Senhas não coincidem');
-      return false;
-    }
-    if (!validateCPF(formData.cpf)) {
-      setError('CPF inválido');
-      return false;
-    }
-    if (!validateCREF(formData.cref)) {
-      setError('CREF inválido. Formato esperado: 123456-G/SP');
-      return false;
-    }
-    const phoneNumbers = formData.phone_number.replace(/\D/g, '');
-    if (phoneNumbers.length < 10 || phoneNumbers.length > 11) {
-      setError('Telefone inválido');
-      return false;
-    }
-    return true;
+    setFormData((prev) => ({ ...prev, password }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!validateForm()) return;
-
+    
     if (!apiKey || !deviceId) {
-      setError('Credenciais de autenticação ausentes');
+      setError('Credenciais de autenticação não encontradas');
+      return;
+    }
+
+    // Validações
+    if (!formData.name.trim()) {
+      setError('Nome é obrigatório');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError('Email é obrigatório');
+      return;
+    }
+
+    if (!id && !formData.password.trim()) {
+      setError('Senha é obrigatória para novos usuários');
+      return;
+    }
+
+    if (formData.password && formData.password !== formData.password_confirmation) {
+      setError('Senha e confirmação não coincidem');
+      return;
+    }
+
+    if (!formData.cpf.trim()) {
+      setError('CPF é obrigatório');
+      return;
+    }
+
+    if (!formData.cref.trim()) {
+      setError('CREF é obrigatório');
+      return;
+    }
+
+    if (!formData.phone_number.trim()) {
+      setError('Telefone é obrigatório');
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
-      const cleanData = {
-        ...formData,
-        cpf: formData.cpf.replace(/\D/g, ''),
-        phone_number: formData.phone_number.replace(/\D/g, ''),
-      };
+      const formDataToSend = new FormData();
+      formDataToSend.append('master_user[name]', formData.name.trim());
+      formDataToSend.append('master_user[email]', formData.email.trim());
+      formDataToSend.append('master_user[cpf]', formData.cpf.trim());
+      formDataToSend.append('master_user[cref]', formData.cref.trim());
+      formDataToSend.append('master_user[phone_number]', formData.phone_number.trim());
 
-      await axios.post(
-        'http://localhost:3000/api/v1/master_users',
-        { master_user: cleanData },
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Device-ID': deviceId,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      onSuccess();
-    } catch (err: any) {
-      console.error('Error creating personal trainer:', err);
-      if (err.response?.data?.errors) {
-        setError(
-          Array.isArray(err.response.data.errors)
-            ? err.response.data.errors.join(', ')
-            : err.response.data.errors
-        );
-      } else if (err.response?.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError('Erro ao cadastrar personal trainer');
+      // Adicionar senha apenas se for criação ou se foi alterada
+      if (formData.password.trim()) {
+        formDataToSend.append('master_user[password]', formData.password);
+        formDataToSend.append('master_user[password_confirmation]', formData.password_confirmation);
       }
+
+      // Adicionar foto se foi selecionada
+      if (formData.photo) {
+        formDataToSend.append('master_user[photo]', formData.photo);
+      }
+
+      let response;
+      if (id) {
+        // Atualizar master user existente
+        response = await axios.put(
+          `http://localhost:3000/api/v1/master_users/${id}`,
+          formDataToSend,
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Device-ID': deviceId,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      } else {
+        // Criar novo master user
+        response = await axios.post(
+          'http://localhost:3000/api/v1/master_users',
+          formDataToSend,
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Device-ID': deviceId,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      }
+
+      console.log('Master user saved successfully:', response.data);
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      console.error('Error saving master user:', err);
+      
+      let errorMessage = 'Erro ao salvar master user';
+      
+      if (err.response?.data?.errors) {
+        errorMessage = Array.isArray(err.response.data.errors)
+          ? err.response.data.errors.join(', ')
+          : err.response.data.errors;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading && id) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <span>Carregando dados...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.configContainer}>
+    <div className={styles.formContainer}>
       <div className={styles.formHeader}>
-        <h2 className={styles.title}>Cadastrar Personal Trainer</h2>
-        <button
-          type="button"
-          onClick={onCancel}
-          className={styles.closeButton}
-          aria-label="Fechar formulário"
-        >
-          <i className="fas fa-times" />
-        </button>
+        <h2>{id ? 'Editar Master Admin' : 'Novo Master Admin'}</h2>
       </div>
 
+      {error && (
+        <div className={styles.errorMessage}>
+          <i className="fas fa-exclamation-triangle"></i>
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className={styles.closeError}>
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formRow}>
+        {/* Foto */}
+        <div className={styles.photoSection}>
+          <div className={styles.photoPreview}>
+            {photoPreview ? (
+              <img src={photoPreview} alt="Preview da foto" />
+            ) : (
+              <div className={styles.photoPlaceholder}>
+                <i className="fas fa-user"></i>
+              </div>
+            )}
+          </div>
+          <div className={styles.photoControls}>
+            <label htmlFor="photo" className={styles.photoButton}>
+              <i className="fas fa-camera"></i>
+              Selecionar Foto
+            </label>
+            <input
+              type="file"
+              id="photo"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              style={{ display: 'none' }}
+            />
+          </div>
+        </div>
+
+        <div className={styles.formGrid}>
+          {/* Nome */}
           <div className={styles.formGroup}>
             <label htmlFor="name">Nome Completo *</label>
             <input
-              id="name"
               type="text"
+              id="name"
+              name="name"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={styles.input}
-              placeholder="Digite o nome completo"
+              onChange={handleInputChange}
               required
+              placeholder="Digite o nome completo"
             />
           </div>
+
+          {/* Email */}
           <div className={styles.formGroup}>
             <label htmlFor="email">Email *</label>
             <input
-              id="email"
               type="email"
+              id="email"
+              name="email"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={styles.input}
-              placeholder="exemplo@email.com"
+              onChange={handleInputChange}
               required
+              placeholder="Digite o email"
             />
           </div>
-        </div>
 
-        <div className={styles.formRow}>
+          {/* CPF */}
           <div className={styles.formGroup}>
             <label htmlFor="cpf">CPF *</label>
             <input
-              id="cpf"
               type="text"
+              id="cpf"
+              name="cpf"
               value={formData.cpf}
-              onChange={(e) => handleInputChange('cpf', e.target.value)}
-              className={styles.input}
-              placeholder="000.000.000-00"
-              maxLength={14}
+              onChange={handleInputChange}
               required
+              placeholder="000.000.000-00"
             />
           </div>
+
+          {/* CREF */}
           <div className={styles.formGroup}>
             <label htmlFor="cref">CREF *</label>
             <input
+              type="text"
               id="cref"
-              type="text"
+              name="cref"
               value={formData.cref}
-              onChange={(e) => handleInputChange('cref', e.target.value)}
-              className={styles.input}
-              placeholder="123456-G/SP"
-              maxLength={11}
+              onChange={handleInputChange}
               required
+              placeholder="000000-G/SP"
             />
-            <small className={styles.helpText}>Formato: 123456-G/SP (6 dígitos + G + barra + estado)</small>
           </div>
-        </div>
 
-        <div className={styles.formRow}>
+          {/* Telefone */}
           <div className={styles.formGroup}>
-            <label htmlFor="phone">Telefone *</label>
+            <label htmlFor="phone_number">Telefone *</label>
             <input
-              id="phone"
-              type="text"
+              type="tel"
+              id="phone_number"
+              name="phone_number"
               value={formData.phone_number}
-              onChange={(e) => handleInputChange('phone_number', e.target.value)}
-              className={styles.input}
-              placeholder="(11) 99999-9999"
-              maxLength={15}
+              onChange={handleInputChange}
               required
+              placeholder="(00) 00000-0000"
             />
           </div>
-        </div>
 
-        <div className={styles.formRow}>
+          {/* Senha */}
           <div className={styles.formGroup}>
-            <label htmlFor="password">Senha *</label>
-            <input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              className={styles.input}
-              placeholder="Mínimo 6 caracteres"
-              minLength={6}
-              required
-            />
+            <label htmlFor="password">
+              {id ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha *'}
+            </label>
+            <div className={styles.passwordInput}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                required={!id}
+                minLength={6}
+                placeholder={id ? 'Nova senha (opcional)' : 'Digite a senha'}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={styles.passwordToggle}
+              >
+                <i className={showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
+              </button>
+              <button
+                type="button"
+                onClick={generateRandomPassword}
+                className={styles.generatePassword}
+                title="Gerar senha aleatória"
+              >
+                <i className="fas fa-dice"></i>
+              </button>
+            </div>
           </div>
+
+          {/* Confirmação de Senha */}
           <div className={styles.formGroup}>
-            <label htmlFor="password_confirmation">Confirmar Senha *</label>
+            <label htmlFor="password_confirmation">
+              {id ? 'Confirmar Nova Senha' : 'Confirmar Senha *'}
+            </label>
             <input
+              type={showPassword ? 'text' : 'password'}
               id="password_confirmation"
-              type="password"
+              name="password_confirmation"
               value={formData.password_confirmation}
-              onChange={(e) => handleInputChange('password_confirmation', e.target.value)}
-              className={styles.input}
-              placeholder="Repita a senha"
+              onChange={handleInputChange}
+              required={!id || formData.password.trim() !== ''}
               minLength={6}
-              required
+              placeholder="Confirme a senha"
             />
           </div>
         </div>
-
-        {error && (
-          <div className={styles.errorMessage}>
-            <i className="fas fa-exclamation-triangle" />
-            {error}
-          </div>
-        )}
 
         <div className={styles.formActions}>
           <button
             type="button"
-            onClick={onCancel}
+            onClick={onCancel || (() => navigate('/dashboard'))}
             className={styles.cancelButton}
             disabled={loading}
           >
+            <i className="fas fa-times"></i>
             Cancelar
           </button>
           <button
             type="submit"
-            className={styles.saveButton}
+            className={styles.submitButton}
             disabled={loading}
           >
             {loading ? (
               <>
-                <i className="fas fa-spinner fa-spin" />
-                Cadastrando...
+                <div className={styles.spinner}></div>
+                {id ? 'Atualizando...' : 'Criando...'}
               </>
             ) : (
               <>
-                <i className="fas fa-user-plus" />
-                Cadastrar Personal
+                <i className="fas fa-save"></i>
+                {id ? 'Atualizar Master Admin' : 'Criar Master Admin'}
               </>
             )}
           </button>

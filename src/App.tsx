@@ -4,6 +4,11 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';  
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
+// In App.tsx or your router setup
+import UserDetails from './pages/UserDetails';
+
 function App() {
   return (
     <Router>
@@ -19,6 +24,7 @@ function App() {
         <Route path="/dashboard/master/:id" element={<Dashboard />} />
         <Route path="/dashboard/metrics" element={<Dashboard />} />
         <Route path="/dashboard/settings" element={<Dashboard />} />
+        <Route path="/dashboard/user/:id/view" element={<UserDetails />} />
         
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

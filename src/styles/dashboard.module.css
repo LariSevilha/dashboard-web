@@ -1905,3 +1905,44 @@ body {
     max-height: 95vh;
   }
 }
+.actionButtons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.editButton,
+.deleteButton,
+.viewButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+  transition: color 0.3s;
+}
+
+.editButton {
+  color: #007bff; /* Blue for edit */
+}
+
+.editButton:hover {
+  color: #0056b3;
+}
+
+.deleteButton {
+  color: #dc3545; /* Red for delete */
+}
+
+.deleteButton:hover {
+  color: #a71d2a;
+}
+
+.viewButton {
+  color: #28a745; /* Green for view */
+}
+
+.viewButton:hover {
+  color: #1e7e34;
+}
+

@@ -1,3 +1,4 @@
+// src/components/Dashboard.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
@@ -75,13 +76,13 @@ const Dashboard: React.FC = () => {
     if (isMobile) {
       setIsMobileMenuOpen(false);
     }
-    // Fetch current user profile data
     if (apiKey && deviceId) {
-      axios.get('http://localhost:3000/api/v1/current_user', {
-        headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
-      })
+      axios
+        .get('http://localhost:3000/api/v1/dashboard/current_user_profile', {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
+        })
         .then((response) => {
-          setUser(response.data); // Update user state with profile data
+          setUser(response.data);
         })
         .catch((err) => {
           console.error('Error fetching user profile:', err);
@@ -121,19 +122,24 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
-      setCurrentView('users');
-    } else if (location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new') {
+    if (location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new' || location.pathname === '/dashboard/masters') {
       setCurrentView('masterConfig');
+    } else if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
+      setCurrentView('users');
     } else if (location.pathname.includes('/metrics')) {
       setCurrentView('metrics');
     } else if (location.pathname.includes('/settings')) {
       setCurrentView('dashboardSettings');
     } else {
-      setCurrentView('users');
+      // Definir view padrão baseado no userRole
+      if (userRole === 'super') {
+        setCurrentView('masterConfig');
+      } else {
+        setCurrentView('users');
+      }
     }
-  }, [location.pathname]);
-
+  }, [location.pathname, userRole]);
+  
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth <= 1024);
     checkIsMobile();
@@ -157,7 +163,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (isMobileMenuOpen && isMobile) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isMobileMenuOpen, isMobile]);
 
   useEffect(() => {
@@ -176,16 +184,23 @@ const Dashboard: React.FC = () => {
       navigate('/login');
       return;
     }
-
+  
     const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Device-ID': deviceId };
-
-    axios.get('http://localhost:3000/api/v1/dashboard', { headers })
+  
+    axios
+      .get('http://localhost:3000/api/v1/dashboard', { headers })
       .then((response) => {
         setUser(response.data.user);
         setMetrics(response.data.metrics);
-        if (role === 'master') fetchUsers(headers);
-        if (role === 'super') fetchMasterUsers(headers);
-        fetchMasterUser(headers);
+        // Verify user role from API response
+        const apiRole = response.data.user.role;
+        if (apiRole !== role) {
+          console.warn(`Role mismatch: localStorage (${role}) vs API (${apiRole})`);
+          localStorage.setItem('userRole', apiRole);
+          setUserRole(apiRole);
+        }
+        if (apiRole === 'master') fetchUsers(headers);
+        if (apiRole === 'super') fetchMasterUsers(headers); 
         fetchDashboardSettings(headers);
       })
       .catch((err) => {
@@ -193,6 +208,7 @@ const Dashboard: React.FC = () => {
         setError('Erro ao carregar o dashboard');
         localStorage.removeItem('apiKey');
         localStorage.removeItem('deviceId');
+        localStorage.removeItem('userRole');
         navigate('/login');
       })
       .finally(() => setLoading(false));
@@ -219,6 +235,7 @@ const Dashboard: React.FC = () => {
 
   const fetchMasterUsers = async (headers: any) => {
     try {
+      // Usar o endpoint correto para buscar master users
       const response = await axios.get('http://localhost:3000/api/v1/master_users', { headers });
       const typedUsers: User[] = response.data.map((u: any) => ({
         id: u.id,
@@ -226,8 +243,8 @@ const Dashboard: React.FC = () => {
         email: u.email || undefined,
         registration_date: u.created_at || undefined,
         plan_duration: u.plan_duration || undefined,
-        role: u.role || undefined,
-        active: u.active || undefined,
+        role: 'master', // Definir explicitamente como master
+        active: u.active !== false, // Assumir ativo se não especificado
       }));
       setUsers(typedUsers);
     } catch (err) {
@@ -236,15 +253,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const fetchMasterUser = async (headers: any) => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/v1/master_user', { headers });
-      setMasterUser(response.data);
-    } catch (err) {
-      console.error('Master user fetch error:', err);
-      setError('Erro ao carregar dados do usuário master');
-    }
-  };
+   
 
   const fetchDashboardSettings = async (headers: any) => {
     try {
@@ -311,10 +320,14 @@ const Dashboard: React.FC = () => {
     handleLinkClick();
     switch (view) {
       case 'users':
-        navigate('/dashboard');
+        if (userRole === 'super') { 
+          navigate('/dashboard/masters');
+        } else { 
+          navigate('/dashboard');
+        }
         break;
       case 'masterConfig':
-        navigate('/dashboard');
+        navigate('/dashboard/masters');
         break;
       case 'metrics':
         navigate('/dashboard/metrics');
@@ -361,20 +374,28 @@ const Dashboard: React.FC = () => {
     <div className={styles.configContainer}>
       <div className={styles.configHeader}>
         <h2 className={styles.title}>Gerenciar Master Admins</h2>
+        {/* Corrigir a condição aqui - estava checando 'super' mas deveria permitir para super users */}
         {userRole === 'super' && (
-          <button onClick={() => navigate('/dashboard/master/new')} className={styles.addButton}>
+          <button 
+            onClick={() => {
+              navigate('/dashboard/master/new');
+              handleLinkClick(); // Fechar menu mobile se aberto
+            }} 
+            className={styles.addButton}
+          >
             <i className="fas fa-user-plus" /> Novo Master Admin
           </button>
-        )}
+        )} 
       </div>
-      
+  
+      {/* Mostrar o formulário apenas se estivermos na rota de criação/edição */}
       {isMasterForm && userRole === 'super' && (
         <PersonalTrainerForm
           onSuccess={handlePersonalTrainerSuccess}
           onCancel={handlePersonalTrainerCancel}
         />
       )}
-      
+  
       <h3 className={styles.subtitle}>Master Admins Cadastrados</h3>
       {loading ? (
         <div className={styles.loading}>Carregando...</div>
@@ -391,21 +412,26 @@ const Dashboard: React.FC = () => {
                 <span>({u.email || 'Email não disponível'})</span>
               </div>
               <div className={styles.userActions}>
-                <Link
-                  to={`/dashboard/master/${u.id}`}
-                  aria-label={`Editar master admin ${u.name}`}
-                  onClick={handleLinkClick}
-                  className={styles.editIcon}
-                >
-                  <i className="fas fa-edit" />
-                </Link>
-                <button
-                  className={styles.deleteIcon}
-                  onClick={() => handleDelete(u.id, 'master')}
-                  aria-label={`Excluir master admin ${u.name}`}
-                >
-                  <i className="fas fa-trash" />
-                </button>
+                {/* Permitir edição apenas para super users */}
+                {userRole === 'super' && (
+                  <>
+                    <Link
+                      to={`/dashboard/master/${u.id}`}
+                      aria-label={`Editar master admin ${u.name}`}
+                      onClick={handleLinkClick}
+                      className={styles.editIcon}
+                    >
+                      <i className="fas fa-edit" />
+                    </Link>
+                    <button
+                      className={styles.deleteIcon}
+                      onClick={() => handleDelete(u.id, 'master')}
+                      aria-label={`Excluir master admin ${u.name}`}
+                    >
+                      <i className="fas fa-trash" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -413,14 +439,17 @@ const Dashboard: React.FC = () => {
       )}
     </div>
   );
+  
 
   const renderUserConfig = () => {
     const filteredUsers = users.filter((user) => {
-      const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTab = activeTab === 'all' || 
-                        (activeTab === 'active' && user.active) ||
-                        (activeTab === 'inactive' && !user.active);
+      const matchesSearch =
+        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTab =
+        activeTab === 'all' ||
+        (activeTab === 'active' && user.active) ||
+        (activeTab === 'inactive' && !user.active);
       return matchesSearch && matchesTab;
     });
 
@@ -440,16 +469,10 @@ const Dashboard: React.FC = () => {
               </button>
               {showOptions && (
                 <div className={styles.subMenu}>
-                  <button
-                    onClick={handleAddUserPdf}
-                    className={styles.subMenuItem}
-                  >
+                  <button onClick={handleAddUserPdf} className={styles.subMenuItem}>
                     <i className="fas fa-file-pdf" /> Adicionar PDF
                   </button>
-                  <button
-                    onClick={handleAddUserManual}
-                    className={styles.subMenuItem}
-                  >
+                  <button onClick={handleAddUserManual} className={styles.subMenuItem}>
                     <i className="fas fa-edit" /> Cadastrar Manual
                   </button>
                 </div>
@@ -457,7 +480,7 @@ const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         {isUserForm && (
           <UserForm
             onSuccess={handleUserSuccess}
@@ -478,7 +501,7 @@ const Dashboard: React.FC = () => {
                 />
                 <i className="fas fa-search" />
               </div>
-              
+
               <div className={styles.tabFilters}>
                 <button
                   className={`${styles.tabButton} ${activeTab === 'all' ? styles.active : ''}`}
@@ -490,13 +513,13 @@ const Dashboard: React.FC = () => {
                   className={`${styles.tabButton} ${activeTab === 'active' ? styles.active : ''}`}
                   onClick={() => handleTabChange('active')}
                 >
-                  Ativos ({users.filter(u => u.active).length})
+                  Ativos ({users.filter((u) => u.active).length})
                 </button>
                 <button
                   className={`${styles.tabButton} ${activeTab === 'inactive' ? styles.active : ''}`}
                   onClick={() => handleTabChange('inactive')}
                 >
-                  Inativos ({users.filter(u => !u.active).length})
+                  Inativos ({users.filter((u) => !u.active).length})
                 </button>
               </div>
             </div>
@@ -515,9 +538,7 @@ const Dashboard: React.FC = () => {
               <div className={styles.emptyState}>
                 <i className="fas fa-users" />
                 <p>Nenhum usuário encontrado.</p>
-                {searchTerm && (
-                  <p>Tente ajustar os termos de busca.</p>
-                )}
+                {searchTerm && <p>Tente ajustar os termos de busca.</p>}
               </div>
             ) : (
               <>
@@ -558,10 +579,9 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div className={styles.tableCell}>
                         <span className={styles.date}>
-                          {user.registration_date 
+                          {user.registration_date && !isNaN(new Date(user.registration_date).getTime())
                             ? format(new Date(user.registration_date), 'dd/MM/yyyy')
-                            : 'Data não informada'
-                          }
+                            : 'Data não informada'}
                         </span>
                       </div>
                       <div className={styles.tableCell}>
@@ -576,21 +596,24 @@ const Dashboard: React.FC = () => {
                             to={`/dashboard/user/${user.id}`}
                             className={styles.editButton}
                             onClick={handleLinkClick}
-                            title={`Editar ${user.name}`}
+                            title={`Editar ${user.name || 'usuário'}`}
+                            aria-label={`Editar usuário ${user.name || 'ID ' + user.id}`}
                           >
                             <i className="fas fa-edit" />
                           </Link>
                           <button
                             className={styles.deleteButton}
                             onClick={() => handleDelete(user.id, 'user')}
-                            title={`Excluir ${user.name}`}
+                            title={`Excluir ${user.name || 'usuário'}`}
+                            aria-label={`Excluir usuário ${user.name || 'ID ' + user.id}`}
                           >
                             <i className="fas fa-trash" />
                           </button>
                           <button
                             className={styles.viewButton}
-                            onClick={() => {/* Implementar visualização */}}
-                            title={`Visualizar ${user.name}`}
+                            onClick={() => navigate(`/dashboard/user/${user.id}/view`)}
+                            title={`Visualizar ${user.name || 'usuário'}`}
+                            aria-label={`Visualizar usuário ${user.name || 'ID ' + user.id}`}
                           >
                             <i className="fas fa-eye" />
                           </button>
@@ -694,7 +717,7 @@ const Dashboard: React.FC = () => {
           <div className={styles.sidebarContent}>
             {user && (
               <div className={styles.info}>
-                <div 
+                <div
                   className={styles.userAvatar}
                   onClick={handleShowProfile}
                   style={{ cursor: 'pointer' }}
@@ -703,7 +726,7 @@ const Dashboard: React.FC = () => {
                   {user.name ? user.name[0] : user.email?.[0]}
                 </div>
                 <div className={styles.userInfo}>
-                  <div 
+                  <div
                     className={styles.userName}
                     onClick={handleShowProfile}
                     style={{ cursor: 'pointer' }}
@@ -717,13 +740,22 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
-                onClick={() => navigateToView('masterConfig')}
-              >
-                <i className="fas fa-user-shield" /> Gerenciar Master Admins
-              </button>
+           <div className={styles.menuItem}>
+              {userRole === 'super' ? (
+                <button
+                  className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
+                  onClick={() => navigateToView('masterConfig')}
+                >
+                  <i className="fas fa-user-shield" /> Gerenciar Master Admins
+                </button>
+              ) : (
+                <button
+                  className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
+                  onClick={() => navigateToView('users')}
+                >
+                  <i className="fas fa-users" /> Gerenciar Usuários
+                </button>
+              )}
             </div>
             <div className={styles.menuItem}>
               <button
@@ -766,10 +798,7 @@ const Dashboard: React.FC = () => {
               </button>
             </div>
             <div className={styles.menuItem}>
-              <button
-                className={styles.menuButton}
-                onClick={handleShowProfile}
-              >
+              <button className={styles.menuButton} onClick={handleShowProfile}>
                 <i className="fas fa-user-edit" /> Meu Perfil
               </button>
             </div>
