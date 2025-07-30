@@ -107,13 +107,7 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   
   const renderBreadcrumbItem = (item: BreadcrumbItem, index: number, isLast: boolean) => {
     const content = (
-      <>
-        {item.icon && (
-          <i 
-            className={`fas fa-${item.icon}`} 
-            aria-hidden="true"
-          />
-        )}
+      <> 
         <span>{item.label}</span>
       </>
     );

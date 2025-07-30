@@ -757,30 +757,7 @@ const Dashboard: React.FC = () => {
                 </button>
               )}
             </div>
-            <div className={styles.menuItem}>
-              <button
-                className={`${styles.menuButton} ${currentView === 'users' ? styles.active : ''}`}
-                onClick={() => navigateToView('users')}
-              >
-                <i className="fas fa-users" /> Gerenciar Usuários
-              </button>
-              {userRole === 'master' && (
-                <div className={styles.subMenu}>
-                  <button
-                    onClick={() => navigate('/dashboard/user/new?type=pdf')}
-                    className={styles.subMenuItem}
-                  >
-                    <i className="fas fa-file-pdf" /> Adicionar PDF
-                  </button>
-                  <button
-                    onClick={() => navigate('/dashboard/user/new?type=manual')}
-                    className={styles.subMenuItem}
-                  >
-                    <i className="fas fa-edit" /> Cadastrar Manual
-                  </button>
-                </div>
-              )}
-            </div>
+            
             <div className={styles.menuItem}>
               <button
                 className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
