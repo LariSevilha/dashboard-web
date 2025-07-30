@@ -1465,3 +1465,409 @@ body {
   outline-offset: 4px;
   border-radius: 4px;
 }
+/* Adicione estes estilos ao seu dashboard.module.css */
+
+/* Container principal */
+.configContainer {
+  padding: 24px;
+  background: var(--background-secondary);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.configHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.title {
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Busca e Filtros */
+.searchAndFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.searchWrapper {
+  position: relative;
+  max-width: 400px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.searchWrapper i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.tabFilters {
+  display: flex;
+  gap: 8px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+.tabButton.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Tabela */
+.tableHeader {
+  background: var(--background-primary);
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--border-color);
+}
+
+.tableBody {
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableBody .tableRow:hover {
+  background: var(--background-secondary);
+}
+
+.tableHeader .tableRow {
+  background: var(--background-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tableCell {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+/* Informações do usuário */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.userDetails strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.userId {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.email {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.planBadge {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+}
+
+.date {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.statusBadge.active {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+.statusBadge.inactive {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Botões de ação */
+.actionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.editButton,
+.deleteButton,
+.viewButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.editButton {
+  background: rgba(74, 144, 226, 0.1);
+  color: var(--primary-color);
+}
+
+.editButton:hover {
+  background: rgba(74, 144, 226, 0.2);
+}
+
+.deleteButton {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.viewButton {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--text-secondary);
+}
+
+.viewButton:hover {
+  background: rgba(107, 114, 128, 0.2);
+}
+
+/* Estados de loading e erro */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.emptyState i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.emptyState p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Paginação */
+.paginationWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.paginationInfo {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  gap: 4px;
+}
+
+.paginationButton {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: var(--background-secondary);
+}
+
+.paginationButton.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .tableRow {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .tableCell:nth-child(3),
+  .tableCell:nth-child(4),
+  .tableCell:nth-child(5) {
+    display: none;
+  }
+
+  .searchAndFilters {
+    flex-direction: column;
+  }
+
+  .tabFilters {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .configContainer {
+    padding: 16px;
+  }
+
+  .configHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .tableCell {
+    justify-content: flex-start;
+  }
+
+  .paginationWrapper {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .userInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
