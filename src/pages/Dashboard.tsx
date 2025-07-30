@@ -15,7 +15,7 @@ import Footer from './Footer';
 import Breadcrumbs from './Breadcrumbs';
 import PersonalTrainerForm from './PersonalTrainerForm';
 import UserForm from './UserForm';
-
+import UserProfile from './UserProfile';
 import { User, Metrics } from '../pages/MetricsTypes';
 import { MasterUser, DashboardSettings as DashboardSettingsType } from '../pages/types';
 
@@ -60,16 +60,40 @@ const Dashboard: React.FC = () => {
   const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
   const [showPersonalTrainerForm, setShowPersonalTrainerForm] = useState<boolean>(false);
   const [formLoading, setFormLoading] = useState<boolean>(false);
+  const [showUserProfile, setShowUserProfile] = useState<boolean>(false);
   const chartRef = useRef<ChartJS | null>(null);
   const [showOptions, setShowOptions] = useState<boolean>(false);
-  
+
   const { id } = useParams<{ id?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const apiKey = localStorage.getItem('apiKey');
   const deviceId = localStorage.getItem('deviceId');
 
-  // Determine what to show based on current route
+  const handleShowProfile = () => {
+    setShowUserProfile(true);
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+    // Fetch current user profile data
+    if (apiKey && deviceId) {
+      axios.get('http://localhost:3000/api/v1/current_user', {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId },
+      })
+        .then((response) => {
+          setUser(response.data); // Update user state with profile data
+        })
+        .catch((err) => {
+          console.error('Error fetching user profile:', err);
+          setError('Erro ao carregar perfil do usuário');
+        });
+    }
+  };
+
+  const handleCloseProfile = () => {
+    setShowUserProfile(false);
+  };
+
   const isUserForm = location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new';
   const isMasterForm = location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new';
   const userType = new URLSearchParams(location.search).get('type') as 'pdf' | 'manual' | null;
@@ -96,7 +120,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Set current view based on URL
   useEffect(() => {
     if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
       setCurrentView('users');
@@ -107,7 +130,7 @@ const Dashboard: React.FC = () => {
     } else if (location.pathname.includes('/settings')) {
       setCurrentView('dashboardSettings');
     } else {
-      setCurrentView('users'); // Default view
+      setCurrentView('users');
     }
   }, [location.pathname]);
 
@@ -284,7 +307,6 @@ const Dashboard: React.FC = () => {
 
   const toggleOptions = () => setShowOptions((prev) => !prev);
 
-  // Navigation handlers
   const navigateToView = (view: string) => {
     handleLinkClick();
     switch (view) {
@@ -305,7 +327,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Form handlers
   const handlePersonalTrainerSuccess = () => {
     setShowPersonalTrainerForm(false);
     fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
@@ -326,7 +347,6 @@ const Dashboard: React.FC = () => {
     navigate('/dashboard');
   };
 
-  // User form navigation
   const handleAddUserPdf = () => {
     navigate('/dashboard/user/new?type=pdf');
     setShowOptions(false);
@@ -394,250 +414,231 @@ const Dashboard: React.FC = () => {
     </div>
   );
 
- // Adicione esta parte na função renderUserConfig() no seu Dashboard.tsx
+  const renderUserConfig = () => {
+    const filteredUsers = users.filter((user) => {
+      const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesTab = activeTab === 'all' || 
+                        (activeTab === 'active' && user.active) ||
+                        (activeTab === 'inactive' && !user.active);
+      return matchesSearch && matchesTab;
+    });
 
-const renderUserConfig = () => {
-  // Filtrar usuários baseado na busca e aba ativa
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesTab = activeTab === 'all' || 
-                      (activeTab === 'active' && user.active) ||
-                      (activeTab === 'inactive' && !user.active);
-    
-    return matchesSearch && matchesTab;
-  });
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+    const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
-  // Paginação
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+    return (
+      <div className={styles.configContainer}>
+        <div className={styles.configHeader}>
+          <h2 className={styles.title}>Gerenciar Usuários</h2>
+          {userRole === 'master' && (
+            <div className={styles.addButtonWrapper}>
+              <button onClick={toggleOptions} className={styles.addButton}>
+                <i className="fas fa-user-plus" /> Novo Usuário
+              </button>
+              {showOptions && (
+                <div className={styles.subMenu}>
+                  <button
+                    onClick={handleAddUserPdf}
+                    className={styles.subMenuItem}
+                  >
+                    <i className="fas fa-file-pdf" /> Adicionar PDF
+                  </button>
+                  <button
+                    onClick={handleAddUserManual}
+                    className={styles.subMenuItem}
+                  >
+                    <i className="fas fa-edit" /> Cadastrar Manual
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {isUserForm && (
+          <UserForm
+            onSuccess={handleUserSuccess}
+            onCancel={handleUserCancel}
+            userType={userType}
+          />
+        )}
 
-  return (
-    <div className={styles.configContainer}>
-      <div className={styles.configHeader}>
-        <h2 className={styles.title}>Gerenciar Usuários</h2>
-        {userRole === 'master' && (
-          <div className={styles.addButtonWrapper}>
-            <button onClick={toggleOptions} className={styles.addButton}>
-              <i className="fas fa-user-plus" /> Novo Usuário
-            </button>
-            {showOptions && (
-              <div className={styles.subMenu}>
+        {!isUserForm && (
+          <>
+            <div className={styles.searchAndFilters}>
+              <div className={styles.searchWrapper}>
+                <input
+                  type="text"
+                  placeholder="Buscar por nome ou email..."
+                  onChange={handleSearchChange}
+                  className={styles.searchInput}
+                />
+                <i className="fas fa-search" />
+              </div>
+              
+              <div className={styles.tabFilters}>
                 <button
-                  onClick={handleAddUserPdf}
-                  className={styles.subMenuItem}
+                  className={`${styles.tabButton} ${activeTab === 'all' ? styles.active : ''}`}
+                  onClick={() => handleTabChange('all')}
                 >
-                  <i className="fas fa-file-pdf" /> Adicionar PDF
+                  Todos ({users.length})
                 </button>
                 <button
-                  onClick={handleAddUserManual}
-                  className={styles.subMenuItem}
+                  className={`${styles.tabButton} ${activeTab === 'active' ? styles.active : ''}`}
+                  onClick={() => handleTabChange('active')}
                 >
-                  <i className="fas fa-edit" /> Cadastrar Manual
+                  Ativos ({users.filter(u => u.active).length})
+                </button>
+                <button
+                  className={`${styles.tabButton} ${activeTab === 'inactive' ? styles.active : ''}`}
+                  onClick={() => handleTabChange('inactive')}
+                >
+                  Inativos ({users.filter(u => !u.active).length})
                 </button>
               </div>
+            </div>
+
+            {loading ? (
+              <div className={styles.loading}>
+                <i className="fas fa-spinner fa-spin" />
+                Carregando usuários...
+              </div>
+            ) : error ? (
+              <div className={styles.errorMessage}>
+                <i className="fas fa-exclamation-triangle" />
+                {error}
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className={styles.emptyState}>
+                <i className="fas fa-users" />
+                <p>Nenhum usuário encontrado.</p>
+                {searchTerm && (
+                  <p>Tente ajustar os termos de busca.</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className={styles.tableHeader}>
+                  <div className={styles.tableRow}>
+                    <div className={styles.tableCell}>Usuário</div>
+                    <div className={styles.tableCell}>Email</div>
+                    <div className={styles.tableCell}>Plano</div>
+                    <div className={styles.tableCell}>Cadastro</div>
+                    <div className={styles.tableCell}>Status</div>
+                    <div className={styles.tableCell}>Ações</div>
+                  </div>
+                </div>
+
+                <div className={styles.tableBody}>
+                  {currentUsers.map((user) => (
+                    <div key={user.id} className={styles.tableRow}>
+                      <div className={styles.tableCell}>
+                        <div className={styles.userInfo}>
+                          <div className={styles.userAvatar}>
+                            {user.name ? user.name[0].toUpperCase() : user.email?.[0].toUpperCase()}
+                          </div>
+                          <div className={styles.userDetails}>
+                            <strong>{user.name || 'Nome não informado'}</strong>
+                            <span className={styles.userId}>ID: {user.id}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.email}>
+                          {user.email || 'Email não informado'}
+                        </span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.planBadge}>
+                          {getPlanLabel(user.plan_duration || '')}
+                        </span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={styles.date}>
+                          {user.registration_date 
+                            ? format(new Date(user.registration_date), 'dd/MM/yyyy')
+                            : 'Data não informada'
+                          }
+                        </span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <span className={`${styles.statusBadge} ${user.active ? styles.active : styles.inactive}`}>
+                          <i className={`fas ${user.active ? 'fa-check-circle' : 'fa-times-circle'}`} />
+                          {user.active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      <div className={styles.tableCell}>
+                        <div className={styles.actionButtons}>
+                          <Link
+                            to={`/dashboard/user/${user.id}`}
+                            className={styles.editButton}
+                            onClick={handleLinkClick}
+                            title={`Editar ${user.name}`}
+                          >
+                            <i className="fas fa-edit" />
+                          </Link>
+                          <button
+                            className={styles.deleteButton}
+                            onClick={() => handleDelete(user.id, 'user')}
+                            title={`Excluir ${user.name}`}
+                          >
+                            <i className="fas fa-trash" />
+                          </button>
+                          <button
+                            className={styles.viewButton}
+                            onClick={() => {/* Implementar visualização */}}
+                            title={`Visualizar ${user.name}`}
+                          >
+                            <i className="fas fa-eye" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className={styles.paginationWrapper}>
+                    <div className={styles.paginationInfo}>
+                      Mostrando {indexOfFirstUser + 1} a {Math.min(indexOfLastUser, filteredUsers.length)} de {filteredUsers.length} usuários
+                    </div>
+                    <div className={styles.pagination}>
+                      <button
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={styles.paginationButton}
+                      >
+                        <i className="fas fa-chevron-left" />
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                        <button
+                          key={number}
+                          onClick={() => paginate(number)}
+                          className={`${styles.paginationButton} ${currentPage === number ? styles.active : ''}`}
+                        >
+                          {number}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={styles.paginationButton}
+                      >
+                        <i className="fas fa-chevron-right" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
-          </div>
+          </>
         )}
       </div>
-      
-      {isUserForm && (
-        <UserForm
-          onSuccess={handleUserSuccess}
-          onCancel={handleUserCancel}
-          userType={userType}
-        />
-      )}
-
-      {!isUserForm && (
-        <>
-          {/* Barra de Busca e Filtros */}
-          <div className={styles.searchAndFilters}>
-            <div className={styles.searchWrapper}>
-              <input
-                type="text"
-                placeholder="Buscar por nome ou email..."
-                onChange={handleSearchChange}
-                className={styles.searchInput}
-              />
-              <i className="fas fa-search" />
-            </div>
-            
-            <div className={styles.tabFilters}>
-              <button
-                className={`${styles.tabButton} ${activeTab === 'all' ? styles.active : ''}`}
-                onClick={() => handleTabChange('all')}
-              >
-                Todos ({users.length})
-              </button>
-              <button
-                className={`${styles.tabButton} ${activeTab === 'active' ? styles.active : ''}`}
-                onClick={() => handleTabChange('active')}
-              >
-                Ativos ({users.filter(u => u.active).length})
-              </button>
-              <button
-                className={`${styles.tabButton} ${activeTab === 'inactive' ? styles.active : ''}`}
-                onClick={() => handleTabChange('inactive')}
-              >
-                Inativos ({users.filter(u => !u.active).length})
-              </button>
-            </div>
-          </div>
-
-          {/* Lista de Usuários */}
-          {loading ? (
-            <div className={styles.loading}>
-              <i className="fas fa-spinner fa-spin" />
-              Carregando usuários...
-            </div>
-          ) : error ? (
-            <div className={styles.errorMessage}>
-              <i className="fas fa-exclamation-triangle" />
-              {error}
-            </div>
-          ) : filteredUsers.length === 0 ? (
-            <div className={styles.emptyState}>
-              <i className="fas fa-users" />
-              <p>Nenhum usuário encontrado.</p>
-              {searchTerm && (
-                <p>Tente ajustar os termos de busca.</p>
-              )}
-            </div>
-          ) : (
-            <>
-              {/* Cabeçalho da Tabela */}
-              <div className={styles.tableHeader}>
-                <div className={styles.tableRow}>
-                  <div className={styles.tableCell}>Usuário</div>
-                  <div className={styles.tableCell}>Email</div>
-                  <div className={styles.tableCell}>Plano</div>
-                  <div className={styles.tableCell}>Cadastro</div>
-                  <div className={styles.tableCell}>Status</div>
-                  <div className={styles.tableCell}>Ações</div>
-                </div>
-              </div>
-
-              {/* Corpo da Tabela */}
-              <div className={styles.tableBody}>
-                {currentUsers.map((user) => (
-                  <div key={user.id} className={styles.tableRow}>
-                    <div className={styles.tableCell}>
-                      <div className={styles.userInfo}>
-                        <div className={styles.userAvatar}>
-                          {user.name ? user.name[0].toUpperCase() : user.email?.[0].toUpperCase()}
-                        </div>
-                        <div className={styles.userDetails}>
-                          <strong>{user.name || 'Nome não informado'}</strong>
-                          <span className={styles.userId}>ID: {user.id}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className={styles.tableCell}>
-                      <span className={styles.email}>
-                        {user.email || 'Email não informado'}
-                      </span>
-                    </div>
-                    
-                    <div className={styles.tableCell}>
-                      <span className={styles.planBadge}>
-                        {getPlanLabel(user.plan_duration || '')}
-                      </span>
-                    </div>
-                    
-                    <div className={styles.tableCell}>
-                      <span className={styles.date}>
-                        {user.registration_date 
-                          ? format(new Date(user.registration_date), 'dd/MM/yyyy')
-                          : 'Data não informada'
-                        }
-                      </span>
-                    </div>
-                    
-                    <div className={styles.tableCell}>
-                      <span className={`${styles.statusBadge} ${user.active ? styles.active : styles.inactive}`}>
-                        <i className={`fas ${user.active ? 'fa-check-circle' : 'fa-times-circle'}`} />
-                        {user.active ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </div>
-                    
-                    <div className={styles.tableCell}>
-                      <div className={styles.actionButtons}>
-                        <Link
-                          to={`/dashboard/user/${user.id}`}
-                          className={styles.editButton}
-                          onClick={handleLinkClick}
-                          title={`Editar ${user.name}`}
-                        >
-                          <i className="fas fa-edit" />
-                        </Link>
-                        <button
-                          className={styles.deleteButton}
-                          onClick={() => handleDelete(user.id, 'user')}
-                          title={`Excluir ${user.name}`}
-                        >
-                          <i className="fas fa-trash" />
-                        </button>
-                        <button
-                          className={styles.viewButton}
-                          onClick={() => {/* Implementar visualização */}}
-                          title={`Visualizar ${user.name}`}
-                        >
-                          <i className="fas fa-eye" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className={styles.paginationWrapper}>
-                  <div className={styles.paginationInfo}>
-                    Mostrando {indexOfFirstUser + 1} a {Math.min(indexOfLastUser, filteredUsers.length)} de {filteredUsers.length} usuários
-                  </div>
-                  
-                  <div className={styles.pagination}>
-                    <button
-                      onClick={() => paginate(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={styles.paginationButton}
-                    >
-                      <i className="fas fa-chevron-left" />
-                    </button>
-                    
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                      <button
-                        key={number}
-                        onClick={() => paginate(number)}
-                        className={`${styles.paginationButton} ${currentPage === number ? styles.active : ''}`}
-                      >
-                        {number}
-                      </button>
-                    ))}
-                    
-                    <button
-                      onClick={() => paginate(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={styles.paginationButton}
-                    >
-                      <i className="fas fa-chevron-right" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <div className={styles.dashboardContainer}>
@@ -693,12 +694,26 @@ const renderUserConfig = () => {
           <div className={styles.sidebarContent}>
             {user && (
               <div className={styles.info}>
-                <div className={styles.userAvatar}>
+                <div 
+                  className={styles.userAvatar}
+                  onClick={handleShowProfile}
+                  style={{ cursor: 'pointer' }}
+                  title="Clique para editar perfil"
+                >
                   {user.name ? user.name[0] : user.email?.[0]}
                 </div>
                 <div className={styles.userInfo}>
-                  <div className={styles.userName}>{user.name || user.email}</div>
-                  <div className={styles.userRole}>{userRole === 'super' ? 'Superusuário' : 'Master'}</div>
+                  <div 
+                    className={styles.userName}
+                    onClick={handleShowProfile}
+                    style={{ cursor: 'pointer' }}
+                    title="Clique para editar perfil"
+                  >
+                    {user.name || user.email}
+                  </div>
+                  <div className={styles.userRole}>
+                    {userRole === 'super' ? 'Superusuário' : 'Master'}
+                  </div>
                 </div>
               </div>
             )}
@@ -753,6 +768,14 @@ const renderUserConfig = () => {
             <div className={styles.menuItem}>
               <button
                 className={styles.menuButton}
+                onClick={handleShowProfile}
+              >
+                <i className="fas fa-user-edit" /> Meu Perfil
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={styles.menuButton}
                 onClick={toggleTheme}
                 aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
               >
@@ -770,6 +793,13 @@ const renderUserConfig = () => {
           {currentView === 'users' && renderUserConfig()}
           {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
           {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
+          {showUserProfile && (
+            <div className={styles.modalOverlay}>
+              <div className={styles.modalContent}>
+                <UserProfile onClose={handleCloseProfile} />
+              </div>
+            </div>
+          )}
           <Footer />
         </main>
       </div>
