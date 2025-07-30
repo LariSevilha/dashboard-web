@@ -3,8 +3,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login'; // Assumindo que você tem um componente de Login
-
+import Login from './pages/Login';  
 function App() {
   return (
     <Router>
