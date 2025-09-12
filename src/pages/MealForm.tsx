@@ -1,20 +1,34 @@
-import React, { useState } from 'react';
-import { InputField, SelectField } from '../components/UserFormComponents';
-import * as Icons from '../components/Icons';
-import styles from '../styles/UserForm.module.css';
+import React from 'react';
 import { WeekdayOptions } from './FormConstants';
+import * as Icons from '../components/Icons';
 
-interface MealProps {
-  meals: any[];
+interface Meal {
+  id: number | null;
+  meal_type: string;
+  weekday: string;
+  _destroy: boolean;
+  comidas_attributes: Comida[];
+}
+
+interface Comida {
+  id: number | null;
+  name: string;
+  amount: string;
+  _destroy: boolean;
+}
+
+interface MealFormProps {
+  meals: Meal[];
   handleMealChange: (mealIndex: number, field: string, value: string) => void;
   removeMeal: (mealIndex: number) => void;
   addMeal: () => void;
   handleComidaChange: (mealIndex: number, comidaIndex: number, field: string, value: string) => void;
   removeComida: (mealIndex: number, comidaIndex: number) => void;
   addComida: (mealIndex: number) => void;
+  styles: any; // Styles from UserForm.module.css
 }
 
-const MealForm: React.FC<MealProps> = ({
+const MealForm: React.FC<MealFormProps> = ({
   meals,
   handleMealChange,
   removeMeal,
@@ -22,119 +36,119 @@ const MealForm: React.FC<MealProps> = ({
   handleComidaChange,
   removeComida,
   addComida,
+  styles,
 }) => {
-  const [openIndex, setOpenIndex] = useState<number | null>(meals.length - 1);
-
-  const handleAddMeal = () => {
-    addMeal();
-    setOpenIndex(meals.length);
-  };
-
-  const toggleMeal = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
-
   return (
-    <div className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <h3>Dietas</h3>
-        <button type="button" className={styles.addButton} onClick={handleAddMeal} aria-label="Adicionar nova refeição">
-          <Icons.Plus /> Adicionar Refeição
-        </button>
-      </div>
-      {meals.map((meal, mealIndex) =>
-        !meal._destroy ? (
-          <div
-            className={`${styles.groupCard} ${openIndex === mealIndex ? '' : styles.collapsed}`}
-            key={meal.id || `meal-${mealIndex}`}
-          >
-            <div className={styles.groupCardHeader} onClick={() => toggleMeal(mealIndex)}>
-              <span>{meal.meal_type || `Refeição ${mealIndex + 1}`}</span>
-              <span style={{ transform: openIndex === mealIndex ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s ease' }}>
-                <Icons.ChevronDown />
-              </span>
+    <div className={styles.formSection}>
+      <h2 className={styles.sectionTitle}>
+        <Icons.Food /> Dietas
+      </h2>
+      {meals.map((meal, mealIndex) => (
+        !meal._destroy && (
+          <div key={mealIndex} className={styles.itemContainer}>
+            <div className={styles.itemHeader}>
+              <span className={styles.itemTitle}>Refeição {mealIndex + 1}</span>
+              <button
+                type="button"
+                className={styles.removeButton}
+                onClick={() => removeMeal(mealIndex)}
+                aria-label={`Remover refeição ${mealIndex + 1}`}
+              >
+                <Icons.Minus />
+              </button>
             </div>
-            <div className={styles.groupCardContent}>
-              <div className={styles.sectionGroup}>
-                <SelectField
-                  label="Dia da Semana"
-                  value={meal.weekday}
-                  onChange={(e) => handleMealChange(mealIndex, 'weekday', e.target.value)}
-                  options={WeekdayOptions}
-                  icon={<Icons.Calendar />}
-                  name={`meal-${mealIndex}-weekday`}
-                />
-                <InputField
-                  label="Tipo da Refeição"
+            <div className={styles.formGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Tipo de Refeição</label>
+                <input
                   type="text"
-                  name={`meal-${mealIndex}-meal_type`}
+                  className={styles.formInput}
                   value={meal.meal_type}
                   onChange={(e) => handleMealChange(mealIndex, 'meal_type', e.target.value)}
-                  placeholder="Café da manhã"
-                  icon={<Icons.Food />}
+                  placeholder="Ex: Café da Manhã"
                 />
               </div>
-              <div className={styles.foodSection}>
-                <div className={styles.sectionSubheader}>
-                  <h4>Comidas</h4>
-                  <button
-                    type="button"
-                    className={styles.addFoodButton}
-                    onClick={() => addComida(mealIndex)}
-                    aria-label="Adicionar nova comida"
-                  >
-                    <Icons.Plus /> Adicionar Comida
-                  </button>
-                </div>
-                {meal.comidas_attributes.map((comida: any, comidaIndex: number) =>
-                  !comida._destroy ? (
-                    <div className={styles.foodItem} key={comida.id || `comida-${mealIndex}-${comidaIndex}`}>
-                      <InputField
-                        label="Nome"
-                        type="text"
-                        name={`comida-${mealIndex}-${comidaIndex}-name`}
-                        value={comida.name}
-                        onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'name', e.target.value)}
-                        placeholder="Alimento"
-                        icon={<Icons.Food />}
-                      />
-                      <InputField
-                        label="Quantidade"
-                        type="text"
-                        name={`comida-${mealIndex}-${comidaIndex}-amount`}
-                        value={comida.amount}
-                        onChange={(e) => handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)}
-                        placeholder="100g"
-                        icon={<Icons.Scale />}
-                      />
-                      <div className={styles.btn_rm}  >
-                        <button
-                          type="button"
-                          className={styles.removeButton}
-                          onClick={() => removeComida(mealIndex, comidaIndex)}
-                          aria-label="Remover comida"
-                        >
-                          <Icons.Minus /> Remover comida  
-                        </button>
-                      </div>
-                    </div>
-                  ) : null
-                )}
-              </div>
-              <div className={styles.buttonRow}>
-                <button
-                  type="button"
-                  className={styles.removeButton}
-                  onClick={() => removeMeal(mealIndex)}
-                  aria-label="Remover refeição"
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Dia da Semana</label>
+                <select
+                  className={styles.formSelect}
+                  value={meal.weekday}
+                  onChange={(e) => handleMealChange(mealIndex, 'weekday', e.target.value)}
                 >
-                  <Icons.Minus /> Remover Refeição
-                </button>
+                  <option value="">Selecione</option>
+                  {WeekdayOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+            <div className={styles.dynamicSection}>
+              <h3 className={styles.sectionTitle}>Alimentos</h3>
+              {meal.comidas_attributes.map((comida, comidaIndex) => (
+                !comida._destroy && (
+                  <div key={comidaIndex} className={styles.itemContainer}>
+                    <div className={styles.itemHeader}>
+                      <span className={styles.itemTitle}>Alimento {comidaIndex + 1}</span>
+                      <button
+                        type="button"
+                        className={styles.removeButton}
+                        onClick={() => removeComida(mealIndex, comidaIndex)}
+                        aria-label={`Remover alimento ${comidaIndex + 1}`}
+                      >
+                        <Icons.Minus />
+                      </button>
+                    </div>
+                    <div className={styles.formGrid}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Nome do Alimento</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={comida.name}
+                          onChange={(e) =>
+                            handleComidaChange(mealIndex, comidaIndex, 'name', e.target.value)
+                          }
+                          placeholder="Ex: Arroz"
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Quantidade</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={comida.amount}
+                          onChange={(e) =>
+                            handleComidaChange(mealIndex, comidaIndex, 'amount', e.target.value)
+                          }
+                          placeholder="Ex: 100g"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              ))}
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={() => addComida(mealIndex)}
+                aria-label="Adicionar alimento"
+              >
+                <Icons.Plus /> Adicionar Alimento
+              </button>
+            </div>
           </div>
-        ) : null
-      )}
+        )
+      ))}
+      <button
+        type="button"
+        className={styles.addButton}
+        onClick={addMeal}
+        aria-label="Adicionar refeição"
+      >
+        <Icons.Plus /> Adicionar Refeição
+      </button>
     </div>
   );
 };

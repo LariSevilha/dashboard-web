@@ -26,26 +26,26 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+  
     setError(null);
     setLoading(true);
-
+  
     if (!formData.email.trim() || !formData.password.trim()) {
       setError('Email e senha são obrigatórios');
       setLoading(false);
       return;
     }
-
+  
     try {
       let deviceId = localStorage.getItem('deviceId');
       if (!deviceId) {
         deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem('deviceId', deviceId);
       }
-
+  
       console.log('Tentando fazer login...', { email: formData.email });
-
-      const response = await axios.post('http://localhost:3000/api/v1/sessions', {
+  
+      const response = await axios.post('http://localhost:3000/api/v1/login', {
         session: {
           email: formData.email,
           password: formData.password,
@@ -57,26 +57,26 @@ const Login: React.FC = () => {
           'Device-ID': deviceId
         }
       });
-
+  
       console.log('Resposta do login:', response.data);
-
+  
       if (response.data && response.data.api_key) {
         localStorage.setItem('apiKey', response.data.api_key);
         localStorage.setItem('deviceId', deviceId);
-        
+  
         let userRole = 'user';
         if (response.data.user && response.data.user.role) {
           userRole = response.data.user.role;
         }
-        
+  
         localStorage.setItem('userRole', userRole);
-
+  
         console.log('Login bem-sucedido, dados salvos:', {
           apiKey: response.data.api_key,
           userRole: userRole,
           deviceId: deviceId
         });
-
+  
         setTimeout(() => {
           console.log('Redirecionando para dashboard...');
           navigate('/dashboard', { replace: true });

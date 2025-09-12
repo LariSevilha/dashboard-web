@@ -396,7 +396,7 @@ const Dashboard: React.FC = () => {
         />
       )}
   
-      <h3 className={styles.subtitle}>Master Admins Cadastrados</h3>
+      <h3 className={styles.subtitle}>Master Admins dCadastrados</h3>
       {loading ? (
         <div className={styles.loading}>Carregando...</div>
       ) : error ? (

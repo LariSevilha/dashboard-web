@@ -1,6 +1,5 @@
 import React from 'react';
 import { PlanDurationOptions } from './FormConstants';
-import styles from '../styles/UserForm.module.css';
 import * as Icons from '../components/Icons';
 
 interface FormDataInterface {
@@ -25,6 +24,7 @@ interface BasicInfoFormProps {
   showPassword: boolean;
   togglePasswordVisibility: () => void;
   generateRandomPassword: () => void;
+  styles: any; // Styles from UserForm.module.css
 }
 
 const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
@@ -34,21 +34,20 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
   showPassword,
   togglePasswordVisibility,
   generateRandomPassword,
+  styles,
 }) => {
   return (
-    <div className={styles.section}>
-      <div className={styles.sectionHeader}>
-        <h3>Informações Pessoais</h3>
-      </div>
-      <div className={styles.basicInfo}>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.Image />
-            </span>
+    <div className={styles.formSection}>
+      <h2 className={styles.sectionTitle}>
+        <Icons.User /> Informações Pessoais
+      </h2>
+      <div className={styles.formGrid}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Foto
+            <span className={styles.optional}> (opcional)</span>
           </label>
-          <div className={styles.photoWrapper}>
+          <div className={styles.fileUpload}>
             {formData.photo ? (
               <img
                 src={URL.createObjectURL(formData.photo)}
@@ -82,13 +81,13 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
               onChange={handlePhotoChange}
               className={styles.fileInput}
             />
+            <label className={styles.fileLabel}>
+              <Icons.Image /> Escolher Foto
+            </label>
           </div>
         </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.User />
-            </span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Nome
             <span className={styles.required}>*</span>
           </label>
@@ -98,15 +97,12 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             value={formData.name}
             onChange={handleInputChange}
             required
-            className={styles.input}
+            className={styles.formInput}
             placeholder="Digite o nome"
           />
         </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.Email />
-            </span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Email
             <span className={styles.required}>*</span>
           </label>
@@ -116,48 +112,43 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             value={formData.email}
             onChange={handleInputChange}
             required
-            className={styles.input}
+            className={styles.formInput}
             placeholder="Digite o email"
           />
         </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.Phone />
-            </span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Telefone
+            <span className={styles.optional}> (opcional)</span>
           </label>
           <input
             type="tel"
             name="phone_number"
             value={formData.phone_number}
             onChange={handleInputChange}
-            className={styles.input}
+            className={styles.formInput}
             placeholder="+5511999999999"
           />
         </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.Password />
-            </span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Senha
             <span className={styles.required}>*</span>
           </label>
-          <div className={styles.passwordWrapper}>
+          <div className={styles.passwordContainer}>
             <input
               type={showPassword ? 'text' : 'password'}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
               required
-              className={styles.input}
+              className={styles.formInput}
               placeholder="Digite a senha"
             />
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className={styles.togglePassword}
+              className={styles.passwordToggle}
               aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
             >
               {showPassword ? <Icons.EyeOpen /> : <Icons.EyeClose />}
@@ -165,18 +156,15 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             <button
               type="button"
               onClick={generateRandomPassword}
-              className={styles.generatePassword}
+              className={styles.generateButton}
               aria-label="Gerar senha aleatória"
             >
-              <Icons.Refresh />
+              <Icons.Refresh /> Gerar Senha
             </button>
           </div>
         </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>
-            <span className={styles.icon}>
-              <Icons.Calendar />
-            </span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
             Duração do Plano
             <span className={styles.required}>*</span>
           </label>
@@ -185,7 +173,7 @@ const BasicInfoForm: React.FC<BasicInfoFormProps> = ({
             value={formData.plan_duration}
             onChange={handleInputChange}
             required
-            className={styles.input}
+            className={styles.formSelect}
           >
             <option value="">Selecione</option>
             {PlanDurationOptions.map((option) => (

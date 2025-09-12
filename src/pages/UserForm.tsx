@@ -6,7 +6,8 @@ import TrainingForm from './TrainingForm';
 import MealForm from './MealForm';
 import PdfForm from './PdfForm';
 import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
-import styles from '../styles/UserForm.module.css';
+import styles from '../styles/UserForm.module.css'; 
+
 import * as Icons from '../components/Icons';
 
 interface UserFormProps {
@@ -549,11 +550,11 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
         </aside>
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
-            {activeTab === 'basic' && (
+          {activeTab === 'basic' && (
               <BasicInfoForm
                 formData={{
                   ...formData,
-                  photo: null, // Ensure photo is included as File | null
+                  photo: null,
                 }}
                 handleInputChange={handleInputChange}
                 handlePhotoChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -563,6 +564,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 showPassword={showPassword}
                 togglePasswordVisibility={togglePasswordVisibility}
                 generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
+                styles={styles} // Pass styles
               />
             )}
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (
@@ -582,6 +584,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 handleComidaChange={handleComidaChange}
                 removeComida={removeComida}
                 addComida={addComida}
+                styles={styles} // Pass styles
               />
             )}
             {activeTab === 'pdfs' && formData.plan_type === 'pdf' && (
