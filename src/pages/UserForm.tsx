@@ -6,8 +6,7 @@ import TrainingForm from './TrainingForm';
 import MealForm from './MealForm';
 import PdfForm from './PdfForm';
 import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
-import styles from '../styles/UserForm.module.css'; 
-
+import styles from '../styles/UserForm.module.css';
 import * as Icons from '../components/Icons';
 
 interface UserFormProps {
@@ -15,14 +14,28 @@ interface UserFormProps {
   onCancel?: () => void;
   userType?: 'pdf' | 'manual' | null;
 }
-interface Training {
+
+interface TrainingExerciseSet {
+  id?: number;
+  series_amount: string;
+  repeats_amount: string;
+  _destroy?: boolean;
+}
+
+interface TrainingExercise {
   id: number | null;
-  serie_amount: string;
-  repeat_amount: string;
+  exercise_id: number | null;
   exercise_name: string;
   video: string;
+  training_exercise_sets: TrainingExerciseSet[];
+  _destroy: boolean;
+}
+
+interface Training {
+  id: number | null;
   weekday: string;
   description: string;
+  training_exercises: TrainingExercise[];
   _destroy: boolean;
 }
 
@@ -64,12 +77,12 @@ interface FormDataInterface {
   plan_duration: string;
   registration_date?: string;
   expiration_date?: string;
-  photo_url?: string; // Added photo_url property
-  photo?: File | null; // Added photo property
+  photo_url?: string;
+  photo?: File | null;
 }
 
 const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) => {
-    const initialFormState = useMemo<FormDataInterface>(
+  const initialFormState = useMemo<FormDataInterface>(
     () => ({
       id: null,
       name: '',
@@ -79,12 +92,18 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
       trainings_attributes: [
         {
           id: null,
-          serie_amount: '',
-          repeat_amount: '',
-          exercise_name: '',
-          video: '',
           weekday: '',
           description: '',
+          training_exercises: [
+            {
+              id: null,
+              exercise_id: null,
+              exercise_name: '',
+              video: '',
+              training_exercise_sets: [],
+              _destroy: false,
+            },
+          ],
           _destroy: false,
         },
       ],
@@ -209,12 +228,21 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
             trainings_attributes: inferredPlanType === 'manual' && user.trainings?.length
               ? user.trainings.map((t: any) => ({
                   id: t.id || null,
-                  serie_amount: t.serie_amount || '',
-                  repeat_amount: t.repeat_amount || '',
-                  exercise_name: t.exercise_name || '',
-                  video: t.video || '',
-                  description: t.description || '',
                   weekday: t.weekday || '',
+                  description: t.description || '',
+                  training_exercises: t.training_exercises?.map((te: any) => ({
+                    id: te.id || null,
+                    exercise_id: te.exercise?.id || null,
+                    exercise_name: te.exercise?.name || '',
+                    video: te.exercise?.video || '',
+                    training_exercise_sets: te.training_exercise_sets?.map((ts: any) => ({
+                      id: ts.id,
+                      series_amount: ts.series_amount?.toString() || '',
+                      repeats_amount: ts.repeats_amount?.toString() || '',
+                      _destroy: false,
+                    })) || [],
+                    _destroy: false,
+                  })) || [],
                   _destroy: false,
                 }))
               : [initialFormState.trainings_attributes[0]],
@@ -273,6 +301,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
+  // Training functions
   const addTraining = () =>
     setFormData({
       ...formData,
@@ -292,6 +321,61 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
     setFormData({ ...formData, trainings_attributes: updatedTrainings });
   };
 
+  // Training Exercise functions
+  const addTrainingExercise = (trainingIndex: number) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    updatedTrainings[trainingIndex].training_exercises.push({
+      ...initialFormState.trainings_attributes[0].training_exercises[0],
+    });
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  const handleTrainingExerciseChange = (trainingIndex: number, exerciseIndex: number, field: string, value: string) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    updatedTrainings[trainingIndex].training_exercises[exerciseIndex] = {
+      ...updatedTrainings[trainingIndex].training_exercises[exerciseIndex],
+      [field]: value,
+    };
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  const removeTrainingExercise = (trainingIndex: number, exerciseIndex: number) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    const exercise = updatedTrainings[trainingIndex].training_exercises[exerciseIndex];
+    if (exercise.id) exercise._destroy = true;
+    else updatedTrainings[trainingIndex].training_exercises.splice(exerciseIndex, 1);
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  // Training Exercise Set functions (Substitui Series e Repeats)
+  const addExerciseSet = (trainingIndex: number, exerciseIndex: number) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    const newSet: TrainingExerciseSet = { series_amount: '', repeats_amount: '', _destroy: false };
+    updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets = [
+      ...updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets,
+      newSet,
+    ];
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  const handleExerciseSetChange = (trainingIndex: number, exerciseIndex: number, setIndex: number, field: string, value: string) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets[setIndex] = {
+      ...updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets[setIndex],
+      [field]: value,
+    };
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  const removeExerciseSet = (trainingIndex: number, exerciseIndex: number, setIndex: number) => {
+    const updatedTrainings = [...formData.trainings_attributes];
+    const exerciseSet = updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets[setIndex];
+    if (exerciseSet.id) exerciseSet._destroy = true;
+    else updatedTrainings[trainingIndex].training_exercises[exerciseIndex].training_exercise_sets.splice(setIndex, 1);
+    setFormData({ ...formData, trainings_attributes: updatedTrainings });
+  };
+
+  // Meal functions (unchanged)
   const addMeal = () =>
     setFormData({
       ...formData,
@@ -334,6 +418,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
     setFormData({ ...formData, meals_attributes: updatedMeals });
   };
 
+  // PDF functions (unchanged)
   const addPdf = () =>
     setFormData({
       ...formData,
@@ -381,12 +466,73 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
           }
         } else {
           if (training.id) data.append(`user[trainings_attributes][${index}][id]`, training.id?.toString() || '');
-          data.append(`user[trainings_attributes][${index}][serie_amount]`, training.serie_amount);
-          data.append(`user[trainings_attributes][${index}][repeat_amount]`, training.repeat_amount);
-          data.append(`user[trainings_attributes][${index}][exercise_name]`, training.exercise_name);
-          data.append(`user[trainings_attributes][${index}][video]`, training.video);
           data.append(`user[trainings_attributes][${index}][weekday]`, training.weekday);
           data.append(`user[trainings_attributes][${index}][description]`, training.description || '');
+
+          training.training_exercises.forEach((exercise, exerciseIndex) => {
+            if (exercise._destroy) {
+              if (exercise.id) {
+                data.append(
+                  `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][id]`,
+                  exercise.id.toString()
+                );
+                data.append(
+                  `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][_destroy]`,
+                  'true'
+                );
+              }
+            } else {
+              if (exercise.id)
+                data.append(
+                  `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][id]`,
+                  exercise.id.toString()
+                );
+              if (exercise.exercise_id)
+                data.append(
+                  `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][exercise_id]`,
+                  exercise.exercise_id.toString()
+                );
+              // Enviar tanto exercise_name quanto video para o backend lidar com a criação/busca do exercício
+              data.append(
+                `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][exercise_name]`,
+                exercise.exercise_name
+              );
+              data.append(
+                `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][video]`,
+                exercise.video
+              );
+
+              // Atualizado para usar training_exercise_sets ao invés de series e repeats separados
+              exercise.training_exercise_sets.forEach((exerciseSet, setIndex) => {
+                if (exerciseSet._destroy) {
+                  if (exerciseSet.id) {
+                    data.append(
+                      `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][training_exercise_sets_attributes][${setIndex}][id]`,
+                      exerciseSet.id.toString()
+                    );
+                    data.append(
+                      `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][training_exercise_sets_attributes][${setIndex}][_destroy]`,
+                      'true'
+                    );
+                  }
+                } else {
+                  if (exerciseSet.id)
+                    data.append(
+                      `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][training_exercise_sets_attributes][${setIndex}][id]`,
+                      exerciseSet.id.toString()
+                    );
+                  data.append(
+                    `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][training_exercise_sets_attributes][${setIndex}][series_amount]`,
+                    exerciseSet.series_amount
+                  );
+                  data.append(
+                    `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][training_exercise_sets_attributes][${setIndex}][repeats_amount]`,
+                    exerciseSet.repeats_amount
+                  );
+                }
+              });
+            }
+          });
         }
       });
 
@@ -550,7 +696,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
         </aside>
         <div className={styles.content}>
           <form onSubmit={handleSubmit}>
-          {activeTab === 'basic' && (
+            {activeTab === 'basic' && (
               <BasicInfoForm
                 formData={{
                   ...formData,
@@ -564,13 +710,19 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 showPassword={showPassword}
                 togglePasswordVisibility={togglePasswordVisibility}
                 generateRandomPassword={() => setFormData({ ...formData, password: generateRandomPassword() })}
-                styles={styles} // Pass styles
+                styles={styles}
               />
             )}
             {activeTab === 'trainings' && formData.plan_type === 'manual' && (
               <TrainingForm
                 trainings={formData.trainings_attributes}
                 handleTrainingChange={handleTrainingChange}
+                handleTrainingExerciseChange={handleTrainingExerciseChange}
+                handleExerciseSetChange={handleExerciseSetChange}
+                addTrainingExercise={addTrainingExercise}
+                addExerciseSet={addExerciseSet}
+                removeTrainingExercise={removeTrainingExercise}
+                removeExerciseSet={removeExerciseSet}
                 removeTraining={removeTraining}
                 addTraining={addTraining}
               />
@@ -584,7 +736,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 handleComidaChange={handleComidaChange}
                 removeComida={removeComida}
                 addComida={addComida}
-                styles={styles} // Pass styles
+                styles={styles}
               />
             )}
             {activeTab === 'pdfs' && formData.plan_type === 'pdf' && (

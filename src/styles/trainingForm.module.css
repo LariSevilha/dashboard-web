@@ -510,3 +510,171 @@
     opacity: 1 !important;
   }
 }
+
+/* Estilos adicionais para o TrainingForm atualizado */
+
+/* Sub-seções (Séries e Repetições) */
+.subSection {
+    margin-top: 1rem;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .subSectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e1e5e9;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .subSectionHeader:hover {
+    background-color: #e9ecef;
+  }
+  
+  .subSectionHeader h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #495057;
+  }
+  
+  .addSubButton {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    color: #007bff;
+  }
+  
+  .addSubButton:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .subSectionContent {
+    padding: 1rem;
+    background-color: #ffffff;
+  }
+  
+  /* Linha de item (série ou repetição individual) */
+  .itemRow {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .itemRow:last-child {
+    margin-bottom: 0;
+  }
+  
+  .itemRow > div {
+    flex: 1;
+  }
+  
+  .removeItemButton {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    min-width: 36px;
+    height: 36px;
+    margin-top: auto;
+  }
+  
+  .removeItemButton:hover {
+    background-color: #c82333;
+  }
+  
+  .removeItemButton:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+  }
+  
+  /* Mensagem para seções vazias */
+  .emptyMessage {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+    margin: 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  /* Melhorias nos botões existentes */
+  .addButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .addButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .removeButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+  
+  .removeButton:hover {
+    background-color: #c82333;
+  }
+  
+  /* Responsividade para telas menores */
+  @media (max-width: 768px) {
+    .itemRow {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .removeItemButton {
+      align-self: flex-end;
+      margin-top: 0.5rem;
+    }
+    
+    .subSectionHeader {
+      padding: 0.5rem;
+    }
+    
+    .subSectionHeader h4 {
+      font-size: 0.85rem;
+    }
+  }
