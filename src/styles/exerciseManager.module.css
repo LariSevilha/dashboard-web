@@ -1,0 +1,122 @@
+/* src/styles/exerciseManager.module.css */
+.exerciseManager {
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: var(--text-color, #333);
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin-bottom: 20px;
+  }
+  
+  .formGroup {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .formGroup label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: var(--text-color, #333);
+  }
+  
+  .formGroup input {
+    padding: 8px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .submitButton {
+    padding: 10px;
+    background-color: var(--primary-color, #007bff);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .submitButton:disabled {
+    background-color: var(--disabled-color, #999);
+    cursor: not-allowed;
+  }
+  
+  .errorMessage {
+    color: var(--error-color, #dc3545);
+    font-size: 14px;
+  }
+  
+  .loading {
+    font-size: 16px;
+    color: var(--text-color, #333);
+  }
+  
+  .empty {
+    font-size: 16px;
+    color: var(--text-color, #666);
+  }
+  
+  .exerciseList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .exerciseItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+  }
+  
+  .exerciseInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .exerciseInfo a {
+    color: var(--primary-color, #007bff);
+    text-decoration: none;
+  }
+  
+  .deleteButton {
+    background: none;
+    border: none;
+    color: var(--error-color, #dc3545);
+    cursor: pointer;
+  }
+  
+  [data-theme='dark'] .title,
+  [data-theme='dark'] .formGroup label,
+  [data-theme='dark'] .loading,
+  [data-theme='dark'] .empty {
+    color: var(--text-color-dark, #ccc);
+  }
+  
+  [data-theme='dark'] .formGroup input {
+    border-color: var(--border-color-dark, #555);
+    background-color: var(--bg-color-dark, #222);
+    color: var(--text-color-dark, #ccc);
+  }
+  
+  [data-theme='dark'] .submitButton {
+    background-color: var(--primary-color-dark, #4dabf7);
+  }
+  
+  [data-theme='dark'] .exerciseItem {
+    border-color: var(--border-color-dark, #555);
+  }

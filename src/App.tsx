@@ -1,13 +1,9 @@
-// App.tsx ou Routes.tsx - Configure as rotas assim:
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';  
-import '@fortawesome/fontawesome-free/css/all.min.css';
-
-// In App.tsx or your router setup
+import Login from './pages/Login';
 import UserDetails from './pages/UserDetails';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function App() {
   return (
@@ -15,17 +11,20 @@ function App() {
       <Routes>
         {/* Login Route */}
         <Route path="/login" element={<Login />} />
-        
+
         {/* Dashboard Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/user/new" element={<Dashboard />} />
-        <Route path="/dashboard/user/:id" element={<Dashboard />} />
-        <Route path="/dashboard/master/new" element={<Dashboard />} />
-        <Route path="/dashboard/master/:id" element={<Dashboard />} />
-        <Route path="/dashboard/metrics" element={<Dashboard />} />
-        <Route path="/dashboard/settings" element={<Dashboard />} />
-        <Route path="/dashboard/user/:id/view" element={<UserDetails />} />
-        
+        <Route path="/dashboard" element={<Dashboard />}>
+          <Route index element={<div />} /> {/* Default dashboard view */}
+          <Route path="user/new" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="user/:id" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="user/:id/view" element={<UserDetails />} />
+          <Route path="master/new" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="master/:id" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="metrics" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="settings" element={<div />} /> {/* Handled by Dashboard */}
+          <Route path="exercises" element={<div />} /> {/* Handled by Dashboard */}
+        </Route>
+
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

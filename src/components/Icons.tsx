@@ -144,3 +144,9 @@ export const Repeat = () => <span>🔁</span>;
 export const Video = () => <span>🎥</span>;
 export const Info = () => <span>ℹ️</span>;
 export const Scale = () => <span>⚖️</span>;
+export const Search: React.FC = () => <i className="fas fa-search" />;
+
+export const Edit: React.FC = () => <i className="fas fa-edit" />;
+export const Trash: React.FC = () => <i className="fas fa-trash" />;
+export const ChevronLeft: React.FC = () => <i className="fas fa-chevron-left" />;
+export const ChevronRight: React.FC = () => <i className="fas fa-chevron-right" />;

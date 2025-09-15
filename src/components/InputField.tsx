@@ -9,6 +9,7 @@ interface InputFieldProps {
   placeholder?: string;
   icon?: React.ReactNode;
   optional?: boolean;
+  required?: boolean;
   error?: string; // Add this prop
   className?: string;
 }
@@ -21,6 +22,7 @@ export const InputField: React.FC<InputFieldProps> = ({
   onChange,
   placeholder,
   icon,
+  required,
   optional,
   error,
   className = '',

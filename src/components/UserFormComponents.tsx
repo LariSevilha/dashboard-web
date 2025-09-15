@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import styles from '../styles/UserForm.module.css';
 
 interface InputFieldProps {
@@ -6,14 +6,12 @@ interface InputFieldProps {
   type: string;
   name: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   icon?: React.ReactNode;
   optional?: boolean;
-  error?: string; // Add this line
-  className?: string;
-  required?: boolean;
-
+  error?: string;
+  disabled?: boolean;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -24,80 +22,84 @@ export const InputField: React.FC<InputFieldProps> = ({
   onChange,
   placeholder,
   icon,
-  optional,
+  optional = false,
   error,
-  className = '',
-}) => {
-  return (
-    <div className={`input-field ${className} ${error ? 'has-error' : ''}`}>
-      <label htmlFor={name} className="input-label">
-        {icon && <span className="input-icon">{icon}</span>}
-        {label}
-        {optional && <span className="optional-text"> (opcional)</span>}
-      </label>
+  disabled = false,
+}) => (
+  <div className={styles.inputGroup}>
+    <label htmlFor={name} className={styles.label}>
+      {label}
+      {optional && <span className={styles.optional}>(Opcional)</span>}
+    </label>
+    <div className={styles.inputWrapper}>
+      {icon && <span className={styles.icon}>{icon}</span>}
       <input
-        id={name}
         type={type}
+        id={name}
         name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`input-control ${error ? 'error' : ''}`}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${name}-error` : undefined}
+        className={`${styles.input} ${error ? styles.error : ''}`}
+        disabled={disabled}
       />
-      {error && (
-        <div id={`${name}-error`} className="error-message" role="alert">
-          {error}
-        </div>
-      )}
     </div>
-  );
-};
+    {error && <span className={styles.errorMessage}>{error}</span>}
+  </div>
+);
 
 interface SelectFieldProps {
   label: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  name: string;
+  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
   options: { value: string; label: string }[];
   icon?: React.ReactNode;
-  required?: boolean;
+  name: string;
+  error?: string;
 }
 
 export const SelectField: React.FC<SelectFieldProps> = ({
   label,
   value,
   onChange,
-  name,
   options,
   icon,
-  required,
+  name,
+  error,
 }) => (
   <div className={styles.inputGroup}>
-    <label>
-      {icon && <span className={styles.inputIcon}>{icon}</span>}
+    <label htmlFor={name} className={styles.label}>
       {label}
     </label>
-    <select name={name} value={value} onChange={onChange} required={required}>
-      <option value="">Selecione</option>
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    <div className={styles.inputWrapper}>
+      {icon && <span className={styles.icon}>{icon}</span>}
+      <select
+        id={name}
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={`${styles.select} ${error ? styles.error : ''}`}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+    {error && <span className={styles.errorMessage}>{error}</span>}
   </div>
-);
+); 
 
 interface FileInputFieldProps {
   label: string;
   name: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   icon?: React.ReactNode;
   required?: boolean;
   currentFileName?: string;
   hasExistingFile?: boolean;
+  error?: string;
 }
 
 export const FileInputField: React.FC<FileInputFieldProps> = ({
@@ -105,16 +107,38 @@ export const FileInputField: React.FC<FileInputFieldProps> = ({
   name,
   onChange,
   icon,
-  required,
+  required = false,
   currentFileName,
-  hasExistingFile,
+  hasExistingFile = false,
+  error,
 }) => (
   <div className={styles.inputGroup}>
-    <label>
-      {icon && <span className={styles.inputIcon}>{icon}</span>}
+    <label htmlFor={name} className={styles.label}>
       {label}
+      {required && !hasExistingFile && <span className={styles.required}>*</span>}
     </label>
-    <input type="file" name={name} onChange={onChange} accept=".pdf" required={required && !hasExistingFile} />
-    {currentFileName && <span className={styles.fileName}>{currentFileName}</span>}
+    <div className={styles.inputWrapper}>
+      {icon && <span className={styles.icon}>{icon}</span>}
+      <input
+        type="file"
+        id={name}
+        name={name}
+        onChange={onChange}
+        accept="application/pdf"
+        className={`${styles.input} ${styles.fileInput} ${error ? styles.error : ''}`}
+      />
+      {currentFileName && (
+        <span className={styles.fileName}>
+          {hasExistingFile ? (
+            <a href={currentFileName} target="_blank" rel="noopener noreferrer">
+              {currentFileName}
+            </a>
+          ) : (
+            currentFileName
+          )}
+        </span>
+      )}
+    </div>
+    {error && <span className={styles.errorMessage}>{error}</span>}
   </div>
 );

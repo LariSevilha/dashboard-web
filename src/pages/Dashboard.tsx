@@ -1,4 +1,3 @@
-// src/components/Dashboard.tsx
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
@@ -11,6 +10,7 @@ import { PlanDurationOptions } from './FormConstants';
 import MetricsView from './MetricsView';
 import MasterUserConfig from './MasterUserConfig';
 import DashboardSettings from './DashboardSettings';
+import ExerciseManager from './ExerciseManager';
 import { useTheme } from './ThemeProvider';
 import Footer from './Footer';
 import Breadcrumbs from './Breadcrumbs';
@@ -56,7 +56,9 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [currentView, setCurrentView] = useState<'users' | 'metrics' | 'masterConfig' | 'dashboardSettings'>('users');
+  const [currentView, setCurrentView] = useState<
+    'users' | 'metrics' | 'masterConfig' | 'dashboardSettings' | 'exercises'
+  >('users');
   const [userRole, setUserRole] = useState<'super' | 'master' | null>(null);
   const [theme, setTheme] = useState<string>(localStorage.getItem('theme') || 'dark');
   const [showPersonalTrainerForm, setShowPersonalTrainerForm] = useState<boolean>(false);
@@ -72,6 +74,7 @@ const Dashboard: React.FC = () => {
   const deviceId = localStorage.getItem('deviceId');
 
   const handleShowProfile = () => {
+    console.log('Opening user profile');
     setShowUserProfile(true);
     if (isMobile) {
       setIsMobileMenuOpen(false);
@@ -92,6 +95,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCloseProfile = () => {
+    console.log('Closing user profile');
     setShowUserProfile(false);
   };
 
@@ -122,16 +126,26 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    if (location.pathname.includes('/master/') || location.pathname === '/dashboard/master/new' || location.pathname === '/dashboard/masters') {
+    console.log('Current pathname:', location.pathname);
+    if (
+      location.pathname.includes('/master/') ||
+      location.pathname === '/dashboard/master/new' ||
+      location.pathname === '/dashboard/masters'
+    ) {
       setCurrentView('masterConfig');
-    } else if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
+    } else if (
+      location.pathname.includes('/user/') ||
+      location.pathname === '/dashboard/user/new' ||
+      location.pathname.includes('/user/:id/view')
+    ) {
       setCurrentView('users');
     } else if (location.pathname.includes('/metrics')) {
       setCurrentView('metrics');
     } else if (location.pathname.includes('/settings')) {
       setCurrentView('dashboardSettings');
+    } else if (location.pathname.includes('/exercises')) {
+      setCurrentView('exercises');
     } else {
-      // Definir view padrão baseado no userRole
       if (userRole === 'super') {
         setCurrentView('masterConfig');
       } else {
@@ -139,7 +153,7 @@ const Dashboard: React.FC = () => {
       }
     }
   }, [location.pathname, userRole]);
-  
+
   useEffect(() => {
     const checkIsMobile = () => setIsMobile(window.innerWidth <= 1024);
     checkIsMobile();
@@ -151,7 +165,13 @@ const Dashboard: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       const sidebar = document.querySelector(`.${styles.sidebar}`);
       const toggle = document.querySelector(`.${styles.mobileMenuToggle}`);
-      if (isMobileMenuOpen && sidebar && toggle && !sidebar.contains(event.target as Node) && !toggle.contains(event.target as Node)) {
+      if (
+        isMobileMenuOpen &&
+        sidebar &&
+        toggle &&
+        !sidebar.contains(event.target as Node) &&
+        !toggle.contains(event.target as Node)
+      ) {
         setIsMobileMenuOpen(false);
         setShowOptions(false);
       }
@@ -184,15 +204,14 @@ const Dashboard: React.FC = () => {
       navigate('/login');
       return;
     }
-  
+
     const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Device-ID': deviceId };
-  
+
     axios
       .get('http://localhost:3000/api/v1/dashboard', { headers })
       .then((response) => {
         setUser(response.data.user);
         setMetrics(response.data.metrics);
-        // Verify user role from API response
         const apiRole = response.data.user.role;
         if (apiRole !== role) {
           console.warn(`Role mismatch: localStorage (${role}) vs API (${apiRole})`);
@@ -200,7 +219,7 @@ const Dashboard: React.FC = () => {
           setUserRole(apiRole);
         }
         if (apiRole === 'master') fetchUsers(headers);
-        if (apiRole === 'super') fetchMasterUsers(headers); 
+        if (apiRole === 'super') fetchMasterUsers(headers);
         fetchDashboardSettings(headers);
       })
       .catch((err) => {
@@ -235,7 +254,6 @@ const Dashboard: React.FC = () => {
 
   const fetchMasterUsers = async (headers: any) => {
     try {
-      // Usar o endpoint correto para buscar master users
       const response = await axios.get('http://localhost:3000/api/v1/master_users', { headers });
       const typedUsers: User[] = response.data.map((u: any) => ({
         id: u.id,
@@ -243,8 +261,8 @@ const Dashboard: React.FC = () => {
         email: u.email || undefined,
         registration_date: u.created_at || undefined,
         plan_duration: u.plan_duration || undefined,
-        role: 'master', // Definir explicitamente como master
-        active: u.active !== false, // Assumir ativo se não especificado
+        role: 'master',
+        active: u.active !== false,
       }));
       setUsers(typedUsers);
     } catch (err) {
@@ -252,8 +270,6 @@ const Dashboard: React.FC = () => {
       setError('Erro ao carregar usuários master');
     }
   };
-
-   
 
   const fetchDashboardSettings = async (headers: any) => {
     try {
@@ -267,7 +283,14 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDelete = async (id: number, type: 'user' | 'master' | 'super') => {
-    if (!window.confirm(`Tem certeza que deseja excluir este ${type === 'super' ? 'superusuário' : type === 'master' ? 'personal trainer' : 'usuário'}?`)) return;
+    if (
+      !window.confirm(
+        `Tem certeza que deseja excluir este ${
+          type === 'super' ? 'superusuário' : type === 'master' ? 'personal trainer' : 'usuário'
+        }?`
+      )
+    )
+      return;
     if (!apiKey || !deviceId) return;
 
     try {
@@ -317,12 +340,16 @@ const Dashboard: React.FC = () => {
   const toggleOptions = () => setShowOptions((prev) => !prev);
 
   const navigateToView = (view: string) => {
+    console.log('Navigating to view:', view, 'Current pathname:', location.pathname);
     handleLinkClick();
     switch (view) {
       case 'users':
-        if (userRole === 'super') { 
+        if (userRole === 'super') {
           navigate('/dashboard/masters');
-        } else { 
+        } else if (location.pathname.includes('/user/') || location.pathname === '/dashboard/user/new') {
+          // Maintain current user-related route
+          return;
+        } else {
           navigate('/dashboard');
         }
         break;
@@ -335,6 +362,9 @@ const Dashboard: React.FC = () => {
       case 'dashboardSettings':
         navigate('/dashboard/settings');
         break;
+      case 'exercises':
+        navigate('/dashboard/exercises');
+        break;
       default:
         navigate('/dashboard');
     }
@@ -343,12 +373,12 @@ const Dashboard: React.FC = () => {
   const handlePersonalTrainerSuccess = () => {
     setShowPersonalTrainerForm(false);
     fetchMasterUsers({ Authorization: `Bearer ${apiKey}`, 'Device-ID': deviceId });
-    navigate('/dashboard');
+    navigate('/dashboard/masters');
   };
 
   const handlePersonalTrainerCancel = () => {
     setShowPersonalTrainerForm(false);
-    navigate('/dashboard');
+    navigate('/dashboard/masters');
   };
 
   const handleUserSuccess = () => {
@@ -357,15 +387,18 @@ const Dashboard: React.FC = () => {
   };
 
   const handleUserCancel = () => {
+    console.log('User form cancelled');
     navigate('/dashboard');
   };
 
   const handleAddUserPdf = () => {
+    console.log('Navigating to add user PDF');
     navigate('/dashboard/user/new?type=pdf');
     setShowOptions(false);
   };
 
   const handleAddUserManual = () => {
+    console.log('Navigating to add user manual');
     navigate('/dashboard/user/new?type=manual');
     setShowOptions(false);
   };
@@ -374,29 +407,27 @@ const Dashboard: React.FC = () => {
     <div className={styles.configContainer}>
       <div className={styles.configHeader}>
         <h2 className={styles.title}>Gerenciar Master Admins</h2>
-        {/* Corrigir a condição aqui - estava checando 'super' mas deveria permitir para super users */}
         {userRole === 'super' && (
-          <button 
+          <button
             onClick={() => {
               navigate('/dashboard/master/new');
-              handleLinkClick(); // Fechar menu mobile se aberto
-            }} 
+              handleLinkClick();
+            }}
             className={styles.addButton}
           >
             <i className="fas fa-user-plus" /> Novo Master Admin
           </button>
-        )} 
+        )}
       </div>
-  
-      {/* Mostrar o formulário apenas se estivermos na rota de criação/edição */}
+
       {isMasterForm && userRole === 'super' && (
         <PersonalTrainerForm
           onSuccess={handlePersonalTrainerSuccess}
           onCancel={handlePersonalTrainerCancel}
         />
       )}
-  
-      <h3 className={styles.subtitle}>Master Admins dCadastrados</h3>
+
+      <h3 className={styles.subtitle}>Master Admins Cadastrados</h3>
       {loading ? (
         <div className={styles.loading}>Carregando...</div>
       ) : error ? (
@@ -412,7 +443,6 @@ const Dashboard: React.FC = () => {
                 <span>({u.email || 'Email não disponível'})</span>
               </div>
               <div className={styles.userActions}>
-                {/* Permitir edição apenas para super users */}
                 {userRole === 'super' && (
                   <>
                     <Link
@@ -439,7 +469,6 @@ const Dashboard: React.FC = () => {
       )}
     </div>
   );
-  
 
   const renderUserConfig = () => {
     const filteredUsers = users.filter((user) => {
@@ -626,7 +655,8 @@ const Dashboard: React.FC = () => {
                 {totalPages > 1 && (
                   <div className={styles.paginationWrapper}>
                     <div className={styles.paginationInfo}>
-                      Mostrando {indexOfFirstUser + 1} a {Math.min(indexOfLastUser, filteredUsers.length)} de {filteredUsers.length} usuários
+                      Mostrando {indexOfFirstUser + 1} a {Math.min(indexOfLastUser, filteredUsers.length)} de{' '}
+                      {filteredUsers.length} usuários
                     </div>
                     <div className={styles.pagination}>
                       <button
@@ -740,7 +770,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-           <div className={styles.menuItem}>
+            <div className={styles.menuItem}>
               {userRole === 'super' ? (
                 <button
                   className={`${styles.menuButton} ${currentView === 'masterConfig' ? styles.active : ''}`}
@@ -757,13 +787,20 @@ const Dashboard: React.FC = () => {
                 </button>
               )}
             </div>
-            
             <div className={styles.menuItem}>
               <button
                 className={`${styles.menuButton} ${currentView === 'metrics' ? styles.active : ''}`}
                 onClick={() => navigateToView('metrics')}
               >
                 <i className="fas fa-chart-bar" /> Métricas
+              </button>
+            </div>
+            <div className={styles.menuItem}>
+              <button
+                className={`${styles.menuButton} ${currentView === 'exercises' ? styles.active : ''}`}
+                onClick={() => navigateToView('exercises')}
+              >
+                <i className="fas fa-dumbbell" /> Gerenciar Exercícios
               </button>
             </div>
             <div className={styles.menuItem}>
@@ -785,7 +822,8 @@ const Dashboard: React.FC = () => {
                 onClick={toggleTheme}
                 aria-label={`Alternar para modo ${theme === 'dark' ? 'claro' : 'escuro'}`}
               >
-                <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} /> {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                <i className={theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'} />{' '}
+                {theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
               </button>
             </div>
             <button className={styles.buttonLogout} onClick={handleLogout}>
@@ -798,6 +836,7 @@ const Dashboard: React.FC = () => {
           {currentView === 'masterConfig' && renderMasterUserConfig()}
           {currentView === 'users' && renderUserConfig()}
           {currentView === 'metrics' && <MetricsView metrics={metrics} users={users} />}
+          {currentView === 'exercises' && <ExerciseManager apiKey={apiKey} deviceId={deviceId} />}
           {currentView === 'dashboardSettings' && <DashboardSettings settings={dashboardSettings} />}
           {showUserProfile && (
             <div className={styles.modalOverlay}>

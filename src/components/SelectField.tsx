@@ -9,7 +9,7 @@ interface SelectFieldProps {
   name: string;
   icon?: React.ReactNode;
   error?: string; 
-
+  required?: boolean;
 }
 
 const SelectField: React.FC<SelectFieldProps> = ({
@@ -18,7 +18,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
   onChange,
   options,
   name,
-  icon,
+  icon, 
   error,
 }) => (
   <div className={trainingStyles.sectionGroup}>

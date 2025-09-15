@@ -7,7 +7,7 @@ import MealForm from './MealForm';
 import PdfForm from './PdfForm';
 import { PlanDurationOptions, WeekdayOptions } from './FormConstants';
 import styles from '../styles/UserForm.module.css';
-import * as Icons from '../components/Icons';
+import { User, Dumbbell, Food, File, Cancel, Save, Loading } from '../components/Icons';
 
 interface UserFormProps {
   onSuccess?: () => void;
@@ -24,11 +24,11 @@ interface TrainingExerciseSet {
 
 interface TrainingExercise {
   id: number | null;
-  exercise_id: number | null;
+  exercise_id: string | null;
   exercise_name: string;
   video: string;
   training_exercise_sets: TrainingExerciseSet[];
-  _destroy: boolean;
+  _destroy?: boolean;
 }
 
 interface Training {
@@ -153,6 +153,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const apiKey = localStorage.getItem('apiKey');
   const deviceId = localStorage.getItem('deviceId') || Math.random().toString(36).substring(2);
 
   if (!localStorage.getItem('deviceId')) {
@@ -172,7 +173,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
   };
 
   useEffect(() => {
-    const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
       navigate('/login');
       return;
@@ -232,7 +232,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                   description: t.description || '',
                   training_exercises: t.training_exercises?.map((te: any) => ({
                     id: te.id || null,
-                    exercise_id: te.exercise?.id || null,
+                    exercise_id: te.exercise?.id?.toString() || null,
                     exercise_name: te.exercise?.name || '',
                     video: te.exercise?.video || '',
                     training_exercise_sets: te.training_exercise_sets?.map((ts: any) => ({
@@ -284,7 +284,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
       setActiveTab('basic');
       setLoading(false);
     }
-  }, [id, navigate, location.search, initialFormState]);
+  }, [id, navigate, location.search, initialFormState, apiKey, deviceId]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -347,7 +347,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
     setFormData({ ...formData, trainings_attributes: updatedTrainings });
   };
 
-  // Training Exercise Set functions (Substitui Series e Repeats)
+  // Training Exercise Set functions
   const addExerciseSet = (trainingIndex: number, exerciseIndex: number) => {
     const updatedTrainings = [...formData.trainings_attributes];
     const newSet: TrainingExerciseSet = { series_amount: '', repeats_amount: '', _destroy: false };
@@ -375,7 +375,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
     setFormData({ ...formData, trainings_attributes: updatedTrainings });
   };
 
-  // Meal functions (unchanged)
+  // Meal functions
   const addMeal = () =>
     setFormData({
       ...formData,
@@ -418,7 +418,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
     setFormData({ ...formData, meals_attributes: updatedMeals });
   };
 
-  // PDF functions (unchanged)
+  // PDF functions
   const addPdf = () =>
     setFormData({
       ...formData,
@@ -441,7 +441,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormSubmitting(true);
-    const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
       setError('Chave API não encontrada. Faça login novamente.');
       setFormSubmitting(false);
@@ -492,7 +491,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                   `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][exercise_id]`,
                   exercise.exercise_id.toString()
                 );
-              // Enviar tanto exercise_name quanto video para o backend lidar com a criação/busca do exercício
               data.append(
                 `user[trainings_attributes][${index}][training_exercises_attributes][${exerciseIndex}][exercise_name]`,
                 exercise.exercise_name
@@ -502,7 +500,6 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 exercise.video
               );
 
-              // Atualizado para usar training_exercise_sets ao invés de series e repeats separados
               exercise.training_exercise_sets.forEach((exerciseSet, setIndex) => {
                 if (exerciseSet._destroy) {
                   if (exerciseSet.id) {
@@ -631,6 +628,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
         );
       }
       navigate('/dashboard');
+      onSuccess?.();
     } catch (err: any) {
       const errorMessage = err.response?.data?.errors?.join(', ') || err.response?.data?.error || err.message;
       setError(`Erro ao salvar usuário: ${errorMessage}`);
@@ -655,7 +653,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
             className={`${styles.sidebarButton} ${activeTab === 'basic' ? styles.active : ''}`}
             onClick={() => setActiveTab('basic')}
           >
-            <Icons.User /> Informações Básicas
+            <User /> Informações Básicas
           </button>
           {formData.plan_type === 'manual' && (
             <>
@@ -664,14 +662,14 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 className={`${styles.sidebarButton} ${activeTab === 'trainings' ? styles.active : ''}`}
                 onClick={() => setActiveTab('trainings')}
               >
-                <Icons.Dumbbell /> Treinos
+                <Dumbbell /> Treinos
               </button>
               <button
                 type="button"
                 className={`${styles.sidebarButton} ${activeTab === 'meals' ? styles.active : ''}`}
                 onClick={() => setActiveTab('meals')}
               >
-                <Icons.Food /> Dietas
+                <Food /> Dietas
               </button>
             </>
           )}
@@ -681,7 +679,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
               className={`${styles.sidebarButton} ${activeTab === 'pdfs' ? styles.active : ''}`}
               onClick={() => setActiveTab('pdfs')}
             >
-              <Icons.File /> PDFs Semanais
+              <File /> PDFs Semanais
             </button>
           )}
           <button
@@ -725,6 +723,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 removeExerciseSet={removeExerciseSet}
                 removeTraining={removeTraining}
                 addTraining={addTraining}
+                apiKey={apiKey}
+                deviceId={deviceId}
               />
             )}
             {activeTab === 'meals' && formData.plan_type === 'manual' && (
@@ -751,10 +751,13 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
               <button
                 type="button"
                 className={styles.cancelButton}
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                  navigate('/dashboard');
+                  onCancel?.();
+                }}
                 aria-label="Cancelar"
               >
-                <Icons.Cancel /> Cancelar
+                <Cancel /> Cancelar
               </button>
               <button
                 type="submit"
@@ -762,7 +765,7 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
                 disabled={formSubmitting || (formData.plan_type === 'pdf' && !formData.weekly_pdfs_attributes.some(pdf => pdf.pdf_file || pdf.pdf_url))}
                 aria-label="Salvar usuário"
               >
-                {formSubmitting ? <Icons.Loading /> : <Icons.Save />}
+                {formSubmitting ? <Loading /> : <Save />}
                 {formData.id ? 'Atualizar Usuário' : 'Cadastrar Usuário'}
               </button>
             </div>
@@ -775,3 +778,4 @@ const UserForm: React.FC<UserFormProps> = ({ onSuccess, onCancel, userType }) =>
 };
 
 export default UserForm;
+

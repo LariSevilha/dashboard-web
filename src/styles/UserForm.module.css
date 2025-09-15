@@ -776,3 +776,142 @@
 .content::-webkit-scrollbar-thumb:hover {
   background: var(--tertiary-color);
 }
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.optional {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+  font-weight: 400;
+}
+
+.required {
+  color: var(--error-color, #ef4444);
+  font-size: 0.875rem;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 1rem;
+  z-index: 1;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  padding-left: 2.5rem;
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text-primary, #1f2937);
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.fileInput {
+  padding: 0.65rem 1rem; /* Adjusted padding for file input */
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.input:disabled,
+.select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+  color: var(--text-secondary, #6b7280);
+}
+
+.input.error,
+.select.error,
+.fileInput.error {
+  border-color: var(--error-color, #ef4444);
+}
+
+.fileName {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+  margin-top: 0.25rem;
+}
+
+.fileName a {
+  color: var(--primary-color, #6366f1);
+  text-decoration: none;
+}
+
+.fileName a:hover {
+  text-decoration: underline;
+}
+
+.errorMessage {
+  color: var(--error-color, #ef4444);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .label {
+    color: var(--text-primary, #e5e7eb);
+  }
+
+  .optional,
+  .fileName {
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  .required {
+    color: var(--error-color, #f87171);
+  }
+
+  .input,
+  .select,
+  .fileInput {
+    background: #374151;
+    color: var(--text-primary, #e5e7eb);
+    border-color: var(--border-light, #4b5563);
+  }
+
+  .input:disabled,
+  .select:disabled,
+  .fileInput:disabled {
+    background: #4b5563;
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  .input:focus,
+  .select:focus,
+  .fileInput:focus {
+    border-color: var(--primary-color, #818cf8);
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+  }
+
+  .fileName a {
+    color: var(--primary-color, #818cf8);
+  }
+}
