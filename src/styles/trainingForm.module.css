@@ -1,52 +1,113 @@
-/* trainingForm.module.css */
+:root {
+  --primary-color: #6366f1;
+  --secondary-color: #a855f7;
+  --error-color: #ef4444;
+  --success-color: #10b981;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-light: #e5e7eb;
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.12);
+  --transition: all 0.2s ease;
+  --border-radius: 12px;
+  --font-size-base: 0.875rem;
+}
 
-/* Container principal */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-color: #818cf8;
+    --secondary-color: #c084fc;
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --border-light: #374151;
+    --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .container {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #374151 100%);
+  }
+
+  .section {
+    background: rgba(31, 41, 55, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .groupCard {
+    background: linear-gradient(135deg, #374151, #1f2937);
+    border: 1px solid var(--border-light);
+  }
+
+  .subSection {
+    background-color: #1f2937;
+  }
+
+  .subSectionHeader {
+    background-color: #374151;
+  }
+
+  .subSectionHeader:hover {
+    background-color: #4b5563;
+  }
+
+  .emptyMessage {
+    background-color: #374151;
+    color: var(--text-secondary);
+  }
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
   min-height: 100vh;
   background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #fdf4ff 100%);
+  animation: slideInUp 0.5s ease-out;
 }
 
-/* Header */
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
 }
 
 .headerIcon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 1rem;
-  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition);
+}
+
+.headerIcon:hover {
+  transform: scale(1.1);
 }
 
 .headerTitle {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
 }
 
 .headerSubtitle {
   font-size: 1.125rem;
-  color: #6b7280;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
-/* Section */
 .section {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 24px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   padding: 2rem;
+  animation: slideInUp 0.5s ease-out;
 }
 
 .sectionHeader {
@@ -58,10 +119,20 @@
   gap: 1rem;
 }
 
+.sectionHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.searchInput {
+  max-width: 300px;
+}
+
 .sectionHeader h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -70,90 +141,69 @@
 
 .sectionHeader h3::before {
   content: '';
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-radius: 50%;
 }
 
-/* Add Button */
 .addButton {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.addButton::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 0;
-}
-
-.addButton:hover::before {
-  transform: translateX(0);
+  font-size: var(--font-size-base);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
 .addButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
-.addButton svg,
-.addButton span {
-  position: relative;
-  z-index: 1;
+.addButton:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
-/* Group Cards */
 .groupCard {
   background: linear-gradient(135deg, #ffffff, #f9fafb);
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 1.5rem;
   overflow: hidden;
-  transition: all 0.5s ease;
-  animation: slideInUp 0.5s ease-out;
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
 .groupCard:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .groupCard:not(.collapsed) {
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.2);
   border-color: #c7d2fe;
 }
 
-/* Card Header */
 .groupCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition);
   position: relative;
 }
 
 .groupCardHeader:hover {
-  background-color: rgba(249, 250, 251, 0.5);
+  background-color: rgba(249, 250, 251, 0.6);
 }
 
 .groupCardHeader::before {
@@ -165,26 +215,26 @@
   transform: translateY(-50%) translateX(-60px);
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
-  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: var(--border-radius);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 700;
-  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-  font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
+  font-size: var(--font-size-base);
 }
 
 .groupCardHeader span:first-child {
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   font-size: 1.125rem;
   margin-left: 50px;
 }
 
 .groupCardHeader span:last-child {
-  color: #9ca3af;
+  color: var(--text-secondary);
   transition: transform 0.3s ease;
 }
 
@@ -193,16 +243,15 @@
   height: 24px;
 }
 
-/* Card Content */
 .groupCardContent {
   max-height: 0;
   opacity: 0;
   overflow: hidden;
-  transition: all 0.5s ease;
+  transition: max-height 0.5s ease, opacity 0.5s ease;
 }
 
 .groupCard:not(.collapsed) .groupCardContent {
-  max-height: 1000px;
+  max-height: 2000px; /* Increased for larger content */
   opacity: 1;
 }
 
@@ -210,17 +259,15 @@
   transform: rotate(180deg);
 }
 
-/* Section Group */
 .sectionGroup {
   padding: 0 1.5rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-light);
   padding-top: 1.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
-/* Form Fields Styling */
 .sectionGroup > div {
   position: relative;
 }
@@ -230,38 +277,38 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-base);
 }
 
 .sectionGroup label svg {
   width: 16px;
   height: 16px;
-  color: #6366f1;
+  color: var(--primary-color);
 }
 
 .sectionGroup input,
 .sectionGroup select {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--border-radius);
   background: white;
-  transition: all 0.2s ease;
-  font-size: 0.875rem;
+  font-size: var(--font-size-base);
+  transition: box-shadow var(--transition), border-color var(--transition);
 }
 
 .sectionGroup input:focus,
 .sectionGroup select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #6366f1;
+  box-shadow: 0 0 0 2px var(--primary-color);
   border-color: transparent;
 }
 
 .sectionGroup input:hover,
 .sectionGroup select:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   border-color: #c7d2fe;
 }
 
@@ -275,74 +322,173 @@
   padding-right: 2.5rem;
 }
 
-/* Button Row */
 .buttonRow {
   display: flex;
   justify-content: flex-end;
   padding: 1rem 1.5rem 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-light);
 }
 
-/* Remove Button */
 .removeButton {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, #ef4444, #ec4899);
+  background: linear-gradient(135deg, var(--error-color), #ec4899);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+  box-shadow: var(--shadow-sm);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
-}
-
-.removeButton::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  z-index: 0;
-}
-
-.removeButton:hover::before {
-  transform: translateX(0);
+  font-size: var(--font-size-base);
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
 .removeButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.removeButton svg,
-.removeButton span {
-  position: relative;
-  z-index: 1;
+.removeButton:focus {
+  outline: 2px solid var(--error-color);
+  outline-offset: 2px;
 }
 
-/* Collapsed State */
-.collapsed .groupCardContent {
-  max-height: 0;
-  opacity: 0;
+.subSection {
+  margin-top: 1.5rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #ffffff;
 }
 
-.collapsed .groupCardHeader span:last-child {
-  transform: rotate(0deg);
+.subSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background-color var(--transition);
 }
 
-/* Training Counter */
+.subSectionHeader:hover {
+  background-color: #e9ecef;
+}
+
+.subSectionHeader h4 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.addSubButton {
+  background: none;
+  border: 1px solid var(--primary-color);
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition), color var(--transition);
+  color: var(--primary-color);
+}
+
+.addSubButton:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.addSubButton:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.subSectionContent {
+  padding: 1.5rem;
+  background-color: #ffffff;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.itemRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.itemRow:last-child {
+  margin-bottom: 0;
+}
+
+.itemRow > div {
+  flex: 1;
+}
+
+.removeItemButton {
+  background-color: var(--error-color);
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition);
+  min-width: 40px;
+  height: 40px;
+  margin-top: auto;
+}
+
+.removeItemButton:hover {
+  background-color: #c82333;
+}
+
+.removeItemButton:focus {
+  outline: 2px solid var(--error-color);
+  outline-offset: 2px;
+}
+
+.emptyMessage {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+  margin: 0;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+}
+
+.errorMessage {
+  color: var(--error-color);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 500;
+}
+
+.successMessage {
+  color: var(--success-color);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 500;
+}
+
 .section {
   counter-reset: training-counter;
 }
 
-/* Animations */
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -369,10 +515,9 @@
   animation: fadeOut 0.3s ease-out forwards;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .container {
-    padding: 1rem;
+    padding: 1.5rem;
   }
 
   .headerTitle {
@@ -388,42 +533,70 @@
     align-items: stretch;
   }
 
+  .sectionHeaderActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchInput {
+    max-width: 100%;
+  }
+
   .sectionGroup {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
     padding: 1rem;
   }
 
   .groupCardHeader::before {
     transform: translateY(-50%) translateX(-50px);
-    width: 32px;
-    height: 32px;
-    font-size: 0.75rem;
+    width: 36px;
+    height: 36px;
+    font-size: 0.85rem;
   }
 
   .groupCardHeader span:first-child {
-    margin-left: 40px;
+    margin-left: 45px;
     font-size: 1rem;
   }
 
   .addButton {
     justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .itemRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .removeItemButton {
+    align-self: flex-end;
+    margin-top: 0.75rem;
+  }
+
+  .subSectionHeader {
+    padding: 0.75rem;
+  }
+
+  .subSectionHeader h4 {
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: 0.5rem;
+    padding: 1rem;
   }
 
   .section {
     padding: 1rem;
-    border-radius: 16px;
+    border-radius: 8px;
   }
 
   .headerIcon {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
   }
 
   .headerTitle {
@@ -447,234 +620,27 @@
   }
 }
 
-/* Enhanced Focus States */
-.addButton:focus,
-.removeButton:focus,
-.groupCardHeader:focus {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
-}
-
-/* Loading State */
-.loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.loading .groupCard {
-  filter: blur(1px);
-}
-
-/* Success States */
-.success {
-  border-color: #10b981;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15);
-}
-
-/* Error States */
-.error {
-  border-color: #ef4444;
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
-}
-
-.error input,
-.error select {
-  border-color: #ef4444;
-}
-
-/* Hover Effects Enhancement */
-.groupCard:hover .groupCardHeader::before {
-  transform: translateY(-50%) translateX(-60px) scale(1.05);
-}
-
-/* Smooth Transitions */
-* {
-  transition: all 0.2s ease;
-}
-
-/* Print Styles */
 @media print {
   .addButton,
-  .removeButton {
+  .removeButton,
+  .addSubButton,
+  .removeItemButton,
+  .searchInput {
     display: none;
   }
 
   .groupCard {
     break-inside: avoid;
     box-shadow: none;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--border-light);
   }
 
   .groupCardContent {
     max-height: none !important;
     opacity: 1 !important;
   }
-}
 
-/* Estilos adicionais para o TrainingForm atualizado */
-
-/* Sub-seções (Séries e Repetições) */
-.subSection {
-    margin-top: 1rem;
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
-  .subSectionHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e1e5e9;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .subSectionHeader:hover {
-    background-color: #e9ecef;
-  }
-  
-  .subSectionHeader h4 {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #495057;
-  }
-  
-  .addSubButton {
-    background: none;
-    border: none;
-    padding: 0.25rem;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease;
-    color: #007bff;
-  }
-  
-  .addSubButton:hover {
-    background-color: #007bff;
-    color: white;
-  }
-  
   .subSectionContent {
-    padding: 1rem;
-    background-color: #ffffff;
+    display: block !important;
   }
-  
-  /* Linha de item (série ou repetição individual) */
-  .itemRow {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .itemRow:last-child {
-    margin-bottom: 0;
-  }
-  
-  .itemRow > div {
-    flex: 1;
-  }
-  
-  .removeItemButton {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.5rem;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s ease;
-    min-width: 36px;
-    height: 36px;
-    margin-top: auto;
-  }
-  
-  .removeItemButton:hover {
-    background-color: #c82333;
-  }
-  
-  .removeItemButton:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
-  }
-  
-  /* Mensagem para seções vazias */
-  .emptyMessage {
-    color: #6c757d;
-    font-style: italic;
-    text-align: center;
-    padding: 1rem;
-    margin: 0;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-  }
-  
-  /* Melhorias nos botões existentes */
-  .addButton {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-  }
-  
-  .addButton:hover {
-    background-color: #0056b3;
-  }
-  
-  .removeButton {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-  }
-  
-  .removeButton:hover {
-    background-color: #c82333;
-  }
-  
-  /* Responsividade para telas menores */
-  @media (max-width: 768px) {
-    .itemRow {
-      flex-direction: column;
-      align-items: stretch;
-    }
-    
-    .removeItemButton {
-      align-self: flex-end;
-      margin-top: 0.5rem;
-    }
-    
-    .subSectionHeader {
-      padding: 0.5rem;
-    }
-    
-    .subSectionHeader h4 {
-      font-size: 0.85rem;
-    }
-  }
+}

@@ -8,9 +8,12 @@ interface InputFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
-  required?: boolean;
   icon?: React.ReactNode;
   optional?: boolean;
+  error?: string; // Add this line
+  className?: string;
+  required?: boolean;
+
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -20,26 +23,37 @@ export const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
   placeholder,
-  required,
   icon,
   optional,
-}) => (
-  <div className={styles.inputGroup}>
-    <label>
-      {icon && <span className={styles.inputIcon}>{icon}</span>}
-      {label}
-      {optional && <span className={styles.optional}>(Opcional)</span>}
-    </label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={required}
-    />
-  </div>
-);
+  error,
+  className = '',
+}) => {
+  return (
+    <div className={`input-field ${className} ${error ? 'has-error' : ''}`}>
+      <label htmlFor={name} className="input-label">
+        {icon && <span className="input-icon">{icon}</span>}
+        {label}
+        {optional && <span className="optional-text"> (opcional)</span>}
+      </label>
+      <input
+        id={name}
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`input-control ${error ? 'error' : ''}`}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${name}-error` : undefined}
+      />
+      {error && (
+        <div id={`${name}-error`} className="error-message" role="alert">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface SelectFieldProps {
   label: string;
